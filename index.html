@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PGSSTROY.PRO</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f7fa;color:#18202a}
+header{background:#111827;color:#fff;padding:22px 18px}header h1{margin:0;font-size:26px}header p{margin:6px 0 0;color:#aeb8c7}
+main{max-width:900px;margin:auto;padding:18px}.card{background:#fff;border:1px solid #e2e7ee;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 3px 12px #00000008}
+h2{font-size:19px;margin:0 0 14px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+input,select,button{width:100%;padding:12px;border-radius:10px;border:1px solid #d6dce5;font-size:16px}button{background:#111827;color:#fff;border:0;font-weight:600;cursor:pointer}.secondary{background:#eef2f7;color:#18202a}
+.result{font-size:25px;font-weight:700;margin-top:12px}.muted{color:#667085;font-size:14px}.obj{padding:13px;border:1px solid #e2e7ee;border-radius:12px;margin-top:10px}.tag{display:inline-block;background:#eef2ff;padding:4px 8px;border-radius:999px;font-size:12px;margin-top:5px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}main{padding:12px}}
+</style>
+</head>
+<body>
+<header><h1>PGSSTROY.PRO</h1><p>Строительный сервис и инженерные расчёты</p></header>
+<main>
+<section class="card">
+<h2>Объект</h2>
+<div class="grid">
+<input id="name" placeholder="Название объекта">
+<input id="address" placeholder="Адрес">
+</div>
+<button style="margin-top:10px" onclick="addObject()">Добавить объект</button>
+<div id="objects"></div>
+</section>
+
+<section class="card">
+<h2>Расчёт бетона</h2>
+<div class="grid">
+<input id="l" type="number" step="0.01" placeholder="Длина, м">
+<input id="w" type="number" step="0.01" placeholder="Ширина, м">
+<input id="t" type="number" step="0.001" placeholder="Толщина, м">
+<input id="reserve" type="number" value="5" step="1" placeholder="Запас, %">
+</div>
+<button style="margin-top:10px" onclick="calc()">Рассчитать</button>
+<div id="result" class="result">—</div>
+<div class="muted">Объём с учётом запаса.</div>
+</section>
+
+<section class="card">
+<h2>Разделы PGSSTROY.PRO</h2>
+<div class="grid">
+<button class="secondary">Арматура</button>
+<button class="secondary">ПГС / материалы</button>
+<button class="secondary">ЛЭП</button>
+<button class="secondary">Нормативы</button>
+<button class="secondary">База опыта</button>
+<button class="secondary">Документы</button>
+</div>
+</section>
+</main>
+<script>
+let objects=[];
+function addObject(){
+ const name=document.getElementById('name').value.trim();
+ const address=document.getElementById('address').value.trim();
+ if(!name){alert('Введите название объекта');return}
+ objects.push({name,address,calc:null}); render();
+ document.getElementById('name').value='';document.getElementById('address').value='';
+}
+function render(){
+ document.getElementById('objects').innerHTML=objects.map((o,i)=>`<div class="obj"><b>${o.name}</b><br><span class="muted">${o.address||'Адрес не указан'}</span><br><span class="tag">Объект №${i+1}</span></div>`).join('');
+}
+function calc(){
+ const l=+document.getElementById('l').value,w=+document.getElementById('w').value,t=+document.getElementById('t').value,r=+document.getElementById('reserve').value;
+ if(!(l>0&&w>0&&t>0)){alert('Заполните длину, ширину и толщину');return}
+ const v=l*w*t*(1+r/100);
+ document.getElementById('result').textContent=v.toFixed(2)+' м³';
+}
+</script>
+</body>
+</html>
