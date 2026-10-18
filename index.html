@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PGSSTROY.PRO v0.6</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f4f6f8;color:#17202a}
+header{background:#111827;color:#fff;padding:16px;position:sticky;top:0;z-index:10}
+.wrap{max-width:1150px;margin:auto}.brand{font-size:24px;font-weight:800}
+.sub{font-size:13px;color:#b7c0ce;margin-top:3px}
+nav{display:flex;gap:7px;overflow:auto;margin-top:14px}
+nav button{white-space:nowrap;border:0;border-radius:10px;padding:9px 12px;background:#263247;color:white}
+nav button.active{background:white;color:#111827}
+main{padding:18px 14px}.page{display:none}.page.active{display:block}
+.card{background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 3px 15px #0000000c}
+h2{margin:0 0 14px;font-size:20px}h3{margin:0 0 7px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:block;font-size:13px;font-weight:650;color:#475467;margin-bottom:5px}
+input,select,textarea{width:100%;padding:11px;border:1px solid #d5dbe3;border-radius:10px;font:inherit;background:#fff}
+textarea{min-height:85px;resize:vertical}
+button.primary{border:0;border-radius:11px;padding:12px 16px;background:#111827;color:#fff;font-weight:700}
+button.secondary{border:1px solid #d5dbe3;background:#fff;border-radius:10px;padding:9px 12px}
+button.danger{color:#b42318}
+.result{margin-top:14px;padding:14px;border-radius:12px;background:#f7f8fa}
+.big{font-size:25px;font-weight:800}.muted{font-size:13px;color:#667085}
+.item{border:1px solid #e1e5ea;border-radius:12px;padding:13px;margin-top:9px}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.tag{display:inline-block;font-size:11px;padding:4px 7px;border-radius:7px;background:#eef2f6;margin:3px 3px 0 0}
+.empty{text-align:center;color:#7b8490;padding:20px}
+.notice{padding:12px;border-radius:10px;background:#f8fafc;margin-top:10px;font-size:13px}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.stat>div{background:#f7f8fa;padding:12px;border-radius:11px}.stat b{display:block;font-size:19px;margin-top:3px}
+.total{font-size:28px;font-weight:850;margin-top:5px}
+.price-line{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #edf0f3}
+@media(max-width:680px){.grid{grid-template-columns:1fr}.row{align-items:flex-start;flex-direction:column}.stat{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<div class="brand">PGSSTROY.PRO</div>
+<div class="sub">Строительный сервис и инженерные расчёты</div>
+<nav id="nav">
+<button data-page="objects">🏗️ Объекты</button>
+<button data-page="concrete">🧱 Бетон</button>
+<button data-page="rebar">🔩 Арматура</button>
+<button data-page="materials">🪨 Материалы</button>
+<button data-page="formwork">🪵 Опалубка</button>
+<button data-page="estimate">💰 Смета</button>
+<button data-page="suppliers">🚚 Поставщики</button>
+<button data-page="prices">📍 Цены</button>
+<button data-page="power">⚡ ЛЭП</button>
+<button data-page="standards">📚 Нормативы</button>
+<button data-page="knowledge">🧠 Опыт</button>
+<button data-page="documents">📄 Документы</button>
+<button data-page="profile">👤 Профиль</button>
+</nav></div></header>
+
+<main class="wrap">
+
+<section id="objects" class="page">
+<div class="card"><h2>🏗️ Объекты</h2>
+<div class="grid">
+<div><label>Название</label><input id="objName" placeholder="Падел-корт"></div>
+<div><label>Адрес / город</label><input id="objAddress" placeholder="Нальчик"></div>
+</div><br>
+<button class="primary" onclick="addObject()">Добавить объект</button>
+</div>
+<div class="card"><h2>Мои объекты</h2><div id="objectsList"></div></div>
+</section>
+
+<section id="concrete" class="page">
+<div class="card"><h2>🧱 Бетон</h2>
+<div class="grid">
+<div><label>Длина, м</label><input id="cl" type="number" step=".01"></div>
+<div><label>Ширина, м</label><input id="cw" type="number" step=".01"></div>
+<div><label>Толщина, м</label><input id="ct" type="number" step=".01"></div>
+<div><label>Запас, %</label><input id="cr" type="number" value="5" step=".5"></div>
+<div><label>Класс бетона</label><select id="cc"><option>B15</option><option>B20</option><option>B25</option><option>B30</option><option>B35</option></select></div>
+</div><br>
+<button class="primary" onclick="calcConcrete()">Рассчитать</button>
+<div id="concreteResult"></div></div>
+</section>
+
+<section id="rebar" class="page">
+<div class="card"><h2>🔩 Арматура</h2>
+<div class="grid">
+<div><label>Длина, м</label><input id="rl" type="number" step=".01"></div>
+<div><label>Ширина, м</label><input id="rw" type="number" step=".01"></div>
+<div><label>Шаг, мм</label><input id="rs" type="number" value="200"></div>
+<div><label>Диаметр, мм</label><input id="rd" type="number" value="12"></div>
+<div><label>Количество слоёв</label><input id="rlayers" type="number" value="1"></div>
+<div><label>Запас, %</label><input id="rr" type="number" value="5"></div>
+</div><br>
+<button class="primary" onclick="calcRebar()">Рассчитать</button>
+<div id="rebarResult"></div></div>
+</section>
+
+<section id="materials" class="page">
+<div class="card"><h2>🪨 Материалы</h2>
+<p class="muted">Потребность хранится отдельно от цен. Цена подбирается в разделе «Цены» или задаётся пользователем.</p>
+<div class="grid">
+<div><label>Материал</label><select id="matType">
+<option>ПГС</option><option>Песок</option><option>Щебень</option><option>Цемент</option><option>Бетон B25</option>
+</select></div>
+<div><label>Количество</label><input id="matQty" type="number" step=".01"></div>
+</div><br>
+<button class="primary" onclick="saveMaterialNeed()">Добавить потребность</button>
+<div id="materialList"></div></div>
+</section>
+
+<section id="formwork" class="page">
+<div class="card"><h2>🪵 Опалубка</h2>
+<div class="grid">
+<div><label>Длина, м</label><input id="fl" type="number" step=".01"></div>
+<div><label>Ширина, м</label><input id="fw" type="number" step=".01"></div>
+<div><label>Высота, м</label><input id="fh" type="number" step=".01"></div>
+<div><label>Запас, %</label><input id="fr" type="number" value="5" step=".5"></div>
+<div><label>Ширина щита, м</label><input id="fsw" type="number" value="1.2" step=".01"></div>
+<div><label>Высота щита, м</label><input id="fsh" type="number" value="3" step=".01"></div>
+</div><br>
+<button class="primary" onclick="calcFormwork()">Рассчитать</button>
+<div id="formworkResult"></div></div>
+</section>
+
+<section id="estimate" class="page">
+<div class="card"><h2>💰 Смета</h2>
+<p class="muted">Смета собирает сохранённые расчёты. Стоимость определяется по выбранной цене материала или по цене, введённой пользователем.</p>
+<div class="grid">
+<div><label>Накладные расходы, %</label><input id="estOverhead" type="number" value="0" step=".1"></div>
+<div><label>Резерв, %</label><input id="estReserve" type="number" value="0" step=".1"></div>
+<div><label>Доставка, ₽</label><input id="estDelivery" type="number" value="0" step=".01"></div>
+</div><br>
+<button class="primary" onclick="recalculateEstimate()">Пересчитать смету</button>
+<div id="estimateBox"></div>
+</div>
+</section>
+
+<section id="suppliers" class="page">
+<div class="card"><h2>🚚 Поставщики</h2>
+<p class="muted">Поставщик сам указывает цену, город и условия.</p>
+<div class="grid">
+<div><label>Название поставщика</label><input id="sName" placeholder="ООО Строй..."></div>
+<div><label>Город</label><input id="sCity" placeholder="Нальчик"></div>
+<div><label>Контакт</label><input id="sContact" placeholder="Телефон / Telegram / сайт"></div>
+<div><label>Описание</label><input id="sDesc" placeholder="Бетон, ЖБИ, доставка"></div>
+</div><br>
+<button class="primary" onclick="addSupplier()">Добавить поставщика</button>
+<div id="supplierList"></div></div>
+</section>
+
+<section id="prices" class="page">
+<div class="card"><h2>📍 Цены</h2>
+<div class="notice">
+<b>Типы цен разделены:</b> сметная — нормативный источник; рыночная — поставщик; моя — фактическая цена пользователя.
+</div>
+<h3 style="margin-top:15px">Добавить цену</h3>
+<div class="grid">
+<div><label>Материал</label><input id="pMaterial" placeholder="Бетон B25"></div>
+<div><label>Цена</label><input id="pPrice" type="number" step=".01"></div>
+<div><label>Единица</label><select id="pUnit"><option>₽/м³</option><option>₽/т</option><option>₽/кг</option><option>₽/шт</option><option>₽/м</option></select></div>
+<div><label>Тип цены</label><select id="pType"><option>Рыночная</option><option>Моя</option><option>Сметная</option></select></div>
+<div><label>Город</label><input id="pCity" placeholder="Нальчик"></div>
+<div><label>Регион</label><input id="pRegion" placeholder="КБР"></div>
+<div><label>Дата актуальности</label><input id="pDate" type="date"></div>
+<div><label>НДС</label><select id="pVat"><option value="0">Без НДС / не указан</option><option value="10">10%</option><option value="20">20%</option><option value="22">22%</option></select></div>
+<div><label>Доставка</label><select id="pDelivery"><option>Не указана</option><option>Включена</option><option>Отдельно</option></select></div>
+<div><label>Источник</label><input id="pSource" placeholder="ФГИС ЦС / поставщик / договор"></div>
+</div><br>
+<button class="primary" onclick="addPrice()">Сохранить цену</button>
+</div>
+<div class="card"><h2>Поиск цен</h2>
+<div class="grid">
+<div><label>Материал</label><input id="searchMaterial" oninput="renderPrices()" placeholder="бетон"></div>
+<div><label>Город</label><input id="searchCity" oninput="renderPrices()" placeholder="Нальчик"></div>
+</div>
+<div id="pricesList"></div>
+</div>
+</section>
+
+<section id="power" class="page">
+<div class="card"><h2>⚡ Конструктор ЛЭП</h2>
+<p class="muted">Предварительный инженерно-строительный расчёт. Не заменяет проектные расчёты и рабочую документацию.</p>
+<div class="grid">
+<div><label>Напряжение</label><select id="plVoltage"><option>0.4 кВ</option><option>6 кВ</option><option>10 кВ</option><option>20 кВ</option><option>35 кВ</option><option>110 кВ</option><option>220 кВ</option><option>330 кВ</option><option>500 кВ</option><option>750 кВ</option><option>Другое</option></select></div>
+<div><label>Мощность, МВт</label><input id="plPower" type="number" step=".1" placeholder="100"></div>
+<div><label>Длина трассы, км</label><input id="plLength" type="number" step=".01" placeholder="15"></div>
+<div><label>Количество цепей</label><select id="plChains"><option>1</option><option>2</option><option>3</option></select></div>
+<div><label>Тип линии</label><select id="plCircuit"><option>ВЛ</option><option>КЛ</option></select></div>
+<div><label>Тип объекта</label><select id="plObjectType"><option>Новое строительство</option><option>Реконструкция</option><option>Капитальный ремонт</option></select></div>
+<div><label>Средний пролёт, м</label><input id="plSpans" type="number" value="250" step="1"></div>
+<div><label>Количество углов трассы</label><input id="plAngles" type="number" value="0" step="1"></div>
+<div><label>Тип опор</label><select id="plSupports"><option>Промежуточные ЖБ</option><option>Анкерно-угловые ЖБ</option><option>Металлические</option><option>Смешанные</option></select></div>
+<div><label>Фундамент</label><select id="plFoundation"><option>ЖБ стаканный / сборный</option><option>Монолитный ЖБ</option><option>Свайный</option><option>По проекту</option></select></div>
+<div><label>Провод</label><input id="plConductor" placeholder="АС 300/39"></div>
+<div><label>Проводов в фазе</label><input id="plWireCount" type="number" value="1" min="1"></div>
+<div><label>Грозотрос / ОКГТ</label><select id="plEarth"><option>Нет</option><option>Грозотрос</option><option>ОКГТ</option></select></div>
+</div><br>
+<button class="primary" onclick="calcPowerLine()">Рассчитать предварительную ведомость</button>
+<div id="powerResult"></div>
+<div class="notice">📚 Нормативы по ЛЭП будут подтягиваться к отдельным операциям. Практический опыт и нормативные требования не смешиваются.</div>
+</div>
+</section>
+
+<section id="standards" class="page">
+<div class="card"><h2>📚 Нормативная база</h2>
+<p class="muted">Единый поиск по строительству и ЛЭП. Источники и статус документа показываются отдельно от практического опыта.</p>
+<div class="grid">
+<div><label>Поиск по названию / обозначению</label><input id="stdSearch" oninput="renderStandards()" placeholder="бетон, организация, ЛЭП, СП 63..."></div>
+<div><label>Тип документа</label><select id="stdType" onchange="renderStandards()"><option>Все</option><option>СП</option><option>ФЗ</option><option>ГОСТ</option><option>Приказ</option></select></div>
+<div><label>Раздел</label><select id="stdCat" onchange="renderStandards()"><option>Все</option><option>Строительство</option><option>Бетон и ЖБ</option><option>Электроэнергетика / ЛЭП</option><option>Безопасность</option><option>Документация</option></select></div>
+</div>
+<div class="stat" style="margin-top:14px"><div>В базе<b id="stdCount">0</b></div><div>Действующие<b id="stdActive">0</b></div><div>Источники<b>Росстандарт</b></div></div>
+<div id="standardsList"></div>
+<div class="notice"><b>Правило PGSSTROY:</b> «Действует» не означает автоматически «обязательно». Для конкретного объекта учитываются законодательство, применимый перечень документов, проектная документация и условия применения.</div>
+</div>
+</section>
+
+<section id="knowledge" class="page">
+<div class="card"><h2>🧠 База практического опыта</h2>
+<p class="muted">Практический опыт не считается нормативным требованием автоматически.</p>
+<div class="grid"><div><label>Название решения</label><input id="kTitle" placeholder="Как устраняли просадку плиты"></div>
+<div><label>Категория</label><select id="kCat"><option>Бетон</option><option>Арматура</option><option>ЛЭП</option><option>Опалубка</option><option>Материалы</option></select></div></div>
+<br><textarea id="kText" placeholder="Опишите решение..."></textarea><br><br>
+<button class="primary" onclick="addKnowledge()">Опубликовать в локальную базу</button>
+<div id="knowledgeList"></div></div>
+</section>
+
+<section id="documents" class="page">
+<div class="card"><h2>📄 Документы</h2><p class="muted">Подготовка раздела под акты, исполнительную документацию, ведомости, расчёты и экспорт.</p>
+<div class="notice">Следующий этап — генерация документов из данных объекта.</div></div>
+</section>
+
+<section id="profile" class="page">
+<div class="card"><h2>👤 Профиль и настройки</h2>
+<div class="grid">
+<div><label>Имя</label><input id="profName" placeholder="Имя"></div>
+<div><label>Город</label><input id="profCity" placeholder="Нальчик"></div>
+<div><label>Регион</label><input id="profRegion" placeholder="КБР"></div>
+<div><label>Радиус поиска, км</label><select id="profRadius"><option>50</option><option>100</option><option>250</option><option>500</option></select></div>
+</div><br>
+<button class="primary" onclick="saveProfile()">Сохранить настройки</button>
+<div class="notice">Пока данные хранятся на устройстве. После подключения сервера база будет синхронизироваться между устройствами.</div>
+</div>
+</section>
+
+</main>
+<footer class="wrap" style="text-align:center;padding:18px;color:#7b8490;font-size:12px">PGSSTROY.PRO · v0.6 · ЛЭП и нормативная база</footer>
+
+<script>
+const KEY="pgsstroy_v05";
+const $=id=>document.getElementById(id);
+
+const ids=[
+"objectsList","objName","objAddress","cl","cw","ct","cr","cc","concreteResult",
+"rl","rw","rs","rd","rlayers","rr","rebarResult","matType","matQty","materialList",
+"fl","fw","fh","fr","fsw","fsh","formworkResult","estimateBox","estOverhead","estReserve","estDelivery",
+"sName","sCity","sContact","sDesc","supplierList",
+"pMaterial","pPrice","pUnit","pType","pCity","pRegion","pDate","pVat","pDelivery","pSource","searchMaterial","searchCity","pricesList",
+"kTitle","kCat","kText","knowledgeList","stdSearch","stdType","stdCat","standardsList","powerResult","plVoltage","plPower","plLength","plChains","plCircuit","plObjectType","plSpans","plAngles","plSupports","plFoundation","plConductor","plWireCount","plEarth" ,"profName","profCity","profRegion","profRadius"
+];
+
+const el={};
+ids.forEach(id=>el[id]=$(id));
+
+let db;
+const emptyDB={
+ schemaVersion:2,
+ objects:[],
+ materials:[],
+ calculations:[],
+ prices:[],
+ suppliers:[],
+ knowledge:[],
+ estimates:[],
+ profile:{}
+};
+
+function loadDB(){
+ try{
+   const raw=localStorage.getItem(KEY);
+   db=raw?JSON.parse(raw):structuredClone(emptyDB);
+   if(!db||typeof db!=="object") db=structuredClone(emptyDB);
+   Object.keys(emptyDB).forEach(k=>{
+     if(db[k]===undefined) db[k]=Array.isArray(emptyDB[k])?[]:{};
+   });
+   db.schemaVersion=2;
+ }catch(e){
+   db=structuredClone(emptyDB);
+ }
+}
+loadDB();
+
+function save(){localStorage.setItem(KEY,JSON.stringify(db));}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
+function money(v){return Number(v||0).toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2})+" ₽";}
+function today(){return new Date().toISOString().slice(0,10);}
+function notify(text){alert(text);}
+
+function showPage(id){
+ document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+ const page=$(id); if(page) page.classList.add("active");
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===id));
+ if(id==="objects")renderObjects();
+ if(id==="prices")renderPrices();
+ if(id==="suppliers")renderSuppliers();
+ if(id==="materials")renderMaterials();
+ if(id==="knowledge")renderKnowledge();
+ if(id==="estimate")renderEstimate();
+ if(id==="standards")renderStandards();
+ window.scrollTo(0,0);
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+
+const normativeDocuments=[
+ {id:"fz384",designation:"384-ФЗ",title:"Технический регламент о безопасности зданий и сооружений",type:"ФЗ",category:"Безопасность",status:"Действует",authority:"Российская Федерация",effectiveDate:"01.07.2010",changes:"Изменение №8 и др.",scope:"Безопасность зданий, сооружений и процессов на этапах жизненного цикла",sourceUrl:"https://protect.gost.ru/tr/details/eed5147e-0bfe-4743-bb74-7fee2f2aa1bf",sourceName:"Росстандарт"},
+ {id:"sp48",designation:"СП 48.13330.2019",title:"Организация строительства",type:"СП",category:"Строительство",status:"Действует",authority:"Минстрой России",effectiveDate:"25.06.2020",changes:"Изменения №1, №2",scope:"Организация строительства; контроль и организация процессов строительства",sourceUrl:"https://protect.gost.ru/sp/details/278f4ffa-b29b-4733-b8ac-d9a5ff3775cc",sourceName:"Росстандарт"},
+ {id:"sp63",designation:"СП 63.13330.2018",title:"Бетонные и железобетонные конструкции. Основные положения",type:"СП",category:"Бетон и ЖБ",status:"Действует",authority:"Минстрой России",effectiveDate:"20.06.2019",changes:"Изменения №1, №2",scope:"Проектирование бетонных и железобетонных конструкций",sourceUrl:"https://protect.gost.ru/sp/details/8b67e228-0c9f-4a62-b562-964b3a58c667",sourceName:"Росстандарт"},
+ {id:"sp76",designation:"СП 76.13330.2016",title:"Электротехнические устройства",type:"СП",category:"Электроэнергетика / ЛЭП",status:"Действует",authority:"Минстрой России",effectiveDate:"17.06.2017",changes:"По реестру Росстандарта",scope:"Электромонтаж; подстанции; ВЛ и КЛ до 220 кВ; заземление",sourceUrl:"https://protect.gost.ru/sp/details/e7468d76-0b61-4d89-b386-c3b2682caee5",sourceName:"Росстандарт"},
+ {id:"list384",designation:"Перечень к 384-ФЗ",title:"Перечень документов по стандартизации для обеспечения соблюдения требований 384-ФЗ",type:"Приказ",category:"Безопасность",status:"Действует",authority:"Росстандарт",effectiveDate:"27.04.2024",changes:"Ред. приказов от 16.12.2025 №2766 и 29.12.2025 №2895",scope:"Связь технического регламента с документами по стандартизации",sourceUrl:"https://protect.gost.ru/TrList/85",sourceName:"Росстандарт"}
+];
+
+function renderStandards(){
+ const q=(el.stdSearch?.value||"").toLowerCase().trim();
+ const type=el.stdType?.value||"Все"; const cat=el.stdCat?.value||"Все";
+ const a=normativeDocuments.filter(x=>{
+   const hay=(x.designation+" "+x.title+" "+x.scope+" "+x.category).toLowerCase();
+   return (!q||hay.includes(q))&& (type==="Все"||x.type===type) && (cat==="Все"||x.category===cat);
+ });
+ if($('stdCount'))$('stdCount').textContent=a.length;
+ if($('stdActive'))$('stdActive').textContent=a.filter(x=>x.status==="Действует").length;
+ el.standardsList.innerHTML=a.length?a.map(x=>`
+ <div class="item"><div class="row"><div><h3>${esc(x.designation)} — ${esc(x.title)}</h3>
+ <span class="tag">🟢 ${esc(x.status)}</span><span class="tag">${esc(x.type)}</span><span class="tag">${esc(x.category)}</span></div>
+ <button class="secondary" onclick="openStandard('${x.id}')">Открыть</button></div>
+ <div class="muted" style="margin-top:7px">Введён: ${esc(x.effectiveDate)} · ${esc(x.authority)}</div>
+ <div style="margin-top:7px">${esc(x.scope)}</div>
+ <div class="muted" style="margin-top:7px">Изменения: ${esc(x.changes)}</div></div>`).join("") : '<div class="empty">По заданным параметрам документы не найдены.</div>';
+}
+function openStandard(id){
+ const x=normativeDocuments.find(d=>d.id===id); if(!x)return;
+ alert(`${x.designation}\n${x.title}\n\nСтатус: ${x.status}\nРаздел: ${x.category}\nВведён: ${x.effectiveDate}\n\n${x.scope}\n\nИсточник: ${x.sourceName}`);
+ window.open(x.sourceUrl,"_blank");
+}
+
+function calcPowerLine(){
+ const voltage=el.plVoltage.value, power=Number(el.plPower.value)||0, km=Number(el.plLength.value)||0, chains=Number(el.plChains.value)||1, circuit=el.plCircuit.value;
+ const span=Number(el.plSpans.value)||250, angles=Number(el.plAngles.value)||0, wires=Number(el.plWireCount.value)||1;
+ if(!(km>0&&span>0))return alert("Укажите длину трассы и средний пролёт");
+ if(circuit!=="ВЛ")return alert("В текущей версии предварительная ведомость рассчитана для ВЛ. Кабельную линию добавим отдельным расчётом.");
+ const baseSupports=Math.ceil(km*1000/span)+1;
+ const extraAngle=Math.max(0,angles);
+ const supports=baseSupports+extraAngle;
+ const anchors=Math.min(supports,extraAngle+2*chains);
+ const intermediate=Math.max(0,supports-anchors);
+ const conductorKm=km*3*wires*chains;
+ const earthKm=el.plEarth.value==="Нет"?0:km*chains;
+ const concretePerFoundation=0;
+ const html=`<div class="result"><div class="stat">
+ <div>Опоры<b>${supports} шт.</b></div><div>Пролёт<b>${span} м</b></div><div>Провод<b>${conductorKm.toFixed(2)} км</b></div></div>
+ <div class="item"><h3>Предварительная ведомость</h3>
+ <div class="price-line"><span>Линия</span><b>${esc(voltage)} · ${chains} цеп.</b></div>
+ <div class="price-line"><span>Мощность</span><b>${power?power.toLocaleString('ru-RU')+' МВт':'не задана'}</b></div>
+ <div class="price-line"><span>Длина трассы</span><b>${km.toFixed(2)} км</b></div>
+ <div class="price-line"><span>Опоры всего</span><b>${supports} шт.</b></div>
+ <div class="price-line"><span>Ориентировочно промежуточных</span><b>${intermediate} шт.</b></div>
+ <div class="price-line"><span>Ориентировочно анкерных/угловых</span><b>${anchors} шт.</b></div>
+ <div class="price-line"><span>Провод</span><b>${conductorKm.toFixed(2)} км · ${esc(el.plConductor.value||'марка не задана')}</b></div>
+ <div class="price-line"><span>Грозотрос / ОКГТ</span><b>${earthKm.toFixed(2)} км</b></div>
+ <div class="notice">⚠️ Количество опор и проводов — предварительная оценка по заданному пролёту и геометрии. Фундаменты, нагрузки, провисания, механический расчёт, климатические районы и типы опор должны определяться проектом.</div></div>
+ <div class="item"><h3>📚 Связанные нормативы</h3><span class="tag">СП 76.13330.2016</span><span class="tag">Нормативная база ЛЭП</span><div class="muted" style="margin-top:7px">Для ВЛ до 220 кВ монтажные требования ищем прежде всего в СП 76.13330.2016; проектные решения и расчёты выполняются по применимым проектным нормативам.</div></div></div>`;
+ el.powerResult.innerHTML=html;
+}
+
+function addObject(){
+ const n=el.objName.value.trim(),a=el.objAddress.value.trim();
+ if(!n)return alert("Укажите название объекта");
+ const obj={id:Date.now(),name:n,address:a,date:today()};
+ db.objects.unshift(obj); save();
+ el.objName.value="";el.objAddress.value="";
+ renderObjects();
+}
+function renderObjects(){
+ el.objectsList.innerHTML=db.objects.length?db.objects.map(o=>`
+ <div class="item"><div class="row"><div><h3>${esc(o.name)}</h3>
+ <div class="muted">📍 ${esc(o.address||"Адрес не указан")} · ${esc(o.date)}</div></div>
+ <button class="secondary danger" onclick="delObject(${o.id})">Удалить</button></div></div>`).join("")
+ :'<div class="empty">Объекты пока не добавлены.</div>';
+}
+function delObject(id){
+ db.objects=db.objects.filter(x=>x.id!==id);
+ db.calculations=db.calculations.filter(x=>x.objectId!==id);
+ save();renderObjects();
+}
+
+function calcConcrete(){
+ const l=+el.cl.value,w=+el.cw.value,t=+el.ct.value,r=+el.cr.value||0;
+ if(!(l>0&&w>0&&t>0))return alert("Заполните размеры");
+ const v=l*w*t,vt=v*(1+r/100),klass=el.cc.value;
+ db.calculations.push({
+   id:Date.now(),objectId:null,type:"Бетон",name:klass,qty:vt,unit:"м³",
+   unitPrice:null,total:0,priceType:null,source:null,date:today(),
+   meta:{baseVolume:v,reserve:r}
+ });
+ save();
+ el.concreteResult.innerHTML=`<div class="result"><div class="muted">${klass}</div>
+ <div>Без запаса: <b>${v.toFixed(2)} м³</b></div>
+ <div class="big">${vt.toFixed(2)} м³</div><div class="muted">Запас ${r}%</div>
+ <div class="notice">Цена будет подставлена в «Смету» из базы цен.</div></div>`;
+}
+
+function calcRebar(){
+ const l=+el.rl.value,w=+el.rw.value,s=+el.rs.value,d=+el.rd.value,lay=+el.rlayers.value||1,r=+el.rr.value||0;
+ if(!(l>0&&w>0&&s>0&&d>0))return alert("Заполните параметры");
+ const nx=Math.floor(w*1000/s)+1,ny=Math.floor(l*1000/s)+1;
+ const len=(nx*l+ny*w)*lay*(1+r/100),kg=len*d*d/162;
+ db.calculations.push({
+   id:Date.now(),objectId:null,type:"Арматура",name:"Ø"+d,qty:kg,unit:"кг",
+   unitPrice:null,total:0,priceType:null,source:null,date:today(),
+   meta:{length:len,diameter:d,layers:lay,reserve:r}
+ });
+ save();
+ el.rebarResult.innerHTML=`<div class="result"><div>Стержней: <b>${nx+ny}</b></div>
+ <div>Общая длина с запасом: <b>${len.toFixed(1)} м</b></div>
+ <div class="big">${kg.toFixed(1)} кг</div>
+ <div class="muted">Теоретическая масса Ø${d} мм</div>
+ <div class="notice">Цена будет подставлена в «Смету» из базы цен.</div></div>`;
+}
+
+function saveMaterialNeed(){
+ const q=+el.matQty.value;if(!(q>0))return alert("Укажите количество");
+ db.materials.push({id:Date.now(),name:el.matType.value,qty:q,unit:"м³",objectId:null,date:today()});
+ save();el.matQty.value="";renderMaterials();
+}
+function renderMaterials(){
+ el.materialList.innerHTML=db.materials.length?db.materials.map(x=>`
+ <div class="item"><b>${esc(x.name)}</b> — ${Number(x.qty).toFixed(2)} ${esc(x.unit||"")}.
+ <span class="muted">${esc(x.date)}</span></div>`).join("")
+ :'<div class="empty">Потребности не добавлены.</div>';
+}
+
+function calcFormwork(){
+ const l=+el.fl.value,w=+el.fw.value,h=+el.fh.value,r=+el.fr.value||0;
+ const sw=+el.fsw.value,sh=+el.fsh.value;
+ if(!(l>0&&w>0&&h>0&&sw>0&&sh>0))return alert("Заполните размеры и размеры щита");
+ const area=2*(l+w)*h;
+ const total=area*(1+r/100);
+ const shieldArea=sw*sh;
+ const count=Math.ceil(total/shieldArea);
+ const actual=count*shieldArea;
+
+ db.calculations.push({
+   id:Date.now(),objectId:null,type:"Опалубка",
+   name:`Щиты ${sw}×${sh} м`,qty:count,unit:"шт",
+   unitPrice:null,total:0,priceType:null,source:null,date:today(),
+   meta:{area,totalArea:total,shieldWidth:sw,shieldHeight:sh,shieldArea,actualArea:actual,reserve:r}
+ });
+ save();
+
+ el.formworkResult.innerHTML=`<div class="result">
+ <div>Площадь без запаса: <b>${area.toFixed(2)} м²</b></div>
+ <div>Площадь с запасом ${r}%: <b>${total.toFixed(2)} м²</b></div>
+ <div>Размер одного щита: <b>${sw.toFixed(2)} × ${sh.toFixed(2)} м</b></div>
+ <div>Площадь одного щита: <b>${shieldArea.toFixed(2)} м²</b></div>
+ <div class="big">${count} шт.</div>
+ <div>Фактическая площадь щитов: <b>${actual.toFixed(2)} м²</b></div>
+ <div class="notice">Количество округлено вверх до целого щита.</div>
+ </div>`;
+}
+
+function addSupplier(){
+ const n=el.sName.value.trim(),c=el.sCity.value.trim();
+ if(!n||!c)return alert("Укажите название и город");
+ db.suppliers.unshift({id:Date.now(),name:n,city:c,contact:el.sContact.value.trim(),desc:el.sDesc.value.trim(),date:today()});
+ save();
+ ["sName","sCity","sContact","sDesc"].forEach(id=>el[id].value="");
+ renderSuppliers();
+}
+function renderSuppliers(){
+ el.supplierList.innerHTML=db.suppliers.length?db.suppliers.map(s=>`
+ <div class="item"><h3>${esc(s.name)}</h3><div class="muted">📍 ${esc(s.city)} · ${esc(s.date)}</div>
+ ${s.desc?`<div>${esc(s.desc)}</div>`:""}${s.contact?`<div class="muted">Контакт: ${esc(s.contact)}</div>`:""}</div>`).join("")
+ :'<div class="empty">Поставщики пока не добавлены.</div>';
+}
+
+function addPrice(){
+ const m=el.pMaterial.value.trim(),p=+el.pPrice.value,c=el.pCity.value.trim();
+ if(!m||!(p>=0)||!c)return alert("Укажите материал, цену и город");
+ db.prices.unshift({
+   id:Date.now(),material:m,price:p,unit:el.pUnit.value,type:el.pType.value,
+   city:c,region:el.pRegion.value.trim(),date:el.pDate.value||today(),
+   vat:Number(el.pVat.value)||0,delivery:el.pDelivery.value,
+   source:el.pSource.value.trim()
+ });
+ save();
+ ["pMaterial","pPrice","pCity","pRegion","pSource"].forEach(id=>el[id].value="");
+ renderPrices();
+}
+function renderPrices(){
+ const m=(el.searchMaterial.value||"").toLowerCase(),c=(el.searchCity.value||"").toLowerCase();
+ const a=db.prices.filter(x=>(!m||x.material.toLowerCase().includes(m))&&(!c||x.city.toLowerCase().includes(c)));
+ el.pricesList.innerHTML=a.length?a.map(x=>`
+ <div class="item"><div class="row"><div><h3>${esc(x.material)}</h3>
+ <div class="big">${money(x.price)} ${esc(x.unit)}</div>
+ <div class="muted">📍 ${esc(x.city)}${x.region?" · "+esc(x.region):""} · актуально ${esc(x.date)}</div>
+ <span class="tag">${esc(x.type)}</span><span class="tag">НДС ${x.vat}%</span>
+ <span class="tag">Доставка: ${esc(x.delivery)}</span>
+ ${x.source?`<span class="tag">Источник: ${esc(x.source)}</span>`:""}
+ </div><button class="secondary danger" onclick="delPrice(${x.id})">Удалить</button></div></div>`).join("")
+ :'<div class="empty">Цены пока не добавлены.</div>';
+}
+function delPrice(id){db.prices=db.prices.filter(x=>x.id!==id);save();renderPrices();}
+
+function findPrice(material){
+ const target=String(material||"").toLowerCase().trim();
+ const exact=db.prices.filter(x=>String(x.material).toLowerCase().trim()===target);
+ if(exact.length)return exact[0];
+ const partial=db.prices.filter(x=>{
+   const m=String(x.material).toLowerCase();
+   return target.includes(m)||m.includes(target);
+ });
+ return partial[0]||null;
+}
+
+function calcLineCost(item){
+ const p=findPrice(item.name);
+ if(!p)return {...item,unitPrice:null,total:0,priceType:null,source:null};
+ const compatible =
+   (item.unit==="м³" && p.unit==="₽/м³") ||
+   (item.unit==="кг" && p.unit==="₽/кг") ||
+   (item.unit==="шт" && p.unit==="₽/шт") ||
+   (item.unit==="м" && p.unit==="₽/м") ||
+   (item.unit==="т" && p.unit==="₽/т");
+ if(!compatible)return {...item,unitPrice:null,total:0,priceType:null,source:null};
+ return {...item,unitPrice:p.price,total:Number(item.qty)*Number(p.price),priceType:p.type,source:p.source||"База цен",priceDate:p.date};
+}
+
+function recalculateEstimate(){
+ renderEstimate();
+}
+
+function renderEstimate(){
+ const priced=db.calculations.map(calcLineCost);
+ let direct=priced.reduce((sum,x)=>sum+(x.total||0),0);
+ const overhead=Number(el.estOverhead.value)||0;
+ const reserve=Number(el.estReserve.value)||0;
+ const delivery=Number(el.estDelivery.value)||0;
+ const overheadSum=direct*overhead/100;
+ const reserveBase=direct+overheadSum+delivery;
+ const reserveSum=reserveBase*reserve/100;
+ const grand=direct+overheadSum+delivery+reserveSum;
+
+ if(!priced.length){
+   el.estimateBox.innerHTML='<div class="empty">Расчётов пока нет. Сначала выполните расчёт бетона, арматуры или опалубки.</div>';
+   return;
+ }
+
+ let html=`
+ <div class="stat">
+ <div>Позиций<b>${priced.length}</b></div>
+ <div>С ценой<b>${priced.filter(x=>x.unitPrice!==null).length}</b></div>
+ <div>Без цены<b>${priced.filter(x=>x.unitPrice===null).length}</b></div>
+ </div>
+ <div class="item">
+ <h3>Позиции сметы</h3>`;
+
+ priced.slice().reverse().forEach(x=>{
+   html+=`<div class="price-line">
+   <div><b>${esc(x.type)}</b> · ${esc(x.name)}<br>
+   <span class="muted">${Number(x.qty).toFixed(2)} ${esc(x.unit)}</span>
+   ${x.unitPrice!==null?` · ${money(x.unitPrice)}/${esc(x.unit.replace("³","³"))}`:` · <span style="color:#b42318">цена не найдена</span>`}
+   ${x.priceType?` · <span class="tag">${esc(x.priceType)}</span>`:""}
+   </div>
+   <b>${x.unitPrice!==null?money(x.total):"—"}</b>
+   </div>`;
+   if(x.type==="Опалубка"&&x.meta){
+     html+=`<div class="muted">Площадь ${Number(x.meta.totalArea).toFixed(2)} м² · ${x.qty} щит. · фактическая площадь ${Number(x.meta.actualArea).toFixed(2)} м²</div>`;
+   }
+ });
+ html+=`</div>
+ <div class="item">
+ <div class="price-line"><span>Материалы / прямые затраты</span><b>${money(direct)}</b></div>
+ <div class="price-line"><span>Накладные ${overhead}%</span><b>${money(overheadSum)}</b></div>
+ <div class="price-line"><span>Доставка</span><b>${money(delivery)}</b></div>
+ <div class="price-line"><span>Резерв ${reserve}%</span><b>${money(reserveSum)}</b></div>
+ <div style="margin-top:12px">ИТОГО</div><div class="total">${money(grand)}</div>
+ </div>`;
+
+ const missing=priced.filter(x=>x.unitPrice===null);
+ if(missing.length){
+   html+=`<div class="notice">⚠️ Для ${missing.length} позиции(й) нет подходящей цены. Добавьте её в разделе «Цены», затем снова нажмите «Пересчитать смету».</div>`;
+ }
+ el.estimateBox.innerHTML=html;
+}
+
+function addKnowledge(){
+ const t=el.kTitle.value.trim(),x=el.kText.value.trim();
+ if(!t||!x)return alert("Заполните название и описание");
+ db.knowledge.unshift({id:Date.now(),title:t,cat:el.kCat.value,text:x,date:today(),status:"Практический опыт"});
+ save();el.kTitle.value="";el.kText.value="";renderKnowledge();
+}
+function renderKnowledge(){
+ el.knowledgeList.innerHTML=db.knowledge.length?db.knowledge.map(x=>`
+ <div class="item"><h3>${esc(x.title)}</h3><span class="tag">🟢 Практический опыт</span>
+ <span class="tag">${esc(x.cat)}</span><div style="margin-top:7px">${esc(x.text)}</div>
+ <div class="muted" style="margin-top:6px">${esc(x.date)}</div></div>`).join("")
+ :'<div class="empty">Публикаций пока нет.</div>';
+}
+
+function saveProfile(){
+ db.profile={name:el.profName.value.trim(),city:el.profCity.value.trim(),region:el.profRegion.value.trim(),radius:el.profRadius.value};
+ save();alert("Настройки сохранены");
+}
+
+el.pDate.value=today();
+showPage("objects");
+</script>
+</body>
+</html>
