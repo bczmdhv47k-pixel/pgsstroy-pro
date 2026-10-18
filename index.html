@@ -3231,10 +3231,11 @@ function renderNormatives(){
     const filtered = docs.filter(doc => {
 
         const categoryOK =
-            !category ||
-            category === "Все разделы" ||
-            category === "Все" ||
-            doc.category === category;
+    !category ||
+    category === "Все разделы" ||
+    category === "Все" ||
+    category === "Строительство" ||
+    doc.category === category;
 
         const typeOK =
             !type ||
