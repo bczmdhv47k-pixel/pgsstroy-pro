@@ -3196,35 +3196,203 @@ function searchNormatives(){
 function renderNormatives(){
 
     const box = document.getElementById("normativeList");
-
     if(!box) return;
 
-    const search = normativeState.search;
+    if(!window.normativeState){
+        window.normativeState = {
+            search: "",
+            category: "",
+            type: "",
+            status: "Все"
+        };
+    }
 
-    const filtered = normativeDocuments.filter(doc => {
+    const search = String(normativeState.search || "")
+        .trim()
+        .toLowerCase()
+        .replace(/ё/g, "е");
+
+    const categoryEl = document.getElementById("normativeCategory");
+    const typeEl = document.getElementById("normativeType");
+    const statusEl = document.getElementById("normativeStatus");
+
+    const category = categoryEl ? String(categoryEl.value || "") : "";
+    const type = typeEl ? String(typeEl.value || "") : "";
+    const status = statusEl ? String(statusEl.value || "") : "";
+
+    normativeState.category = category;
+    normativeState.type = type;
+    normativeState.status = status;
+
+    const docs = Array.isArray(normativeDocuments)
+        ? normativeDocuments
+        : [];
+
+    const filtered = docs.filter(doc => {
 
         const categoryOK =
-            normativeState.category === "Все" ||
-            doc.category === normativeState.category;
+            !category ||
+            category === "Все разделы" ||
+            category === "Все" ||
+            doc.category === category;
+
+        const typeOK =
+            !type ||
+            type === "Все типы" ||
+            type === "Все" ||
+            doc.type === type;
 
         const statusOK =
-            normativeState.status === "Все" ||
-            doc.status === normativeState.status;
+            !status ||
+            status === "Все статусы" ||
+            status === "Все" ||
+            doc.status === status;
 
         const haystack = [
+            doc.id,
             doc.title,
             doc.subtitle,
             doc.category,
             doc.type,
+            doc.status,
+            doc.applicability,
             doc.description,
             ...(doc.tags || [])
-        ].join(" ").toLowerCase();
+        ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .replace(/ё/g, "е");
 
         const searchOK =
-            !search || haystack.includes(search);
+            !search ||
+            haystack.includes(search);
 
-        return categoryOK && statusOK && searchOK;
+        return categoryOK && typeOK && statusOK && searchOK;
     });
+
+    if(!filtered.length){
+
+        box.innerHTML = `
+            <div class="card span-12">
+                <div class="empty">
+                    Ничего не найдено.
+                    <br>
+                    <small>
+                        Попробуйте изменить запрос или фильтры.
+                    </small>
+                </div>
+            </div>
+        `;
+
+        return;
+    }
+
+    box.innerHTML = filtered.map(doc => {
+
+        const statusClass =
+            doc.status === "Действует"
+                ? "badge-success"
+                : "badge";
+
+        const tags = (doc.tags || [])
+            .slice(0, 5)
+            .map(tag => `
+                <span class="tag">${esc(tag)}</span>
+            `)
+            .join("");
+
+        return `
+            <div class="card normative-card">
+
+                <div class="card-head">
+                    <div>
+                        <div class="card-title">
+                            ${esc(doc.title || "")}
+                        </div>
+
+                        <div class="muted">
+                            ${esc(doc.subtitle || "")}
+                        </div>
+                    </div>
+
+                    <span class="${statusClass}">
+                        ${esc(doc.status || "Статус не указан")}
+                    </span>
+                </div>
+
+                <div class="normative-meta">
+                    <span>
+                        📚 ${esc(doc.category || "")}
+                    </span>
+
+                    <span>
+                        📄 ${esc(doc.type || "")}
+                    </span>
+                </div>
+
+                ${
+                    doc.description
+                    ? `
+                        <div class="normative-description">
+                            ${esc(doc.description)}
+                        </div>
+                    `
+                    : ""
+                }
+
+                ${
+                    doc.applicability
+                    ? `
+                        <div class="normative-applicability">
+                            <b>Применение:</b>
+                            ${esc(doc.applicability)}
+                        </div>
+                    `
+                    : ""
+                }
+
+                ${
+                    tags
+                    ? `
+                        <div class="tags">
+                            ${tags}
+                        </div>
+                    `
+                    : ""
+                }
+
+                <div class="card-actions">
+
+                    ${
+                        doc.source
+                        ? `
+                            <button
+                                class="btn btn-secondary"
+                                type="button"
+                                onclick="window.open('${doc.source}','_blank')"
+                            >
+                                Открыть источник
+                            </button>
+                        `
+                        : ""
+                    }
+
+                    <button
+                        class="btn btn-secondary"
+                        type="button"
+                        onclick="showNormativeHint('${doc.id}')"
+                    >
+                        Подробнее
+                    </button>
+
+                </div>
+
+            </div>
+        `;
+
+    }).join("");
+}
 
 
     if(!filtered.length){
