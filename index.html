@@ -1,1543 +1,7396 @@
-document
-  .getElementById("calculateFormworkBtn")
-  .addEventListener(
-    "click",
-    () => {
-
-      const length =
-        num(
-          document
-            .getElementById("formworkLength")
-            .value
-        );
-
-      const width =
-        num(
-          document
-            .getElementById("formworkWidth")
-            .value
-        );
-
-      const height =
-        num(
-          document
-            .getElementById("formworkHeight")
-            .value
-        );
-
-      const reserve =
-        num(
-          document
-            .getElementById("formworkReserve")
-            .value
-        );
-
-      const shieldWidth =
-        num(
-          document
-            .getElementById("shieldWidth")
-            .value
-        );
-
-      const shieldHeight =
-        num(
-          document
-            .getElementById("shieldHeight")
-            .value
-        );
-
-      const objectId =
-        document
-          .getElementById("formworkObject")
-          .value || null;
-
-      if(
-        length <= 0 ||
-        width <= 0 ||
-        height <= 0 ||
-        shieldWidth <= 0 ||
-        shieldHeight <= 0
-      ){
-
-        alert(
-          "Введите размеры конструкции и щита."
-        );
-
-        return;
-      }
-
-      /*
-       * Площадь боковой поверхности:
-       * 2 × (длина + ширина) × высота
-       */
-
-      const area =
-        2 *
-        (length + width) *
-        height;
-
-      const totalArea =
-        area *
-        (1 + reserve / 100);
-
-      const shieldArea =
-        shieldWidth *
-        shieldHeight;
-
-      const shieldCount =
-        Math.ceil(
-          totalArea /
-          shieldArea
-        );
-
-      const actualShieldArea =
-        shieldCount *
-        shieldArea;
-
-      const calculation = {
-
-        id:uid("calc"),
-
-        type:"formwork",
-
-        objectId,
-
-        name:"Опалубка",
-
-        qty:Number(totalArea.toFixed(2)),
-
-        unit:"м²",
-
-        price:null,
-
-        priceType:null,
-
-        source:null,
-
-        createdAt:
-          new Date().toISOString(),
-
-        metadata:{
-          length,
-          width,
-          height,
-          reserve,
-          shieldWidth,
-          shieldHeight,
-          shieldArea,
-          shieldCount,
-          actualShieldArea
-        }
-
-      };
-
-      db.calculations.push(
-        calculation
-      );
-
-      saveDB();
-
-      document
-        .getElementById("formworkResult")
-        .innerHTML = `
-
-          <div class="result">
-
-            <div class="metric">
-              <span>Площадь опалубки</span>
-              <strong>
-                ${area.toFixed(2)} м²
-              </strong>
-            </div>
-
-            <div class="metric">
-              <span>Площадь с запасом ${reserve}%</span>
-              <strong>
-                ${totalArea.toFixed(2)} м²
-              </strong>
-            </div>
-
-            <div class="metric">
-              <span>Размер одного щита</span>
-              <strong>
-                ${shieldWidth} × ${shieldHeight} м
-              </strong>
-            </div>
-
-            <div class="metric">
-              <span>Площадь одного щита</span>
-              <strong>
-                ${shieldArea.toFixed(2)} м²
-              </strong>
-            </div>
-
-            <div class="metric">
-              <span>Количество щитов</span>
-              <strong>
-                ${shieldCount} шт.
-              </strong>
-            </div>
-
-            <div class="metric">
-              <span>Фактическая площадь щитов</span>
-              <strong>
-                ${actualShieldArea.toFixed(2)} м²
-              </strong>
-            </div>
-
-            <div style="margin-top:12px;">
-              Расчёт сохранён в смету.
-            </div>
-
-          </div>
-
-        `;
-
-    }
-  );
-
-
-/* =========================
-   МАТЕРИАЛЫ
-========================= */
-
-function renderMaterials(){
-
-  const list =
-    document.getElementById(
-      "materialsList"
-    );
-
-  const count =
-    document.getElementById(
-      "materialCount"
-    );
-
-  if(!list){
-    return;
-  }
-
-  count.textContent =
-    db.materials.length;
-
-  if(db.materials.length === 0){
-
-    list.innerHTML =
-      `<div class="empty">
-        Пока нет материалов
-      </div>`;
-
-    return;
-  }
-
-  list.innerHTML =
-    db.materials.map(item => {
-
-      const object =
-        db.objects.find(
-          obj => obj.id === item.objectId
-        );
-
-      return `
-
-        <div class="card"
-             style="margin-bottom:10px;box-shadow:none;border:1px solid #e5e7eb;">
-
-          <div class="card-header">
-
-            <div>
-
-              <strong>
-                ${escapeHTML(item.name)}
-              </strong>
-
-              <div style="font-size:12px;color:#6b7280;">
-                ${escapeHTML(
-                  object
-                    ? object.name
-                    : "Без объекта"
-                )}
-              </div>
-
-            </div>
-
-            <button
-              class="btn-danger btn-small"
-              onclick="deleteMaterial('${item.id}')">
-              Удалить
-            </button>
-
-          </div>
-
-          <div class="metric">
-            <span>Количество</span>
-            <strong>
-              ${item.qty} ${escapeHTML(item.unit)}
-            </strong>
-          </div>
-
-        </div>
-
-      `;
-
-    }).join("");
-
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PGSSTROY.PRO v0.6</title>
+
+<style>
+*{
+  box-sizing:border-box;
 }
 
+html,body{
+  margin:0;
+  padding:0;
+  background:#f4f6f8;
+  color:#17202a;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+}
 
-function deleteMaterial(id){
+body{
+  min-height:100vh;
+}
 
-  db.materials =
-    db.materials.filter(
-      item => item.id !== id
+button,
+input,
+select,
+textarea{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.app{
+  min-height:100vh;
+}
+
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:#111827;
+  color:#fff;
+  padding:14px 16px;
+  box-shadow:0 2px 12px rgba(0,0,0,.15);
+}
+
+.header-inner{
+  max-width:1200px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+
+.logo{
+  font-weight:800;
+  font-size:20px;
+  letter-spacing:.3px;
+}
+
+.logo span{
+  color:#60a5fa;
+}
+
+.header-sub{
+  font-size:12px;
+  color:#9ca3af;
+  margin-top:2px;
+}
+
+.container{
+  max-width:1200px;
+  margin:0 auto;
+  padding:18px 14px 40px;
+}
+
+.nav{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  padding:4px 0 14px;
+  scrollbar-width:none;
+}
+
+.nav::-webkit-scrollbar{
+  display:none;
+}
+
+.nav button{
+  border:0;
+  background:#fff;
+  color:#374151;
+  border-radius:10px;
+  padding:10px 13px;
+  white-space:nowrap;
+  box-shadow:0 1px 5px rgba(0,0,0,.08);
+}
+
+.nav button.active{
+  background:#2563eb;
+  color:#fff;
+}
+
+.page{
+  display:none;
+}
+
+.page.active{
+  display:block;
+}
+
+.page-title{
+  margin:4px 0 4px;
+  font-size:27px;
+  font-weight:800;
+}
+
+.page-description{
+  color:#6b7280;
+  margin-bottom:18px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  gap:14px;
+}
+
+.card{
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 2px 10px rgba(0,0,0,.06);
+}
+
+.card h2,
+.card h3{
+  margin-top:0;
+}
+
+.span-12{grid-column:span 12}
+.span-8{grid-column:span 8}
+.span-6{grid-column:span 6}
+.span-4{grid-column:span 4}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+
+.form-grid.three{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.field label{
+  font-size:13px;
+  color:#4b5563;
+  font-weight:600;
+}
+
+input,
+select,
+textarea{
+  width:100%;
+  border:1px solid #d1d5db;
+  border-radius:10px;
+  padding:10px 11px;
+  background:#fff;
+  color:#111827;
+  outline:none;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px rgba(37,99,235,.1);
+}
+
+textarea{
+  min-height:100px;
+  resize:vertical;
+}
+
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:14px;
+}
+
+.btn{
+  border:0;
+  border-radius:10px;
+  padding:10px 14px;
+  font-weight:700;
+}
+
+.btn-primary{
+  background:#2563eb;
+  color:#fff;
+}
+
+.btn-secondary{
+  background:#e5e7eb;
+  color:#111827;
+}
+
+.btn-success{
+  background:#16a34a;
+  color:#fff;
+}
+
+.btn-danger{
+  background:#dc2626;
+  color:#fff;
+}
+
+.btn-warning{
+  background:#f59e0b;
+  color:#111827;
+}
+
+.btn-small{
+  padding:7px 10px;
+  font-size:12px;
+}
+
+.result{
+  margin-top:14px;
+  padding:14px;
+  border-radius:12px;
+  background:#eff6ff;
+  border:1px solid #bfdbfe;
+}
+
+.result strong{
+  color:#1d4ed8;
+}
+
+.stat-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+}
+
+.stat{
+  padding:14px;
+  border-radius:12px;
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+}
+
+.stat-value{
+  font-size:23px;
+  font-weight:800;
+}
+
+.stat-label{
+  font-size:12px;
+  color:#6b7280;
+  margin-top:3px;
+}
+
+.list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.list-item{
+  padding:13px;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  background:#fff;
+}
+
+.list-item-title{
+  font-weight:800;
+  margin-bottom:5px;
+}
+
+.muted{
+  color:#6b7280;
+  font-size:13px;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:700;
+  margin-right:5px;
+  margin-bottom:4px;
+}
+
+.badge-green{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.badge-blue{
+  background:#dbeafe;
+  color:#1d4ed8;
+}
+
+.badge-purple{
+  background:#f3e8ff;
+  color:#7e22ce;
+}
+
+.badge-orange{
+  background:#ffedd5;
+  color:#c2410c;
+}
+
+.badge-gray{
+  background:#e5e7eb;
+  color:#374151;
+}
+
+.normative-card{
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:15px;
+  background:#fff;
+}
+
+.normative-title{
+  font-size:18px;
+  font-weight:800;
+  margin-bottom:4px;
+}
+
+.normative-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin:9px 0;
+}
+
+.normative-section{
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px solid #eef0f2;
+}
+
+.search-row{
+  display:flex;
+  gap:8px;
+}
+
+.search-row input{
+  flex:1;
+}
+
+.empty{
+  text-align:center;
+  padding:30px 15px;
+  color:#6b7280;
+}
+
+.table-wrap{
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:650px;
+}
+
+th,
+td{
+  padding:10px;
+  border-bottom:1px solid #e5e7eb;
+  text-align:left;
+  vertical-align:top;
+}
+
+th{
+  font-size:12px;
+  color:#6b7280;
+  background:#f8fafc;
+}
+
+.warning-box{
+  padding:13px;
+  border-radius:12px;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  color:#9a3412;
+  margin-top:12px;
+}
+
+.info-box{
+  padding:13px;
+  border-radius:12px;
+  background:#eff6ff;
+  border:1px solid #bfdbfe;
+  color:#1e40af;
+  margin-top:12px;
+}
+
+.success-box{
+  padding:13px;
+  border-radius:12px;
+  background:#f0fdf4;
+  border:1px solid #bbf7d0;
+  color:#166534;
+  margin-top:12px;
+}
+
+.kpi{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:9px 0;
+  border-bottom:1px solid #eef0f2;
+}
+
+.kpi:last-child{
+  border-bottom:0;
+}
+
+.kpi span:last-child{
+  font-weight:800;
+}
+
+.section-title{
+  font-size:18px;
+  font-weight:800;
+  margin:0 0 10px;
+}
+
+.small{
+  font-size:12px;
+}
+
+hr{
+  border:0;
+  border-top:1px solid #e5e7eb;
+  margin:18px 0;
+}
+
+@media(max-width:800px){
+  .span-8,
+  .span-6,
+  .span-4{
+    grid-column:span 12;
+  }
+
+  .form-grid,
+  .form-grid.three{
+    grid-template-columns:1fr;
+  }
+
+  .stat-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .header-inner{
+    align-items:flex-start;
+  }
+}
+
+@media(max-width:480px){
+  .container{
+    padding:14px 10px 30px;
+  }
+
+  .page-title{
+    font-size:23px;
+  }
+
+  .card{
+    padding:13px;
+  }
+
+  .stat-grid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .btn{
+    width:auto;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header class="header">
+  <div class="header-inner">
+    <div>
+      <div class="logo">PGSSTROY<span>.PRO</span></div>
+      <div class="header-sub">Строительство · ЛЭП · Нормативы · Расчёты</div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+<nav class="nav">
+  <button data-page="dashboard" onclick="showPage('dashboard')">Главная</button>
+  <button data-page="objects" onclick="showPage('objects')">Объекты</button>
+  <button data-page="concrete" onclick="showPage('concrete')">Бетон</button>
+  <button data-page="rebar" onclick="showPage('rebar')">Арматура</button>
+  <button data-page="materials" onclick="showPage('materials')">Материалы</button>
+  <button data-page="formwork" onclick="showPage('formwork')">Опалубка</button>
+  <button data-page="estimate" onclick="showPage('estimate')">Смета</button>
+  <button data-page="suppliers" onclick="showPage('suppliers')">Поставщики</button>
+  <button data-page="prices" onclick="showPage('prices')">Цены</button>
+  <button data-page="power" onclick="showPage('power')">ЛЭП</button>
+  <button data-page="normatives" onclick="showPage('normatives')">📚 Нормативы</button>
+  <button data-page="knowledge" onclick="showPage('knowledge')">База опыта</button>
+  <button data-page="documents" onclick="showPage('documents')">Документы</button>
+  <button data-page="profile" onclick="showPage('profile')">Профиль</button>
+</nav>
+
+<!-- DASHBOARD -->
+<section id="page-dashboard" class="page">
+  <h1 class="page-title">PGSSTROY.PRO</h1>
+  <div class="page-description">
+    Профессиональная строительная платформа для расчётов, объектов,
+    нормативов, ЛЭП, материалов и смет.
+  </div>
+
+  <div class="grid">
+    <div class="card span-12">
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-value" id="statObjects">0</div>
+          <div class="stat-label">Объектов</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="statCalculations">0</div>
+          <div class="stat-label">Расчётов</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="statMaterials">0</div>
+          <div class="stat-label">Материалов</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="statNormatives">0</div>
+          <div class="stat-label">Нормативов</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card span-6">
+      <h3>Быстрый доступ</h3>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="showPage('concrete')">Расчёт бетона</button>
+        <button class="btn btn-primary" onclick="showPage('rebar')">Расчёт арматуры</button>
+        <button class="btn btn-primary" onclick="showPage('formwork')">Опалубка</button>
+        <button class="btn btn-primary" onclick="showPage('power')">Конструктор ЛЭП</button>
+        <button class="btn btn-secondary" onclick="showPage('normatives')">Нормативная база</button>
+      </div>
+    </div>
+
+    <div class="card span-6">
+      <h3>Принцип PGSSTROY</h3>
+      <p class="muted">
+        Нормативное требование, расчётная рекомендация и практический опыт
+        должны быть разделены. Платформа не должна выдавать опыт пользователя
+        как обязательную норму.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- OBJECTS -->
+<section id="page-objects" class="page">
+  <h1 class="page-title">Объекты</h1>
+  <div class="page-description">
+    Создавай объекты и связывай с ними расчёты.
+  </div>
+
+  <div class="grid">
+    <div class="card span-4">
+      <h3>Новый объект</h3>
+
+      <div class="field">
+        <label>Название</label>
+        <input id="objectName" placeholder="Например: ВЛ 110 кВ">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Адрес / район</label>
+        <input id="objectAddress" placeholder="Нальчик / район">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Дата</label>
+        <input id="objectDate" type="date">
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="addObject()">Добавить</button>
+      </div>
+    </div>
+
+    <div class="card span-8">
+      <h3>Мои объекты</h3>
+      <div id="objectsList" class="list"></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONCRETE -->
+<section id="page-concrete" class="page">
+  <h1 class="page-title">Расчёт бетона</h1>
+  <div class="page-description">
+    Геометрический расчёт объёма бетона с резервом.
+  </div>
+
+  <div class="grid">
+    <div class="card span-6">
+      <h3>Исходные данные</h3>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>Длина, м</label>
+          <input id="concreteLength" type="number" step="0.01">
+        </div>
+
+        <div class="field">
+          <label>Ширина, м</label>
+          <input id="concreteWidth" type="number" step="0.01">
+        </div>
+
+        <div class="field">
+          <label>Толщина, м</label>
+          <input id="concreteThickness" type="number" step="0.01">
+        </div>
+
+        <div class="field">
+          <label>Резерв, %</label>
+          <input id="concreteReserve" type="number" value="5" step="0.1">
+        </div>
+
+        <div class="field">
+          <label>Класс бетона</label>
+          <select id="concreteClass">
+            <option>B15</option>
+            <option>B20</option>
+            <option selected>B25</option>
+            <option>B30</option>
+            <option>B35</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Объект</label>
+          <select id="concreteObject"></select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="calculateConcrete()">Рассчитать</button>
+      </div>
+
+      <div id="concreteResult"></div>
+    </div>
+
+    <div class="card span-6">
+      <h3>Нормативная база</h3>
+
+      <div class="info-box">
+        Для конструкционного бетона и железобетона применяются соответствующие
+        нормативные документы и проектные решения. Конкретные требования
+        необходимо проверять по применимому проекту и действующей нормативной базе.
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-secondary" onclick="openNormativeCategory('Бетон и железобетон')">
+          📚 Нормативы по бетону
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REBAR -->
+<section id="page-rebar" class="page">
+  <h1 class="page-title">Расчёт арматуры</h1>
+  <div class="page-description">
+    Предварительный расчёт количества стержней, длины и теоретической массы.
+  </div>
+
+  <div class="grid">
+    <div class="card span-8">
+      <h3>Исходные данные</h3>
+
+      <div class="form-grid three">
+        <div class="field">
+          <label>Длина, м</label>
+          <input id="rebarLength" type="number" step="0.01">
+        </div>
+
+        <div class="field">
+          <label>Ширина, м</label>
+          <input id="rebarWidth" type="number" step="0.01">
+        </div>
+
+        <div class="field">
+          <label>Шаг, мм</label>
+          <input id="rebarStep" type="number" value="200">
+        </div>
+
+        <div class="field">
+          <label>Диаметр, мм</label>
+          <input id="rebarDiameter" type="number" value="12">
+        </div>
+
+        <div class="field">
+          <label>Количество слоёв</label>
+          <input id="rebarLayers" type="number" value="2">
+        </div>
+
+        <div class="field">
+          <label>Резерв, %</label>
+          <input id="rebarReserve" type="number" value="5">
+        </div>
+
+        <div class="field">
+          <label>Объект</label>
+          <select id="rebarObject"></select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="calculateRebar()">Рассчитать</button>
+      </div>
+
+      <div id="rebarResult"></div>
+    </div>
+
+    <div class="card span-4">
+      <h3>Важно</h3>
+      <div class="warning-box">
+        Расчёт является предварительным геометрическим расчётом расхода арматуры
+        и не заменяет расчёт конструкций по проектной документации.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MATERIALS -->
+<section id="page-materials" class="page">
+  <h1 class="page-title">Материалы</h1>
+  <div class="page-description">
+    Формирование потребности в основных строительных материалах.
+  </div>
+
+  <div class="grid">
+    <div class="card span-4">
+      <h3>Добавить потребность</h3>
+
+      <div class="field">
+        <label>Материал</label>
+        <select id="materialName">
+          <option>ПГС</option>
+          <option>Песок</option>
+          <option>Щебень</option>
+          <option>Цемент</option>
+          <option>Бетон B25</option>
+          <option>Арматура</option>
+          <option>Опалубка</option>
+        </select>
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Количество</label>
+        <input id="materialQty" type="number" step="0.01">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Единица</label>
+        <select id="materialUnit">
+          <option>м³</option>
+          <option>т</option>
+          <option>кг</option>
+          <option>шт</option>
+          <option>м</option>
+          <option>м²</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="addMaterial()">Добавить</button>
+      </div>
+    </div>
+
+    <div class="card span-8">
+      <h3>Потребность</h3>
+      <div id="materialsList" class="list"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FORMWORK -->
+<section id="page-formwork" class="page">
+  <h1 class="page-title">Расчёт опалубки</h1>
+  <div class="page-description">
+    Расчёт площади опалубки и количества щитов.
+  </div>
+
+  <div class="grid">
+    <div class="card span-7">
+      <h3>Исходные данные</h3>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>Длина, м</label>
+          <input id="formLength" type="number" step="0.01">
+        </div>
+
+        <div class="field">
+          <label>Ширина, м</label>
+          <input id="formWidth" type="number" step="0.01">
+        </div>
+
+        <div class="field">
+          <label>Высота, м</label>
+          <input id="formHeight" type="number" step="0.01">
+        </div>
+
+        <div class="field">
+          <label>Резерв, %</label>
+          <input id="formReserve" type="number" value="5" step="0.1">
+        </div>
+
+        <div class="field">
+          <label>Ширина щита, м</label>
+          <input id="shieldWidth" type="number" value="1.2" step="0.01">
+        </div>
+
+        <div class="field">
+          <label>Высота щита, м</label>
+          <input id="shieldHeight" type="number" value="3" step="0.01">
+        </div>
+
+        <div class="field">
+          <label>Объект</label>
+          <select id="formObject"></select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="calculateFormwork()">Рассчитать</button>
+      </div>
+
+      <div id="formworkResult"></div>
+    </div>
+
+    <div class="card span-5">
+      <h3>Что считаем</h3>
+
+      <div class="kpi">
+        <span>Площадь опалубки</span>
+        <span>м²</span>
+      </div>
+
+      <div class="kpi">
+        <span>Площадь одного щита</span>
+        <span>м²</span>
+      </div>
+
+      <div class="kpi">
+        <span>Количество щитов</span>
+        <span>шт</span>
+      </div>
+
+      <div class="kpi">
+        <span>Фактическая площадь щитов</span>
+        <span>м²</span>
+      </div>
+
+      <div class="info-box">
+        Количество щитов округляется вверх до целого количества.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ESTIMATE -->
+<section id="page-estimate" class="page">
+  <h1 class="page-title">Смета</h1>
+  <div class="page-description">
+    Предварительная стоимость на основании сохранённых расчётов и цен.
+  </div>
+
+  <div class="grid">
+    <div class="card span-12">
+      <div class="form-grid three">
+        <div class="field">
+          <label>Накладные расходы, %</label>
+          <input id="estimateOverhead" type="number" value="10">
+        </div>
+
+        <div class="field">
+          <label>Доставка, %</label>
+          <input id="estimateDelivery" type="number" value="0">
+        </div>
+
+        <div class="field">
+          <label>Резерв, %</label>
+          <input id="estimateReserve" type="number" value="5">
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="calculateEstimate()">Сформировать смету</button>
+      </div>
+
+      <div id="estimateResult"></div>
+    </div>
+  </div>
+</section>
+
+<!-- SUPPLIERS -->
+<section id="page-suppliers" class="page">
+  <h1 class="page-title">Поставщики</h1>
+  <div class="page-description">
+    Локальная база поставщиков материалов и услуг.
+  </div>
+
+  <div class="grid">
+    <div class="card span-4">
+      <h3>Добавить поставщика</h3>
+
+      <div class="field">
+        <label>Название</label>
+        <input id="supplierName">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Город</label>
+        <input id="supplierCity">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Контакт</label>
+        <input id="supplierContact">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Описание</label>
+        <textarea id="supplierDescription"></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="addSupplier()">Добавить</button>
+      </div>
+    </div>
+
+    <div class="card span-8">
+      <h3>Поставщики</h3>
+      <div id="suppliersList" class="list"></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICES -->
+<section id="page-prices" class="page">
+  <h1 class="page-title">Цены</h1>
+  <div class="page-description">
+    Локальная база цен. В дальнейшем подключается к ФГИС ЦС и внешним источникам.
+  </div>
+
+  <div class="grid">
+    <div class="card span-5">
+      <h3>Добавить цену</h3>
+
+      <div class="field">
+        <label>Материал</label>
+        <input id="priceMaterial">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Цена</label>
+        <input id="priceValue" type="number" step="0.01">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Единица</label>
+        <select id="priceUnit">
+          <option>₽/м³</option>
+          <option>₽/т</option>
+          <option>₽/кг</option>
+          <option>₽/шт</option>
+          <option>₽/м</option>
+          <option>₽/м²</option>
+        </select>
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Тип цены</label>
+        <select id="priceType">
+          <option>Рыночная</option>
+          <option>Моя</option>
+          <option>Сметная</option>
+        </select>
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Город</label>
+        <input id="priceCity">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Регион</label>
+        <input id="priceRegion" value="Кабардино-Балкария">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Дата</label>
+        <input id="priceDate" type="date">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>НДС, %</label>
+        <input id="priceVat" type="number" value="22">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Доставка</label>
+        <input id="priceDelivery">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Источник</label>
+        <input id="priceSource" placeholder="ФГИС ЦС / поставщик / КП">
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="addPrice()">Добавить цену</button>
+      </div>
+    </div>
+
+    <div class="card span-7">
+      <h3>База цен</h3>
+
+      <div class="search-row">
+        <input id="priceSearch" placeholder="Поиск по материалу или городу" oninput="renderPrices()">
+      </div>
+
+      <div id="pricesList" class="list" style="margin-top:12px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- POWER -->
+<section id="page-power" class="page">
+  <h1 class="page-title">⚡ Конструктор ЛЭП</h1>
+  <div class="page-description">
+    Предварительная оценка основных параметров воздушной линии электропередачи.
+  </div>
+
+  <div class="grid">
+    <div class="card span-8">
+      <h3>Исходные данные линии</h3>
+
+      <div class="form-grid three">
+        <div class="field">
+          <label>Напряжение</label>
+          <select id="powerVoltage">
+            <option>0.4 кВ</option>
+            <option>6 кВ</option>
+            <option>10 кВ</option>
+            <option>20 кВ</option>
+            <option>35 кВ</option>
+            <option selected>110 кВ</option>
+            <option>220 кВ</option>
+            <option>330 кВ</option>
+            <option>500 кВ</option>
+            <option>750 кВ</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Мощность, МВт</label>
+          <input id="powerMW" type="number" step="0.1">
+        </div>
+
+        <div class="field">
+          <label>Длина трассы, км</label>
+          <input id="powerLength" type="number" step="0.01">
+        </div>
+
+        <div class="field">
+          <label>Количество цепей</label>
+          <select id="powerChains">
+            <option>1</option>
+            <option selected>2</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Средний пролёт, м</label>
+          <input id="powerSpan" type="number" value="250">
+        </div>
+
+        <div class="field">
+          <label>Количество углов</label>
+          <input id="powerAngles" type="number" value="0">
+        </div>
+
+        <div class="field">
+          <label>Тип опоры</label>
+          <select id="powerSupport">
+            <option>ЖБ промежуточная</option>
+            <option>ЖБ анкерная</option>
+            <option>Металлическая промежуточная</option>
+            <option>Металлическая анкерная</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Провод</label>
+          <input id="powerWire" value="АС 300/39">
+        </div>
+
+        <div class="field">
+          <label>Проводов в фазе</label>
+          <input id="powerWiresPerPhase" type="number" value="1">
+        </div>
+
+        <div class="field">
+          <label>Грозотрос</label>
+          <select id="powerGroundWire">
+            <option>Нет</option>
+            <option selected>Да</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>ОКГТ</label>
+          <select id="powerOKGT">
+            <option selected>Нет</option>
+            <option>Да</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Запас провода, %</label>
+          <input id="powerReserve" type="number" value="3">
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="calculatePowerLine()">Рассчитать ЛЭП</button>
+        <button class="btn btn-secondary" onclick="openNormativeCategory('ЛЭП и электроэнергетика')">
+          📚 Нормативы ЛЭП
+        </button>
+      </div>
+
+      <div id="powerResult"></div>
+    </div>
+
+    <div class="card span-4">
+      <h3>Нормативная база ЛЭП</h3>
+
+      <div class="list">
+        <div class="list-item">
+          <div class="list-item-title">СП 76.13330.2016</div>
+          <div class="muted">Электротехнические устройства</div>
+          <div class="normative-meta">
+            <span class="badge badge-green">Действует</span>
+          </div>
+        </div>
+
+        <div class="list-item">
+          <div class="list-item-title">Приказ Минэнерго №884</div>
+          <div class="muted">
+            Требования к технологическому проектированию объектов электросетевого хозяйства.
+          </div>
+        </div>
+      </div>
+
+      <div class="warning-box">
+        Расчёт ЛЭП в текущей версии является предварительным.
+        Он не заменяет проектирование, расчёт режимов, механические расчёты,
+        расчёт фундаментов и проверку проектной документации.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NORMATIVES -->
+<section id="page-normatives" class="page">
+  <h1 class="page-title">📚 Нормативная база</h1>
+  <div class="page-description">
+    Строительные, электротехнические и нормативные документы PGSSTROY.PRO.
+  </div>
+
+  <div class="grid">
+    <div class="card span-12">
+      <div class="search-row">
+        <input
+          id="normativeSearch"
+          placeholder="Например: бетон, арматура, фундамент, ЛЭП, опалубка..."
+          oninput="renderNormatives()"
+        >
+        <button class="btn btn-primary" onclick="renderNormatives()">Найти</button>
+      </div>
+
+      <div class="form-grid three" style="margin-top:12px">
+        <div class="field">
+          <label>Раздел</label>
+          <select id="normativeCategory" onchange="renderNormatives()">
+            <option value="">Все разделы</option>
+            <option>Строительство</option>
+            <option>Бетон и железобетон</option>
+            <option>Основания и фундаменты</option>
+            <option>Земляные работы</option>
+            <option>Организация строительства</option>
+            <option>ЛЭП и электроэнергетика</option>
+            <option>Безопасность</option>
+            <option>Проектирование и документация</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Тип документа</label>
+          <select id="normativeType" onchange="renderNormatives()">
+            <option value="">Все типы</option>
+            <option>ФЗ</option>
+            <option>СП</option>
+            <option>ГОСТ</option>
+            <option>ГОСТ Р</option>
+            <option>Приказ</option>
+            <option>ПУЭ</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Статус</label>
+          <select id="normativeStatus" onchange="renderNormatives()">
+            <option value="">Все</option>
+            <option>Действует</option>
+            <option>Заменён</option>
+            <option>Отменён</option>
+            <option>Проект</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card span-12">
+      <div id="normativesList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- KNOWLEDGE -->
+<section id="page-knowledge" class="page">
+  <h1 class="page-title">База опыта</h1>
+  <div class="page-description">
+    Практический опыт специалистов. Не является нормативным требованием.
+  </div>
+
+  <div class="grid">
+    <div class="card span-4">
+      <h3>Добавить опыт</h3>
+
+      <div class="field">
+        <label>Название</label>
+        <input id="knowledgeTitle">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Категория</label>
+        <select id="knowledgeCategory">
+          <option>Бетон</option>
+          <option>Арматура</option>
+          <option>Фундаменты</option>
+          <option>Опалубка</option>
+          <option>ЛЭП</option>
+          <option>Монтаж</option>
+          <option>Другое</option>
+        </select>
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Описание</label>
+        <textarea id="knowledgeText"></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="addKnowledge()">Добавить</button>
+      </div>
+    </div>
+
+    <div class="card span-8">
+      <h3>Практический опыт</h3>
+      <div id="knowledgeList" class="list"></div>
+    </div>
+  </div>
+</section>
+
+<!-- DOCUMENTS -->
+<section id="page-documents" class="page">
+  <h1 class="page-title">Документы</h1>
+  <div class="page-description">
+    Раздел для будущего хранения проектной, исполнительной и рабочей документации.
+  </div>
+
+  <div class="card">
+    <div class="info-box">
+      Следующий этап: загрузка файлов, привязка документов к объектам,
+      версиям проекта и нормативным требованиям.
+    </div>
+  </div>
+</section>
+
+<!-- PROFILE -->
+<section id="page-profile" class="page">
+  <h1 class="page-title">Профиль</h1>
+  <div class="page-description">
+    Локальные настройки пользователя.
+  </div>
+
+  <div class="grid">
+    <div class="card span-6">
+      <div class="field">
+        <label>Имя</label>
+        <input id="profileName">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Город</label>
+        <input id="profileCity">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Регион</label>
+        <input id="profileRegion">
+      </div>
+
+      <div class="field" style="margin-top:10px">
+        <label>Радиус работы, км</label>
+        <input id="profileRadius" type="number">
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="saveProfile()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+</div><script>
+"use strict";
+
+/* =========================================================
+   PGSSTROY.PRO v0.6
+   LOCAL DATABASE
+========================================================= */
+
+const DB_KEY = "pgsstroy_v06";
+
+const emptyDB = {
+  schemaVersion: 6,
+  objects: [],
+  materials: [],
+  calculations: [],
+  prices: [],
+  suppliers: [],
+  knowledge: [],
+  estimates: [],
+  profile: {}
+};
+
+let db = loadDB();
+
+/* =========================================================
+   DATABASE
+========================================================= */
+
+function loadDB(){
+  try{
+    const raw = localStorage.getItem(DB_KEY);
+
+    if(!raw){
+      return JSON.parse(JSON.stringify(emptyDB));
+    }
+
+    const parsed = JSON.parse(raw);
+
+    return {
+      ...JSON.parse(JSON.stringify(emptyDB)),
+      ...parsed
+    };
+
+  }catch(error){
+    console.error("Ошибка загрузки базы:", error);
+    return JSON.parse(JSON.stringify(emptyDB));
+  }
+}
+
+function saveDB(){
+  try{
+    localStorage.setItem(DB_KEY, JSON.stringify(db));
+  }catch(error){
+    console.error("Ошибка сохранения базы:", error);
+  }
+
+  updateDashboard();
+}
+
+function uid(prefix="id"){
+  return prefix + "_" +
+    Date.now().toString(36) +
+    Math.random().toString(36).substring(2,8);
+}
+
+function esc(value){
+  if(value === null || value === undefined){
+    return "";
+  }
+
+  return String(value)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+function num(id){
+  const el = document.getElementById(id);
+
+  if(!el){
+    return 0;
+  }
+
+  const value = parseFloat(el.value);
+
+  return Number.isFinite(value) ? value : 0;
+}
+
+function val(id){
+  const el = document.getElementById(id);
+  return el ? el.value : "";
+}
+
+function setVal(id,value){
+  const el = document.getElementById(id);
+
+  if(el){
+    el.value = value ?? "";
+  }
+}
+
+function round(value, digits=2){
+  const multiplier = Math.pow(10,digits);
+  return Math.round((value + Number.EPSILON) * multiplier) / multiplier;
+}
+
+function money(value){
+  return new Intl.NumberFormat("ru-RU",{
+    maximumFractionDigits:2
+  }).format(value || 0) + " ₽";
+}
+
+function numberRU(value,digits=2){
+  return new Intl.NumberFormat("ru-RU",{
+    minimumFractionDigits:0,
+    maximumFractionDigits:digits
+  }).format(value || 0);
+}
+
+function today(){
+  return new Date().toISOString().slice(0,10);
+}
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+function showPage(page){
+  document.querySelectorAll(".page").forEach(section=>{
+    section.classList.remove("active");
+  });
+
+  const target = document.getElementById("page-" + page);
+
+  if(target){
+    target.classList.add("active");
+  }
+
+  document.querySelectorAll(".nav button").forEach(button=>{
+    button.classList.toggle(
+      "active",
+      button.dataset.page === page
     );
+  });
+
+  if(page === "dashboard"){
+    updateDashboard();
+  }
+
+  if(page === "objects"){
+    renderObjects();
+    populateObjectSelects();
+  }
+
+  if(page === "materials"){
+    renderMaterials();
+  }
+
+  if(page === "suppliers"){
+    renderSuppliers();
+  }
+
+  if(page === "prices"){
+    renderPrices();
+  }
+
+  if(page === "knowledge"){
+    renderKnowledge();
+  }
+
+  if(page === "normatives"){
+    renderNormatives();
+  }
+
+  if(page === "profile"){
+    loadProfile();
+  }
+
+  if(page === "estimate"){
+    renderEstimatePreview();
+  }
+}
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+function updateDashboard(){
+  const statObjects = document.getElementById("statObjects");
+  const statCalculations = document.getElementById("statCalculations");
+  const statMaterials = document.getElementById("statMaterials");
+  const statNormatives = document.getElementById("statNormatives");
+
+  if(statObjects){
+    statObjects.textContent = db.objects.length;
+  }
+
+  if(statCalculations){
+    statCalculations.textContent = db.calculations.length;
+  }
+
+  if(statMaterials){
+    statMaterials.textContent = db.materials.length;
+  }
+
+  if(statNormatives){
+    statNormatives.textContent = normativeDocuments.length;
+  }
+}
+
+/* =========================================================
+   OBJECTS
+========================================================= */
+
+function addObject(){
+  const name = val("objectName").trim();
+
+  if(!name){
+    alert("Введите название объекта.");
+    return;
+  }
+
+  const object = {
+    id: uid("obj"),
+    name,
+    address: val("objectAddress").trim(),
+    date: val("objectDate") || today(),
+    createdAt: new Date().toISOString()
+  };
+
+  db.objects.unshift(object);
 
   saveDB();
+
+  setVal("objectName","");
+  setVal("objectAddress","");
+  setVal("objectDate",today());
+
+  renderObjects();
+  populateObjectSelects();
+}
+
+function deleteObject(id){
+  const object = db.objects.find(item => item.id === id);
+
+  if(!object){
+    return;
+  }
+
+  if(!confirm("Удалить объект «" + object.name + "» и связанные с ним расчёты?")){
+    return;
+  }
+
+  db.objects = db.objects.filter(item => item.id !== id);
+
+  db.calculations = db.calculations.filter(
+    item => item.objectId !== id
+  );
+
+  saveDB();
+
+  renderObjects();
+  populateObjectSelects();
+}
+
+function renderObjects(){
+  const container = document.getElementById("objectsList");
+
+  if(!container){
+    return;
+  }
+
+  if(db.objects.length === 0){
+    container.innerHTML = `
+      <div class="empty">
+        Пока нет объектов.<br>
+        Создай первый объект слева.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = db.objects.map(object=>{
+    const calcCount = db.calculations.filter(
+      calc => calc.objectId === object.id
+    ).length;
+
+    return `
+      <div class="list-item">
+        <div class="list-item-title">
+          ${esc(object.name)}
+        </div>
+
+        <div class="muted">
+          ${esc(object.address || "Адрес не указан")}
+        </div>
+
+        <div class="normative-meta">
+          <span class="badge badge-blue">
+            ${calcCount} расч.
+          </span>
+
+          <span class="badge badge-gray">
+            ${esc(object.date || "")}
+          </span>
+        </div>
+
+        <div class="actions">
+          <button
+            class="btn btn-danger btn-small"
+            onclick="deleteObject('${object.id}')"
+          >
+            Удалить
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function populateObjectSelects(){
+  const ids = [
+    "concreteObject",
+    "rebarObject",
+    "formObject"
+  ];
+
+  ids.forEach(id=>{
+    const select = document.getElementById(id);
+
+    if(!select){
+      return;
+    }
+
+    const current = select.value;
+
+    select.innerHTML = `
+      <option value="">Без объекта</option>
+      ${
+        db.objects.map(object=>`
+          <option value="${esc(object.id)}">
+            ${esc(object.name)}
+          </option>
+        `).join("")
+      }
+    `;
+
+    if(db.objects.some(object => object.id === current)){
+      select.value = current;
+    }
+  });
+}
+
+/* =========================================================
+   CONCRETE
+========================================================= */
+
+function calculateConcrete(){
+  const length = num("concreteLength");
+  const width = num("concreteWidth");
+  const thickness = num("concreteThickness");
+  const reserve = num("concreteReserve");
+  const concreteClass = val("concreteClass");
+  const objectId = val("concreteObject");
+
+  if(length <= 0 || width <= 0 || thickness <= 0){
+    alert("Введите длину, ширину и толщину.");
+    return;
+  }
+
+  const baseVolume = length * width * thickness;
+  const totalVolume = baseVolume * (1 + reserve / 100);
+
+  const calculation = {
+    id: uid("calc"),
+    type: "concrete",
+    name: "Бетон " + concreteClass,
+    objectId,
+    qty: round(totalVolume,3),
+    unit: "м³",
+    createdAt: new Date().toISOString(),
+    metadata: {
+      length,
+      width,
+      thickness,
+      reserve,
+      concreteClass,
+      baseVolume
+    }
+  };
+
+  db.calculations.unshift(calculation);
+
+  saveDB();
+
+  const result = document.getElementById("concreteResult");
+
+  if(result){
+    result.innerHTML = `
+      <div class="result">
+        <div class="kpi">
+          <span>Чистый объём</span>
+          <span>${numberRU(baseVolume,3)} м³</span>
+        </div>
+
+        <div class="kpi">
+          <span>Резерв</span>
+          <span>${numberRU(reserve,1)} %</span>
+        </div>
+
+        <div class="kpi">
+          <span>Итого бетона</span>
+          <span>${numberRU(totalVolume,3)} м³</span>
+        </div>
+
+        <div class="kpi">
+          <span>Класс</span>
+          <span>${esc(concreteClass)}</span>
+        </div>
+
+        <div class="success-box">
+          Расчёт сохранён в базе PGSSTROY.PRO.
+        </div>
+      </div>
+    `;
+  }
+}
+
+/* =========================================================
+   REBAR
+========================================================= */
+
+function calculateRebar(){
+  const length = num("rebarLength");
+  const width = num("rebarWidth");
+  const stepMm = num("rebarStep");
+  const diameter = num("rebarDiameter");
+  const layers = Math.max(1,Math.round(num("rebarLayers")));
+  const reserve = num("rebarReserve");
+  const objectId = val("rebarObject");
+
+  if(
+    length <= 0 ||
+    width <= 0 ||
+    stepMm <= 0 ||
+    diameter <= 0
+  ){
+    alert("Проверьте исходные данные.");
+    return;
+  }
+
+  const step = stepMm / 1000;
+
+  const barsAcrossWidth =
+    Math.ceil(width / step) + 1;
+
+  const barsAcrossLength =
+    Math.ceil(length / step) + 1;
+
+  const lengthBars =
+    barsAcrossWidth * length;
+
+  const widthBars =
+    barsAcrossLength * width;
+
+  const totalLength =
+    (lengthBars + widthBars) * layers;
+
+  const withReserve =
+    totalLength * (1 + reserve / 100);
+
+  const weightPerMeter =
+    diameter * diameter / 162;
+
+  const theoreticalWeight =
+    withReserve * weightPerMeter;
+
+  const calculation = {
+    id: uid("calc"),
+    type: "rebar",
+    name: "Арматура Ø" + diameter,
+    objectId,
+    qty: round(theoreticalWeight,2),
+    unit: "кг",
+    createdAt: new Date().toISOString(),
+    metadata: {
+      length,
+      width,
+      stepMm,
+      diameter,
+      layers,
+      reserve,
+      barsAcrossWidth,
+      barsAcrossLength,
+      totalLength: withReserve,
+      weightPerMeter
+    }
+  };
+
+  db.calculations.unshift(calculation);
+
+  saveDB();
+
+  const result = document.getElementById("rebarResult");
+
+  if(result){
+    result.innerHTML = `
+      <div class="result">
+
+        <div class="kpi">
+          <span>Стержней по длине</span>
+          <span>${numberRU(barsAcrossWidth,0)} шт</span>
+        </div>
+
+        <div class="kpi">
+          <span>Стержней по ширине</span>
+          <span>${numberRU(barsAcrossLength,0)} шт</span>
+        </div>
+
+        <div class="kpi">
+          <span>Общая длина</span>
+          <span>${numberRU(withReserve,2)} м</span>
+        </div>
+
+        <div class="kpi">
+          <span>Теоретический вес</span>
+          <span>${numberRU(theoreticalWeight,2)} кг</span>
+        </div>
+
+        <div class="success-box">
+          Расчёт сохранён.
+        </div>
+
+      </div>
+    `;
+  }
+}
+
+/* =========================================================
+   MATERIALS
+========================================================= */
+
+function addMaterial(){
+  const name = val("materialName");
+  const qty = num("materialQty");
+  const unit = val("materialUnit");
+
+  if(!name || qty <= 0){
+    alert("Введите материал и количество.");
+    return;
+  }
+
+  db.materials.unshift({
+    id: uid("mat"),
+    name,
+    qty: round(qty,3),
+    unit,
+    createdAt: new Date().toISOString()
+  });
+
+  saveDB();
+
+  setVal("materialQty","");
 
   renderMaterials();
 }
 
-
-document
-  .getElementById("addMaterialBtn")
-  .addEventListener(
-    "click",
-    () => {
-
-      const name =
-        document
-          .getElementById("materialName")
-          .value;
-
-      const qty =
-        num(
-          document
-            .getElementById("materialQty")
-            .value
-        );
-
-      const unit =
-        document
-          .getElementById("materialUnit")
-          .value;
-
-      const objectId =
-        document
-          .getElementById("materialObject")
-          .value || null;
-
-      if(qty <= 0){
-
-        alert(
-          "Введите количество материала."
-        );
-
-        return;
-      }
-
-      db.materials.push({
-
-        id:uid("mat"),
-
-        objectId,
-
-        name,
-
-        qty,
-
-        unit,
-
-        createdAt:
-          new Date().toISOString()
-
-      });
-
-      saveDB();
-
-      document
-        .getElementById("materialQty")
-        .value = "";
-
-      renderMaterials();
-
-    }
+function deleteMaterial(id){
+  db.materials = db.materials.filter(
+    item => item.id !== id
   );
 
+  saveDB();
+  renderMaterials();
+}
 
-/* =========================
-   ПОСТАВЩИКИ
-========================= */
+function renderMaterials(){
+  const container = document.getElementById("materialsList");
 
-function renderSuppliers(){
-
-  const list =
-    document.getElementById(
-      "suppliersList"
-    );
-
-  if(!list){
+  if(!container){
     return;
   }
 
-  if(db.suppliers.length === 0){
-
-    list.innerHTML =
-      `<div class="empty">
-        Пока нет поставщиков
-      </div>`;
-
+  if(db.materials.length === 0){
+    container.innerHTML = `
+      <div class="empty">
+        Нет добавленных материалов.
+      </div>
+    `;
     return;
   }
 
-  list.innerHTML =
-    db.suppliers.map(item => `
+  container.innerHTML = db.materials.map(item=>`
+    <div class="list-item">
+      <div class="list-item-title">
+        ${esc(item.name)}
+      </div>
 
-      <div class="card"
-           style="margin-bottom:10px;box-shadow:none;border:1px solid #e5e7eb;">
+      <div class="kpi">
+        <span>Количество</span>
+        <span>
+          ${numberRU(item.qty,3)} ${esc(item.unit)}
+        </span>
+      </div>
 
-        <div class="card-header">
+      <div class="actions">
+        <button
+          class="btn btn-danger btn-small"
+          onclick="deleteMaterial('${item.id}')"
+        >
+          Удалить
+        </button>
+      </div>
+    </div>
+  `).join("");
+}
 
-          <div>
-            <strong>
-              ${escapeHTML(item.name)}
-            </strong>
+/* =========================================================
+   FORMWORK
+========================================================= */
 
-            <div style="font-size:12px;color:#6b7280;">
-              ${escapeHTML(item.city || "")}
-            </div>
-          </div>
+function calculateFormwork(){
+  const length = num("formLength");
+  const width = num("formWidth");
+  const height = num("formHeight");
+  const reserve = num("formReserve");
+  const shieldWidth = num("shieldWidth");
+  const shieldHeight = num("shieldHeight");
+  const objectId = val("formObject");
 
-          <button
-            class="btn-danger btn-small"
-            onclick="deleteSupplier('${item.id}')">
-            Удалить
-          </button>
+  if(
+    length <= 0 ||
+    width <= 0 ||
+    height <= 0 ||
+    shieldWidth <= 0 ||
+    shieldHeight <= 0
+  ){
+    alert("Проверьте размеры.");
+    return;
+  }
 
+  const area =
+    2 * (length + width) * height;
+
+  const totalArea =
+    area * (1 + reserve / 100);
+
+  const shieldArea =
+    shieldWidth * shieldHeight;
+
+  const shieldCount =
+    Math.ceil(totalArea / shieldArea);
+
+  const actualShieldArea =
+    shieldCount * shieldArea;
+
+  const calculation = {
+    id: uid("calc"),
+    type: "formwork",
+    name: "Опалубка",
+    objectId,
+    qty: round(totalArea,2),
+    unit: "м²",
+    createdAt: new Date().toISOString(),
+    metadata: {
+      length,
+      width,
+      height,
+      reserve,
+      shieldWidth,
+      shieldHeight,
+      shieldArea,
+      shieldCount,
+      actualShieldArea
+    }
+  };
+
+  db.calculations.unshift(calculation);
+
+  saveDB();
+
+  const result = document.getElementById("formworkResult");
+
+  if(result){
+    result.innerHTML = `
+      <div class="result">
+
+        <div class="kpi">
+          <span>Площадь опалубки</span>
+          <span>${numberRU(totalArea,2)} м²</span>
         </div>
 
-        <div class="metric">
-          <span>Контакт</span>
-          <strong>
-            ${escapeHTML(item.contact || "—")}
-          </strong>
+        <div class="kpi">
+          <span>Размер щита</span>
+          <span>
+            ${numberRU(shieldWidth,2)} ×
+            ${numberRU(shieldHeight,2)} м
+          </span>
         </div>
 
-        <div style="font-size:13px;color:#6b7280;margin-top:10px;">
-          ${escapeHTML(item.description || "")}
+        <div class="kpi">
+          <span>Площадь одного щита</span>
+          <span>${numberRU(shieldArea,2)} м²</span>
+        </div>
+
+        <div class="kpi">
+          <span>Количество щитов</span>
+          <span>${numberRU(shieldCount,0)} шт</span>
+        </div>
+
+        <div class="kpi">
+          <span>Фактическая площадь щитов</span>
+          <span>${numberRU(actualShieldArea,2)} м²</span>
+        </div>
+
+        <div class="success-box">
+          Расчёт сохранён. Количество щитов округлено вверх.
         </div>
 
       </div>
-
-    `).join("");
-
+    `;
+  }
 }
 
+/* =========================================================
+   SUPPLIERS
+========================================================= */
 
-function deleteSupplier(id){
+function addSupplier(){
+  const name = val("supplierName").trim();
 
-  db.suppliers =
-    db.suppliers.filter(
-      item => item.id !== id
-    );
+  if(!name){
+    alert("Введите название поставщика.");
+    return;
+  }
+
+  db.suppliers.unshift({
+    id: uid("sup"),
+    name,
+    city: val("supplierCity").trim(),
+    contact: val("supplierContact").trim(),
+    description: val("supplierDescription").trim(),
+    createdAt: new Date().toISOString()
+  });
 
   saveDB();
+
+  setVal("supplierName","");
+  setVal("supplierCity","");
+  setVal("supplierContact","");
+  setVal("supplierDescription","");
 
   renderSuppliers();
 }
 
-
-document
-  .getElementById("addSupplierBtn")
-  .addEventListener(
-    "click",
-    () => {
-
-      const name =
-        document
-          .getElementById("supplierName")
-          .value
-          .trim();
-
-      if(!name){
-
-        alert(
-          "Введите название поставщика."
-        );
-
-        return;
-      }
-
-      db.suppliers.push({
-
-        id:uid("sup"),
-
-        name,
-
-        city:
-          document
-            .getElementById("supplierCity")
-            .value
-            .trim(),
-
-        contact:
-          document
-            .getElementById("supplierContact")
-            .value
-            .trim(),
-
-        description:
-          document
-            .getElementById("supplierDescription")
-            .value
-            .trim(),
-
-        createdAt:
-          new Date().toISOString()
-
-      });
-
-      saveDB();
-
-      document
-        .getElementById("supplierName")
-        .value = "";
-
-      document
-        .getElementById("supplierCity")
-        .value = "";
-
-      document
-        .getElementById("supplierContact")
-        .value = "";
-
-      document
-        .getElementById("supplierDescription")
-        .value = "";
-
-      renderSuppliers();
-
-    }
+function deleteSupplier(id){
+  db.suppliers = db.suppliers.filter(
+    item => item.id !== id
   );
 
-
-/* =========================
-   ЦЕНЫ
-========================= */
-
-function renderPrices(){
-
-  const list =
-    document.getElementById(
-      "pricesList"
-    );
-
-  const count =
-    document.getElementById(
-      "priceCount"
-    );
-
-  if(!list){
-    return;
-  }
-
-  count.textContent =
-    db.prices.length;
-
-  const search =
-    (
-      document
-        .getElementById("priceSearch")
-        ?.value || ""
-    )
-    .trim()
-    .toLowerCase();
-
-  const filtered =
-    db.prices.filter(item => {
-
-      if(!search){
-        return true;
-      }
-
-      return (
-        item.material
-          .toLowerCase()
-          .includes(search) ||
-
-        (item.city || "")
-          .toLowerCase()
-          .includes(search)
-      );
-
-    });
-
-  if(filtered.length === 0){
-
-    list.innerHTML =
-      `<div class="empty">
-        Цены не найдены
-      </div>`;
-
-    return;
-  }
-
-  list.innerHTML =
-    filtered.map(item => `
-
-      <div class="card"
-           style="margin-bottom:10px;box-shadow:none;border:1px solid #e5e7eb;">
-
-        <div class="card-header">
-
-          <div>
-
-            <strong>
-              ${escapeHTML(item.material)}
-            </strong>
-
-            <div style="font-size:12px;color:#6b7280;">
-              ${escapeHTML(item.city || "Город не указан")}
-            </div>
-
-          </div>
-
-          <button
-            class="btn-danger btn-small"
-            onclick="deletePrice('${item.id}')">
-            Удалить
-          </button>
-
-        </div>
-
-        <div class="metric">
-
-          <span>Цена</span>
-
-          <strong>
-            ${money(item.price)}
-            ${escapeHTML(item.unit)}
-          </strong>
-
-        </div>
-
-        <div class="metric">
-
-          <span>Тип</span>
-
-          <span class="badge">
-            ${escapeHTML(item.type)}
-          </span>
-
-        </div>
-
-        <div class="metric">
-
-          <span>Дата</span>
-
-          <strong>
-            ${escapeHTML(item.date || "—")}
-          </strong>
-
-        </div>
-
-        <div class="metric">
-
-          <span>Источник</span>
-
-          <strong>
-            ${escapeHTML(item.source || "—")}
-          </strong>
-
-        </div>
-
-      </div>
-
-    `).join("");
-
+  saveDB();
+  renderSuppliers();
 }
 
+function renderSuppliers(){
+  const container = document.getElementById("suppliersList");
 
-function deletePrice(id){
+  if(!container){
+    return;
+  }
 
-  db.prices =
-    db.prices.filter(
-      item => item.id !== id
-    );
+  if(db.suppliers.length === 0){
+    container.innerHTML = `
+      <div class="empty">
+        Поставщиков пока нет.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = db.suppliers.map(item=>`
+    <div class="list-item">
+      <div class="list-item-title">
+        ${esc(item.name)}
+      </div>
+
+      <div class="muted">
+        ${esc(item.city || "Город не указан")}
+      </div>
+
+      <div style="margin-top:7px">
+        <strong>Контакт:</strong>
+        ${esc(item.contact || "—")}
+      </div>
+
+      <div style="margin-top:7px" class="muted">
+        ${esc(item.description || "")}
+      </div>
+
+      <div class="actions">
+        <button
+          class="btn btn-danger btn-small"
+          onclick="deleteSupplier('${item.id}')"
+        >
+          Удалить
+        </button>
+      </div>
+    </div>
+  `).join("");
+}
+
+/* =========================================================
+   PRICES
+========================================================= */
+
+function addPrice(){
+  const material = val("priceMaterial").trim();
+  const price = num("priceValue");
+  const unit = val("priceUnit");
+
+  if(!material || price <= 0){
+    alert("Введите материал и цену.");
+    return;
+  }
+
+  db.prices.unshift({
+    id: uid("price"),
+    material,
+    price: round(price,2),
+    unit,
+    type: val("priceType"),
+    city: val("priceCity").trim(),
+    region: val("priceRegion").trim(),
+    date: val("priceDate") || today(),
+    vat: num("priceVat"),
+    delivery: val("priceDelivery").trim(),
+    source: val("priceSource").trim(),
+    createdAt: new Date().toISOString()
+  });
 
   saveDB();
+
+  setVal("priceMaterial","");
+  setVal("priceValue","");
+  setVal("priceCity","");
+  setVal("priceDelivery","");
+  setVal("priceSource","");
 
   renderPrices();
 }
 
+function deletePrice(id){
+  db.prices = db.prices.filter(
+    item => item.id !== id
+  );
 
-document
-  .getElementById("addPriceBtn")
-  .addEventListener(
-    "click",
-    () => {
+  saveDB();
+  renderPrices();
+}
 
-      const material =
-        document
-          .getElementById("priceMaterial")
-          .value
-          .trim();
+function renderPrices(){
+  const container = document.getElementById("pricesList");
 
-      const price =
-        num(
-          document
-            .getElementById("priceValue")
-            .value
-        );
+  if(!container){
+    return;
+  }
 
-      if(
-        !material ||
-        price <= 0
-      ){
+  const search =
+    val("priceSearch").trim().toLowerCase();
 
-        alert(
-          "Введите материал и цену."
-        );
-
-        return;
-      }
-
-      db.prices.push({
-
-        id:uid("price"),
-
-        material,
-
-        price,
-
-        unit:
-          document
-            .getElementById("priceUnit")
-            .value,
-
-        type:
-          document
-            .getElementById("priceType")
-            .value,
-
-        city:
-          document
-            .getElementById("priceCity")
-            .value
-            .trim(),
-
-        region:
-          document
-            .getElementById("priceRegion")
-            .value
-            .trim(),
-
-        date:
-          document
-            .getElementById("priceDate")
-            .value ||
-          today(),
-
-        vat:
-          num(
-            document
-              .getElementById("priceVat")
-              .value
-          ),
-
-        delivery:
-          num(
-            document
-              .getElementById("priceDelivery")
-              .value
-          ),
-
-        source:
-          document
-            .getElementById("priceSource")
-            .value
-            .trim(),
-
-        createdAt:
-          new Date().toISOString()
-
-      });
-
-      saveDB();
-
-      document
-        .getElementById("priceMaterial")
-        .value = "";
-
-      document
-        .getElementById("priceValue")
-        .value = "";
-
-      document
-        .getElementById("priceSource")
-        .value = "";
-
-      renderPrices();
-
+  const items = db.prices.filter(item=>{
+    if(!search){
+      return true;
     }
-  );
 
-
-document
-  .getElementById("priceSearch")
-  .addEventListener(
-    "input",
-    renderPrices
-  );
-
-
-/* =========================
-   ПОИСК ЦЕНЫ
-========================= */
-
-function findPrice(calculation){
-
-  const name =
-    calculation.name
-      .toLowerCase()
-      .trim();
-
-  let exact =
-    db.prices.find(
-      price =>
-        price.material
-          .toLowerCase()
-          .trim() === name
+    return (
+      item.material.toLowerCase().includes(search) ||
+      item.city.toLowerCase().includes(search)
     );
+  });
+
+  if(items.length === 0){
+    container.innerHTML = `
+      <div class="empty">
+        Цены не найдены.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = items.map(item=>`
+    <div class="list-item">
+
+      <div class="list-item-title">
+        ${esc(item.material)}
+      </div>
+
+      <div class="kpi">
+        <span>Цена</span>
+        <span>
+          ${money(item.price)}
+          <span class="small">${esc(item.unit)}</span>
+        </span>
+      </div>
+
+      <div class="normative-meta">
+
+        <span class="badge ${
+          item.type === "Рыночная"
+            ? "badge-blue"
+            : item.type === "Сметная"
+              ? "badge-purple"
+              : "badge-gray"
+        }">
+          ${esc(item.type)}
+        </span>
+
+        ${
+          item.city
+            ? `<span class="badge badge-gray">${esc(item.city)}</span>`
+            : ""
+        }
+
+        ${
+          item.region
+            ? `<span class="badge badge-gray">${esc(item.region)}</span>`
+            : ""
+        }
+
+      </div>
+
+      <div class="muted">
+        Дата: ${esc(item.date || "—")}
+      </div>
+
+      <div class="muted">
+        Источник: ${esc(item.source || "не указан")}
+      </div>
+
+      <div class="actions">
+        <button
+          class="btn btn-danger btn-small"
+          onclick="deletePrice('${item.id}')"
+        >
+          Удалить
+        </button>
+      </div>
+
+    </div>
+  `).join("");
+}
+
+/* =========================================================
+   PRICE MATCHING
+========================================================= */
+
+function findPrice(materialName){
+  if(!materialName){
+    return null;
+  }
+
+  const target = materialName.toLowerCase().trim();
+
+  let exact = db.prices.find(item =>
+    item.material.toLowerCase().trim() === target
+  );
 
   if(exact){
     return exact;
   }
 
-  let partial =
-    db.prices.find(
-      price => {
-
-        const material =
-          price.material
-            .toLowerCase()
-            .trim();
-
-        return (
-          name.includes(material) ||
-          material.includes(name)
-        );
-
-      }
-    );
+  let partial = db.prices.find(item =>
+    target.includes(item.material.toLowerCase().trim()) ||
+    item.material.toLowerCase().trim().includes(target)
+  );
 
   return partial || null;
 }
 
-
-function compatibleUnit(
-  calculationUnit,
-  priceUnit
-){
+function compatibleUnits(calcUnit, priceUnit){
+  if(!calcUnit || !priceUnit){
+    return false;
+  }
 
   const map = {
-
     "м³":["₽/м³"],
-
     "т":["₽/т"],
-
     "кг":["₽/кг"],
-
     "шт":["₽/шт"],
-
     "м":["₽/м"],
-
     "м²":["₽/м²"]
-
   };
 
-  return (
-    map[calculationUnit] || []
-  ).includes(priceUnit);
-
+  return (map[calcUnit] || []).includes(priceUnit);
 }
 
-
-function calcLineCost(
-  calculation
-){
-
-  const price =
-    findPrice(calculation);
+function calcLineCost(item){
+  const price = findPrice(item.name);
 
   if(!price){
     return {
+      item,
       price:null,
-      cost:0,
-      compatible:false
+      compatible:false,
+      cost:0
     };
   }
 
   const compatible =
-    compatibleUnit(
-      calculation.unit,
-      price.unit
-    );
-
-  if(!compatible){
-
-    return {
-      price,
-      cost:0,
-      compatible:false
-    };
-
-  }
+    compatibleUnits(item.unit,price.unit);
 
   return {
-
+    item,
     price,
-
-    cost:
-      calculation.qty *
-      price.price,
-
-    compatible:true
-
+    compatible,
+    cost:compatible
+      ? item.qty * price.price
+      : 0
   };
-
 }
 
+/* =========================================================
+   ESTIMATE
+========================================================= */
 
-/* =========================
-   СМЕТА
-========================= */
+function renderEstimatePreview(){
+  const result = document.getElementById("estimateResult");
 
-function renderEstimate(){
-
-  const positions =
-    document.getElementById(
-      "estimatePositions"
-    );
-
-  const summary =
-    document.getElementById(
-      "estimateSummary"
-    );
-
-  if(!positions || !summary){
+  if(!result){
     return;
   }
 
-  const selectedObject =
-    document
-      .getElementById("estimateObject")
-      .value;
+  if(db.calculations.length === 0){
+    result.innerHTML = `
+      <div class="empty">
+        Нет сохранённых расчётов.<br>
+        Сначала выполни хотя бы один расчёт.
+      </div>
+    `;
+    return;
+  }
 
-  const calculations =
-    db.calculations.filter(
-      item =>
-        !selectedObject ||
-        item.objectId === selectedObject
-    );
+  result.innerHTML = `
+    <div class="info-box">
+      В смету попадут сохранённые расчёты.
+      Для получения стоимости необходимо добавить соответствующие цены.
+    </div>
+  `;
+}
 
-  if(calculations.length === 0){
+function calculateEstimate(){
+  const overhead = num("estimateOverhead");
+  const delivery = num("estimateDelivery");
+  const reserve = num("estimateReserve");
 
-    positions.innerHTML =
-      `<div class="empty">
-        Нет сохранённых расчётов.
-      </div>`;
-
-    summary.innerHTML = "";
-
+  if(db.calculations.length === 0){
+    alert("Нет сохранённых расчётов.");
     return;
   }
 
   let directCost = 0;
+  let missing = [];
+  let rows = [];
 
-  let html = `
-    <div class="table-wrap">
-    <table>
+  db.calculations.forEach(item=>{
+    const line = calcLineCost(item);
 
-      <thead>
-
-        <tr>
-          <th>Позиция</th>
-          <th>Количество</th>
-          <th>Цена</th>
-          <th>Стоимость</th>
-          <th>Источник</th>
-        </tr>
-
-      </thead>
-
-      <tbody>
-  `;
-
-  calculations.forEach(calc => {
-
-    const result =
-      calcLineCost(calc);
-
-    const price =
-      result.price;
-
-    const cost =
-      result.cost;
-
-    directCost += cost;
-
-    let sourceText =
-      "Цена не найдена";
-
-    if(price){
-
-      sourceText =
-        price.source ||
-        price.type ||
-        "Источник не указан";
-
+    if(!line.price){
+      missing.push({
+        name:item.name,
+        unit:item.unit,
+        qty:item.qty
+      });
     }
 
-    html += `
+    rows.push(line);
 
-      <tr>
-
-        <td>
-          <strong>
-            ${escapeHTML(calc.name)}
-          </strong>
-        </td>
-
-        <td>
-          ${calc.qty}
-          ${escapeHTML(calc.unit)}
-        </td>
-
-        <td>
-
-          ${
-            price && result.compatible
-              ? money(price.price) + " " + escapeHTML(price.unit)
-              : "—"
-          }
-
-        </td>
-
-        <td>
-
-          ${
-            result.compatible
-              ? money(cost)
-              : '<span class="badge badge-orange">Нет цены</span>'
-          }
-
-        </td>
-
-        <td>
-          ${escapeHTML(sourceText)}
-        </td>
-
-      </tr>
-
-    `;
-
+    directCost += line.cost;
   });
 
-  html += `
-      </tbody>
-    </table>
-    </div>
-  `;
-
-  positions.innerHTML = html;
-
-
-  const overhead =
-    num(
-      document
-        .getElementById("estimateOverhead")
-        .value
-    );
-
-  const delivery =
-    num(
-      document
-        .getElementById("estimateDelivery")
-        .value
-    );
-
-  const reservePercent =
-    num(
-      document
-        .getElementById("estimateReserve")
-        .value
-    );
-
   const overheadCost =
-    directCost *
-    overhead /
-    100;
+    directCost * overhead / 100;
+
+  const deliveryCost =
+    directCost * delivery / 100;
 
   const subtotal =
     directCost +
     overheadCost +
-    delivery;
+    deliveryCost;
 
   const reserveCost =
-    subtotal *
-    reservePercent /
-    100;
+    subtotal * reserve / 100;
 
   const total =
-    subtotal +
-    reserveCost;
+    subtotal + reserveCost;
 
+  const result = document.getElementById("estimateResult");
 
-  summary.innerHTML = `
+  if(!result){
+    return;
+  }
 
-    <div class="metric">
-      <span>Прямые затраты</span>
-      <strong>
-        ${money(directCost)}
-      </strong>
+  result.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Позиция</th>
+            <th>Количество</th>
+            <th>Цена</th>
+            <th>Источник</th>
+            <th>Стоимость</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${
+            rows.map(line=>`
+              <tr>
+                <td>${esc(line.item.name)}</td>
+
+                <td>
+                  ${numberRU(line.item.qty,3)}
+                  ${esc(line.item.unit)}
+                </td>
+
+                <td>
+                  ${
+                    line.price && line.compatible
+                      ? money(line.price.price) + " " + esc(line.price.unit)
+                      : "Нет цены"
+                  }
+                </td>
+
+                <td>
+                  ${
+                    line.price
+                      ? esc(line.price.source || line.price.type)
+                      : "—"
+                  }
+                </td>
+
+                <td>
+                  ${
+                    line.compatible
+                      ? money(line.cost)
+                      : "—"
+                  }
+                </td>
+              </tr>
+            `).join("")
+          }
+        </tbody>
+      </table>
     </div>
 
-    <div class="metric">
-      <span>
-        Накладные ${overhead}%
-      </span>
-      <strong>
-        ${money(overheadCost)}
-      </strong>
+    <div class="card" style="margin-top:14px">
+
+      <div class="kpi">
+        <span>Прямые затраты</span>
+        <span>${money(directCost)}</span>
+      </div>
+
+      <div class="kpi">
+        <span>Накладные ${numberRU(overhead,1)}%</span>
+        <span>${money(overheadCost)}</span>
+      </div>
+
+      <div class="kpi">
+        <span>Доставка ${numberRU(delivery,1)}%</span>
+        <span>${money(deliveryCost)}</span>
+      </div>
+
+      <div class="kpi">
+        <span>Резерв ${numberRU(reserve,1)}%</span>
+        <span>${money(reserveCost)}</span>
+      </div>
+
+      <div class="kpi">
+        <strong>ИТОГО</strong>
+        <strong>${money(total)}</strong>
+      </div>
+
     </div>
 
-    <div class="metric">
-      <span>Доставка</span>
-      <strong>
-        ${money(delivery)}
-      </strong>
-    </div>
-
-    <div class="metric">
-      <span>Резерв ${reservePercent}%</span>
-      <strong>
-        ${money(reserveCost)}
-      </strong>
-    </div>
-
-    <div class="total">
-      ${money(total)}
-    </div>
-
-    <div style="color:#6b7280;font-size:12px;margin-top:6px;">
-      Итоговая ориентировочная стоимость
-    </div>
-
+    ${
+      missing.length
+        ? `
+          <div class="warning-box">
+            <strong>Позиции без цены:</strong><br>
+            ${missing.map(item=>`
+              • ${esc(item.name)}
+              — ${numberRU(item.qty,3)} ${esc(item.unit)}
+            `).join("<br>")}
+          </div>
+        `
+        : `
+          <div class="success-box">
+            Для всех позиций найдены совместимые цены.
+          </div>
+        `
+    }
   `;
 
+  db.estimates.unshift({
+    id:uid("estimate"),
+    createdAt:new Date().toISOString(),
+    directCost,
+    overhead,
+    overheadCost,
+    delivery,
+    deliveryCost,
+    reserve,
+    reserveCost,
+    total
+  });
+
+  saveDB();
+}
+</script><script>
+/* =========================
+   PGSSTROY.PRO v0.6
+   BLOCK 3/6
+   ЛЭП + НОРМАТИВНАЯ БАЗА
+   ========================= */
+
+/* ---------- ЛЭП ---------- */
+
+function calculatePowerLine(){
+    const voltage = val("powerVoltage");
+    const power = val("powerMW");
+    const length = val("powerLength");
+    const circuits = Math.max(1, Math.floor(val("powerCircuits") || 1));
+    const spans = val("powerSpan");
+    const angle = val("powerAngles");
+    const roadCross = val("powerRoadCross");
+    const waterCross = val("powerWaterCross");
+    const forest = val("powerForest");
+    const settlements = val("powerSettlements");
+
+    const supportIntermediate = val("powerSupportIntermediate");
+    const supportAnchor = val("powerSupportAnchor");
+    const supportAngle = val("powerSupportAngle");
+    const supportEnd = val("powerSupportEnd");
+
+    const foundationDepth = val("powerFoundationDepth");
+    const foundationWidth = val("powerFoundationWidth");
+    const foundationLength = val("powerFoundationLength");
+
+    const conductorSection = val("powerConductorSection");
+    const conductorsPerPhase = Math.max(1, Math.floor(val("powerConductorsPerPhase") || 1));
+    const reserve = val("powerReserve") || 5;
+
+    if(!length || length <= 0){
+        alert("Укажи длину трассы ЛЭП.");
+        return;
+    }
+
+    const averageSpan = spans > 0 ? spans : (
+        voltage >= 220 ? 350 :
+        voltage >= 110 ? 250 :
+        voltage >= 35 ? 120 : 60
+    );
+
+    const basicSupports = Math.ceil((length * 1000) / averageSpan) + 1;
+
+    const totalAngles = Math.max(0, Math.floor(angle || 0));
+    const totalRoadCross = Math.max(0, Math.floor(roadCross || 0));
+    const totalWaterCross = Math.max(0, Math.floor(waterCross || 0));
+
+    const intermediate =
+        Math.max(0, Math.floor(supportIntermediate || 0));
+
+    const anchors =
+        Math.max(0, Math.floor(supportAnchor || 0));
+
+    const angleSupports =
+        Math.max(totalAngles, Math.floor(supportAngle || 0));
+
+    const endSupports =
+        Math.max(2, Math.floor(supportEnd || 2));
+
+    const estimatedSupports =
+        intermediate +
+        anchors +
+        angleSupports +
+        endSupports;
+
+    const supports =
+        estimatedSupports > 2
+            ? estimatedSupports
+            : basicSupports;
+
+    const foundationVolumeOne =
+        foundationDepth *
+        foundationWidth *
+        foundationLength;
+
+    const foundationCount =
+        supports;
+
+    const concreteVolume =
+        foundationVolumeOne *
+        foundationCount;
+
+    const conductorLength =
+        length *
+        1000 *
+        circuits *
+        3 *
+        conductorsPerPhase *
+        (1 + reserve / 100);
+
+    const lightningWireLength =
+        length *
+        1000 *
+        circuits *
+        (voltage >= 110 ? 2 : 1) *
+        (1 + reserve / 100);
+
+    const result = {
+        voltage,
+        power,
+        length,
+        circuits,
+        averageSpan,
+        basicSupports,
+        supports,
+        foundationCount,
+        foundationVolumeOne,
+        concreteVolume,
+        conductorSection,
+        conductorsPerPhase,
+        conductorLength,
+        lightningWireLength,
+        reserve,
+        totalAngles,
+        totalRoadCross,
+        totalWaterCross,
+        forest,
+        settlements
+    };
+
+    window.lastPowerResult = result;
+
+    const box = document.getElementById("powerResult");
+
+    if(!box) return;
+
+    box.innerHTML = `
+        <div class="result">
+            <h3>Предварительный результат</h3>
+
+            <div class="result-grid">
+
+                <div>
+                    <b>Класс напряжения</b>
+                    <span>${esc(voltage || "—")} кВ</span>
+                </div>
+
+                <div>
+                    <b>Мощность</b>
+                    <span>${numberRU(power || 0)} МВт</span>
+                </div>
+
+                <div>
+                    <b>Длина трассы</b>
+                    <span>${numberRU(length)} км</span>
+                </div>
+
+                <div>
+                    <b>Количество цепей</b>
+                    <span>${circuits}</span>
+                </div>
+
+                <div>
+                    <b>Расчётный пролёт</b>
+                    <span>${numberRU(averageSpan)} м</span>
+                </div>
+
+                <div>
+                    <b>Ориентировочное количество опор</b>
+                    <span>${supports} шт.</span>
+                </div>
+
+                <div>
+                    <b>Фундаменты</b>
+                    <span>${foundationCount} шт.</span>
+                </div>
+
+                <div>
+                    <b>Бетон на фундаменты</b>
+                    <span>${numberRU(concreteVolume)} м³</span>
+                </div>
+
+                <div>
+                    <b>Провод</b>
+                    <span>${numberRU(conductorLength)} м</span>
+                </div>
+
+                <div>
+                    <b>Грозотрос / ОКГТ</b>
+                    <span>${numberRU(lightningWireLength)} м</span>
+                </div>
+
+                <div>
+                    <b>Пересечения дорог</b>
+                    <span>${totalRoadCross} шт.</span>
+                </div>
+
+                <div>
+                    <b>Водные пересечения</b>
+                    <span>${totalWaterCross} шт.</span>
+                </div>
+
+            </div>
+
+            <div class="warning" style="margin-top:16px;">
+                ⚠️ Расчёт является предварительным инженерным ориентиром.
+                Для рабочего проектирования ЛЭП необходимо использовать
+                проектные данные, инженерные изыскания и действующие нормативные документы.
+            </div>
+
+            <div style="margin-top:16px;">
+                <button class="primary" onclick="savePowerCalculation()">
+                    Сохранить расчёт
+                </button>
+                <button onclick="exportPowerToEstimate()">
+                    Добавить в смету
+                </button>
+            </div>
+        </div>
+    `;
 }
 
 
-document
-  .getElementById("calculateEstimateBtn")
-  .addEventListener(
-    "click",
-    renderEstimate
-  );
+function savePowerCalculation(){
+
+    const r = window.lastPowerResult;
+
+    if(!r){
+        alert("Сначала выполни расчёт ЛЭП.");
+        return;
+    }
+
+    db.calculations.push({
+        id: uid("calc"),
+        type: "power",
+        name: `ЛЭП ${r.voltage || ""} кВ`,
+        unit: "комплекс",
+        value: r.length,
+        meta: r,
+        createdAt: today()
+    });
+
+    saveDB();
+    updateDashboard();
+
+    alert("Расчёт ЛЭП сохранён.");
+}
 
 
-document
-  .getElementById("estimateObject")
-  .addEventListener(
-    "change",
-    renderEstimate
-  );
+function exportPowerToEstimate(){
 
+    const r = window.lastPowerResult;
 
-/* =========================
-   ЛЭП
-========================= */
+    if(!r){
+        alert("Сначала выполни расчёт ЛЭП.");
+        return;
+    }
 
-document
-  .getElementById("powerShowBtn")
-  .addEventListener(
-    "click",
-    () => {
+    const items = [
+        {
+            name: `Опоры ЛЭП ${r.voltage || ""} кВ`,
+            qty: r.supports,
+            unit: "шт."
+        },
+        {
+            name: "Фундаменты опор ЛЭП",
+            qty: r.foundationCount,
+            unit: "шт."
+        },
+        {
+            name: "Бетон для фундаментов ЛЭП",
+            qty: r.concreteVolume,
+            unit: "м³"
+        },
+        {
+            name: "Провод ЛЭП",
+            qty: r.conductorLength,
+            unit: "м"
+        },
+        {
+            name: "Грозотрос / ОКГТ",
+            qty: r.lightningWireLength,
+            unit: "м"
+        }
+    ];
 
-      const voltage =
-        document
-          .getElementById("powerVoltage")
-          .value;
+    window.powerEstimateItems = items;
 
-      const section =
-        document
-          .getElementById("powerSection")
-          .value;
+    showPage("estimate");
 
-      document
-        .getElementById("powerResult")
-        .innerHTML = `
+    setTimeout(() => {
 
-          <div class="result">
+        const box = document.getElementById("estimatePowerPreview");
 
-            <strong>
-              ${escapeHTML(section)}
-            </strong>
+        if(!box) return;
 
-            <div style="margin-top:8px;">
-              Класс напряжения:
-              <strong>
-                ${escapeHTML(voltage)}
-              </strong>
+        box.innerHTML = `
+            <div class="card">
+                <h3>Добавленные позиции ЛЭП</h3>
+
+                ${items.map(item => `
+                    <div class="list-row">
+                        <div>
+                            <b>${esc(item.name)}</b>
+                            <small>${numberRU(item.qty)} ${esc(item.unit)}</small>
+                        </div>
+                    </div>
+                `).join("")}
+
+                <div class="warning">
+                    Для включения позиций в итоговую смету
+                    необходимо назначить цены из базы цен.
+                </div>
             </div>
-
-            <p style="font-size:13px;color:#6b7280;">
-              Раздел подготовлен как основа базы
-              практических материалов PGSSTROY.PRO.
-              Конкретные инженерные решения необходимо
-              проверять по проектной документации
-              и действующим нормативам.
-            </p>
-
-          </div>
-
         `;
 
+    }, 100);
+}
+
+
+/* ---------- НОРМАТИВНАЯ БАЗА ---------- */
+
+const normativeDocuments = [
+
+    {
+        id:"384fz",
+        category:"Общие",
+        type:"Федеральный закон",
+        title:"Федеральный закон №384-ФЗ",
+        subtitle:"Технический регламент о безопасности зданий и сооружений",
+        status:"Действует",
+        applicability:"Обязательное регулирование",
+        date:"30.12.2009",
+        update:"действующая редакция",
+        tags:["безопасность","здания","сооружения"],
+        source:"https://www.consultant.ru/document/cons_doc_LAW_95720/",
+        sourceName:"КонсультантПлюс",
+        description:
+            "Базовый федеральный закон в области безопасности зданий и сооружений."
+    },
+
+    {
+        id:"sp4813330",
+        category:"Организация строительства",
+        type:"СП",
+        title:"СП 48.13330.2019",
+        subtitle:"Организация строительства",
+        status:"Действует",
+        applicability:"Нормативный документ",
+        date:"2019",
+        update:"актуализированная редакция",
+        tags:["стройка","организация","ПОС","ППР"],
+        source:"https://www.minstroyrf.gov.ru/",
+        sourceName:"Минстрой России",
+        description:
+            "Требования и рекомендации по организации строительства и подготовке производства работ."
+    },
+
+    {
+        id:"sp6313330",
+        category:"Бетон и железобетон",
+        type:"СП",
+        title:"СП 63.13330.2018",
+        subtitle:"Бетонные и железобетонные конструкции",
+        status:"Действует",
+        applicability:"Нормативный документ",
+        date:"2018",
+        update:"актуализированная редакция",
+        tags:["бетон","железобетон","армирование"],
+        source:"https://www.minstroyrf.gov.ru/",
+        sourceName:"Минстрой России",
+        description:
+            "Расчёт и проектирование бетонных и железобетонных конструкций."
+    },
+
+    {
+        id:"sp7613330",
+        category:"Электроэнергетика",
+        type:"СП",
+        title:"СП 76.13330.2016",
+        subtitle:"Электротехнические устройства",
+        status:"Действует",
+        applicability:"Нормативный документ",
+        date:"2016",
+        update:"актуализированная редакция",
+        tags:["электрика","ЛЭП","заземление","электроустановки"],
+        source:"https://www.minstroyrf.gov.ru/",
+        sourceName:"Минстрой России",
+        description:
+            "Правила выполнения электромонтажных работ, включая электрические сети и воздушные линии."
+    },
+
+    {
+        id:"sp4513330",
+        category:"Земляные работы",
+        type:"СП",
+        title:"СП 45.13330.2017",
+        subtitle:"Земляные сооружения, основания и фундаменты",
+        status:"Действует",
+        applicability:"Нормативный документ",
+        date:"2017",
+        update:"актуализированная редакция",
+        tags:["земляные работы","котлован","обратная засыпка","основания"],
+        source:"https://www.minstroyrf.gov.ru/",
+        sourceName:"Минстрой России",
+        description:
+            "Производство и контроль земляных работ, устройство оснований и земляных сооружений."
+    },
+
+    {
+        id:"sp7013330",
+        category:"Конструкции",
+        type:"СП",
+        title:"СП 70.13330.2012",
+        subtitle:"Несущие и ограждающие конструкции",
+        status:"Действует",
+        applicability:"Нормативный документ",
+        date:"2012",
+        update:"актуализированная редакция",
+        tags:["монтаж","конструкции","бетон","металл"],
+        source:"https://www.minstroyrf.gov.ru/",
+        sourceName:"Минстрой России",
+        description:
+            "Правила производства и приёмки работ по несущим и ограждающим конструкциям."
+    },
+
+    {
+        id:"sp7113330",
+        category:"Отделочные работы",
+        type:"СП",
+        title:"СП 71.13330.2017",
+        subtitle:"Изоляционные и отделочные покрытия",
+        status:"Действует",
+        applicability:"Нормативный документ",
+        date:"2017",
+        update:"актуализированная редакция",
+        tags:["отделка","изоляция","покрытия"],
+        source:"https://www.minstroyrf.gov.ru/",
+        sourceName:"Минстрой России",
+        description:
+            "Требования к выполнению изоляционных и отделочных работ."
+    },
+
+    {
+        id:"sp2213330",
+        category:"Основания и фундаменты",
+        type:"СП",
+        title:"СП 22.13330.2016",
+        subtitle:"Основания зданий и сооружений",
+        status:"Действует",
+        applicability:"Нормативный документ",
+        date:"2016",
+        update:"актуализированная редакция",
+        tags:["фундамент","основание","грунт"],
+        source:"https://www.minstroyrf.gov.ru/",
+        sourceName:"Минстрой России",
+        description:
+            "Проектирование оснований зданий и сооружений."
+    },
+
+    {
+        id:"pue",
+        category:"Электроэнергетика",
+        type:"ПУЭ",
+        title:"Правила устройства электроустановок",
+        subtitle:"ПУЭ",
+        status:"Действует",
+        applicability:"Отдельные требования применяются в установленном порядке",
+        date:"действующая редакция",
+        update:"проверять актуальность конкретного раздела",
+        tags:["ПУЭ","электрика","ЛЭП","заземление"],
+        source:"https://docs.cntd.ru/",
+        sourceName:"Нормативная база",
+        description:
+            "Основной массив требований по устройству электроустановок."
+    },
+
+    {
+        id:"lep35750",
+        category:"ЛЭП",
+        type:"Нормативная база",
+        title:"ЛЭП 35–750 кВ",
+        subtitle:"Проектирование воздушных линий электропередачи",
+        status:"Действует",
+        applicability:"Проектные требования",
+        date:"актуальная редакция",
+        update:"проверять действующие документы проекта",
+        tags:["ЛЭП","35 кВ","110 кВ","220 кВ","330 кВ","500 кВ","750 кВ"],
+        source:"https://minenergo.gov.ru/",
+        sourceName:"Минэнерго России",
+        description:
+            "Комплекс нормативных требований к проектированию и устройству объектов электросетевого хозяйства."
+    },
+
+    {
+        id:"safetyheight",
+        category:"Охрана труда",
+        type:"Правила",
+        title:"Работы на высоте",
+        subtitle:"Требования безопасности при работах на высоте",
+        status:"Действует",
+        applicability:"Требования охраны труда",
+        date:"актуальная редакция",
+        update:"проверять действующую редакцию",
+        tags:["охрана труда","высота","монтаж"],
+        source:"https://publication.pravo.gov.ru/",
+        sourceName:"Официальное опубликование",
+        description:
+            "Требования безопасности при выполнении работ на высоте."
+    },
+
+    {
+        id:"gost26633",
+        category:"Бетон и железобетон",
+        type:"ГОСТ",
+        title:"ГОСТ 26633",
+        subtitle:"Бетоны тяжёлые и мелкозернистые",
+        status:"Действует",
+        applicability:"Стандарт",
+        date:"актуальная редакция",
+        update:"проверять редакцию",
+        tags:["бетон","ГОСТ","смеси"],
+        source:"https://www.rst.gov.ru/",
+        sourceName:"Росстандарт",
+        description:
+            "Стандартные требования к тяжёлым и мелкозернистым бетонам."
+    },
+
+    {
+        id:"gost34028",
+        category:"Арматура",
+        type:"ГОСТ",
+        title:"ГОСТ 34028",
+        subtitle:"Прокат арматурный для железобетонных конструкций",
+        status:"Действует",
+        applicability:"Стандарт",
+        date:"актуальная редакция",
+        update:"проверять редакцию",
+        tags:["арматура","A500","прокат"],
+        source:"https://www.rst.gov.ru/",
+        sourceName:"Росстандарт",
+        description:
+            "Требования к арматурному прокату для железобетонных конструкций."
     }
-  );
+
+];
 
 
-/* =========================
-   НОРМАТИВЫ
-========================= */
+let normativeState = {
+    search:"",
+    category:"Все",
+    status:"Все"
+};
 
-document
-  .getElementById("standardSearchBtn")
-  .addEventListener(
-    "click",
-    () => {
 
-      const query =
-        document
-          .getElementById("standardSearch")
-          .value
-          .trim();
+function getNormativeCategories(){
 
-      if(!query){
+    const categories = [
+        "Все",
+        ...normativeDocuments.map(x => x.category)
+    ];
 
-        alert(
-          "Введите запрос."
-        );
+    return [...new Set(categories)];
+}
+
+
+function renderNormativeCategories(){
+
+    const box = document.getElementById("normativeCategories");
+
+    if(!box) return;
+
+    box.innerHTML = getNormativeCategories().map(category => `
+        <button
+            class="${normativeState.category === category ? "primary" : ""}"
+            onclick="setNormativeCategory('${esc(category)}')">
+            ${esc(category)}
+        </button>
+    `).join("");
+}
+
+
+function setNormativeCategory(category){
+
+    normativeState.category = category;
+
+    renderNormativeCategories();
+    renderNormatives();
+}
+
+
+function setNormativeStatus(status){
+
+    normativeState.status = status;
+    renderNormatives();
+}
+
+
+function searchNormatives(){
+
+    const input = document.getElementById("normativeSearch");
+
+    normativeState.search =
+        input ? input.value.trim().toLowerCase() : "";
+
+    renderNormatives();
+}
+
+
+function renderNormatives(){
+
+    const box = document.getElementById("normativeList");
+
+    if(!box) return;
+
+    const search = normativeState.search;
+
+    const filtered = normativeDocuments.filter(doc => {
+
+        const categoryOK =
+            normativeState.category === "Все" ||
+            doc.category === normativeState.category;
+
+        const statusOK =
+            normativeState.status === "Все" ||
+            doc.status === normativeState.status;
+
+        const haystack = [
+            doc.title,
+            doc.subtitle,
+            doc.category,
+            doc.type,
+            doc.description,
+            ...(doc.tags || [])
+        ].join(" ").toLowerCase();
+
+        const searchOK =
+            !search || haystack.includes(search);
+
+        return categoryOK && statusOK && searchOK;
+    });
+
+
+    if(!filtered.length){
+
+        box.innerHTML = `
+            <div class="empty">
+                Ничего не найдено.
+            </div>
+        `;
 
         return;
-      }
+    }
 
-      document
-        .getElementById("standardsResult")
-        .innerHTML = `
 
-          <div class="result">
+    box.innerHTML = filtered.map(doc => `
+        <div class="card normative-card">
 
-            <strong>
-              Поиск: ${escapeHTML(query)}
-            </strong>
+            <div class="card-top">
+                <span class="badge">${esc(doc.type)}</span>
 
-            <p style="color:#6b7280;font-size:13px;">
-              В следующей версии этот раздел будет
-              подключён к структурированной нормативной
-              базе с указанием документа, редакции,
-              пункта и источника.
+                <span class="status active">
+                    🟢 ${esc(doc.status)}
+                </span>
+            </div>
+
+            <h3>${esc(doc.title)}</h3>
+
+            <p>
+                <b>${esc(doc.subtitle)}</b>
             </p>
 
-          </div>
+            <p class="muted">
+                ${esc(doc.description)}
+            </p>
 
-        `;
+            <div class="tags">
+                ${(doc.tags || []).map(tag => `
+                    <span>${esc(tag)}</span>
+                `).join("")}
+            </div>
 
+            <div class="normative-meta">
+
+                <div>
+                    <small>Категория</small>
+                    <b>${esc(doc.category)}</b>
+                </div>
+
+                <div>
+                    <small>Применение</small>
+                    <b>${esc(doc.applicability)}</b>
+                </div>
+
+                <div>
+                    <small>Дата</small>
+                    <b>${esc(doc.date)}</b>
+                </div>
+
+                <div>
+                    <small>Актуальность</small>
+                    <b>${esc(doc.update)}</b>
+                </div>
+
+            </div>
+
+            <div class="actions">
+
+                <button onclick="openNormative('${doc.id}')">
+                    Подробнее
+                </button>
+
+                <button
+                    class="primary"
+                    onclick="openNormativeSource('${doc.id}')">
+                    Открыть источник
+                </button>
+
+            </div>
+
+        </div>
+    `).join("");
+}
+
+
+function openNormative(id){
+
+    const doc =
+        normativeDocuments.find(x => x.id === id);
+
+    if(!doc) return;
+
+    window.currentNormative = doc;
+
+    const modal =
+        document.getElementById("normativeModal");
+
+    const content =
+        document.getElementById("normativeModalContent");
+
+    if(!modal || !content) return;
+
+    content.innerHTML = `
+        <div class="modal-head">
+
+            <div>
+                <span class="badge">${esc(doc.type)}</span>
+                <h2>${esc(doc.title)}</h2>
+                <p>${esc(doc.subtitle)}</p>
+            </div>
+
+            <button onclick="closeNormativeModal()">✕</button>
+
+        </div>
+
+        <hr>
+
+        <div class="normative-detail-grid">
+
+            <div>
+                <small>Статус документа</small>
+                <b>🟢 ${esc(doc.status)}</b>
+            </div>
+
+            <div>
+                <small>Применение</small>
+                <b>${esc(doc.applicability)}</b>
+            </div>
+
+            <div>
+                <small>Дата</small>
+                <b>${esc(doc.date)}</b>
+            </div>
+
+            <div>
+                <small>Актуальность</small>
+                <b>${esc(doc.update)}</b>
+            </div>
+
+        </div>
+
+        <div class="info" style="margin-top:18px;">
+            <b>Описание</b>
+            <p>${esc(doc.description)}</p>
+        </div>
+
+        <div class="warning" style="margin-top:14px;">
+            ⚠️ Перед использованием документа в проекте
+            необходимо проверить его действующую редакцию
+            и область применения.
+        </div>
+
+        <div class="actions" style="margin-top:18px;">
+
+            <button
+                class="primary"
+                onclick="openNormativeSource('${doc.id}')">
+                Открыть официальный источник
+            </button>
+
+            <button onclick="addNormativeToKnowledge('${doc.id}')">
+                Добавить в базу опыта
+            </button>
+
+        </div>
+    `;
+
+    modal.classList.add("open");
+}
+
+
+function closeNormativeModal(){
+
+    const modal =
+        document.getElementById("normativeModal");
+
+    if(modal){
+        modal.classList.remove("open");
     }
-  );
+}
 
+
+function openNormativeSource(id){
+
+    const doc =
+        normativeDocuments.find(x => x.id === id);
+
+    if(!doc || !doc.source) return;
+
+    window.open(doc.source, "_blank");
+}
+
+
+function openNormativeCategory(category){
+
+    showPage("normatives");
+
+    normativeState.category = category;
+
+    renderNormativeCategories();
+    renderNormatives();
+}
+
+
+function addNormativeToKnowledge(id){
+
+    const doc =
+        normativeDocuments.find(x => x.id === id);
+
+    if(!doc) return;
+
+    db.knowledge.push({
+        id:uid("knowledge"),
+        title:doc.title,
+        category:"Норматив",
+        type:"Нормативная база",
+        description:doc.description,
+        tags:doc.tags || [],
+        source:doc.source,
+        sourceName:doc.sourceName,
+        status:"Подтверждено нормативом",
+        createdAt:today()
+    });
+
+    saveDB();
+    renderKnowledge();
+
+    alert("Документ добавлен в базу.");
+}
+
+
+/* ---------- НОРМАТИВНАЯ ПОДСКАЗКА ---------- */
+
+function showNormativeHint(title, text, source){
+
+    const box =
+        document.getElementById("normativeHint");
+
+    if(!box) return;
+
+    box.innerHTML = `
+        <div class="info">
+
+            <div style="display:flex;justify-content:space-between;gap:10px;">
+                <b>📚 Нормативное обоснование</b>
+                <button onclick="this.closest('.info').remove()">✕</button>
+            </div>
+
+            <h4>${esc(title)}</h4>
+
+            <p>${esc(text)}</p>
+
+            ${source ? `
+                <button
+                    onclick="window.open('${source}','_blank')">
+                    Источник
+                </button>
+            ` : ""}
+
+        </div>
+    `;
+}
+
+
+/* ---------- ИНИЦИАЛИЗАЦИЯ НОРМАТИВОВ ---------- */
+
+function initNormatives(){
+
+    renderNormativeCategories();
+    renderNormatives();
+
+    const status =
+        document.getElementById("normativeStatus");
+
+    if(status){
+        status.innerHTML = `
+            <option value="Все">Все статусы</option>
+            <option value="Действует">Действует</option>
+        `;
+    }
+}
+
+
+/* ---------- СОХРАНЕНИЕ ЦЕНТРА ЛЭП ---------- */
+
+function savePowerRoute(){
+
+    const data = {
+
+        voltage: val("powerVoltage"),
+        length: val("powerLength"),
+        power: val("powerMW"),
+
+        circuits: val("powerCircuits"),
+
+        region: val("powerRegion"),
+        frequency: val("powerFrequency"),
+
+        overhead:
+            document.querySelector(
+                'input[name="powerType"]:checked'
+            )?.value || "ВЛ",
+
+        routeDescription:
+            val("powerRouteDescription"),
+
+        createdAt:today()
+    };
+
+    db.calculations.push({
+        id:uid("route"),
+        type:"power-route",
+        name:`Трасса ЛЭП ${data.voltage || ""} кВ`,
+        unit:"объект",
+        value:data.length || 0,
+        meta:data,
+        createdAt:today()
+    });
+
+    saveDB();
+
+    alert("Параметры трассы сохранены.");
+}
+
+
+/* ---------- ДОБАВЛЕНИЕ НОРМАТИВНОЙ ССЫЛКИ В РАСЧЁТ ---------- */
+
+function attachNormativeToCalculation(
+    calculationType
+){
+
+    const matches =
+        normativeDocuments.filter(doc => {
+
+            if(calculationType === "concrete"){
+                return [
+                    "Бетон и железобетон",
+                    "Конструкции"
+                ].includes(doc.category);
+            }
+
+            if(calculationType === "rebar"){
+                return [
+                    "Бетон и железобетон",
+                    "Арматура",
+                    "Конструкции"
+                ].includes(doc.category);
+            }
+
+            if(calculationType === "power"){
+                return doc.category === "Электроэнергетика" ||
+                       doc.category === "ЛЭП";
+            }
+
+            if(calculationType === "formwork"){
+                return [
+                    "Конструкции",
+                    "Бетон и железобетон"
+                ].includes(doc.category);
+            }
+
+            return false;
+        });
+
+    if(!matches.length) return;
+
+    const first = matches[0];
+
+    showNormativeHint(
+        first.title,
+        first.description,
+        first.source
+    );
+}
+
+
+/* ---------- СОБЫТИЯ НОРМАТИВНОГО РАЗДЕЛА ---------- */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    initNormatives();
+
+    const search =
+        document.getElementById("normativeSearch");
+
+    if(search){
+
+        search.addEventListener(
+            "input",
+            searchNormatives
+        );
+    }
+
+    const status =
+        document.getElementById("normativeStatus");
+
+    if(status){
+
+        status.addEventListener(
+            "change",
+            e => setNormativeStatus(e.target.value)
+        );
+    }
+
+});
+
+
+/* ---------- ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ---------- */
+
+function getPowerVoltageOptions(){
+
+    return [
+        0.4,
+        6,
+        10,
+        20,
+        35,
+        110,
+        220,
+        330,
+        500,
+        750
+    ];
+}
+
+
+function populatePowerVoltage(){
+
+    const select =
+        document.getElementById("powerVoltage");
+
+    if(!select) return;
+
+    select.innerHTML =
+        getPowerVoltageOptions().map(v => `
+            <option value="${v}">
+                ${v} кВ
+            </option>
+        `).join("") +
+        `<option value="custom">Другое</option>`;
+}
+
+
+function powerVoltageChanged(){
+
+    const select =
+        document.getElementById("powerVoltage");
+
+    const custom =
+        document.getElementById("powerVoltageCustom");
+
+    if(!select || !custom) return;
+
+    custom.style.display =
+        select.value === "custom"
+            ? "block"
+            : "none";
+}
+
+
+function validatePowerInput(){
+
+    const length =
+        val("powerLength");
+
+    const voltage =
+        val("powerVoltage");
+
+    if(length <= 0){
+
+        alert("Длина трассы должна быть больше нуля.");
+
+        return false;
+    }
+
+    if(!voltage){
+
+        alert("Выбери класс напряжения.");
+
+        return false;
+    }
+
+    return true;
+}
+
+
+/* ---------- БАЗА НОРМАТИВОВ ДЛЯ КАЛЬКУЛЯТОРОВ ---------- */
+
+const calculationNormatives = {
+
+    concrete:[
+        {
+            title:"СП 63.13330.2018",
+            text:"Бетонные и железобетонные конструкции."
+        },
+        {
+            title:"ГОСТ 26633",
+            text:"Бетоны тяжёлые и мелкозернистые."
+        }
+    ],
+
+    rebar:[
+        {
+            title:"СП 63.13330.2018",
+            text:"Расчёт и конструирование железобетонных конструкций."
+        },
+        {
+            title:"ГОСТ 34028",
+            text:"Прокат арматурный для железобетонных конструкций."
+        }
+    ],
+
+    formwork:[
+        {
+            title:"СП 70.13330.2012",
+            text:"Производство и приёмка работ по несущим и ограждающим конструкциям."
+        }
+    ],
+
+    earthwork:[
+        {
+            title:"СП 45.13330.2017",
+            text:"Земляные сооружения, основания и фундаменты."
+        }
+    ],
+
+    power:[
+        {
+            title:"СП 76.13330.2016",
+            text:"Электротехнические устройства."
+        },
+        {
+            title:"Нормативная база Минэнерго",
+            text:"Проектирование объектов электросетевого хозяйства."
+        }
+    ]
+};
+
+
+function showCalculationNormatives(type){
+
+    const list =
+        calculationNormatives[type];
+
+    if(!list || !list.length){
+
+        alert("Нормативная привязка пока не настроена.");
+
+        return;
+    }
+
+    const box =
+        document.getElementById("normativeHint");
+
+    if(!box) return;
+
+    box.innerHTML = `
+        <div class="info">
+
+            <div style="display:flex;justify-content:space-between;">
+                <b>📚 Нормативная база расчёта</b>
+
+                <button onclick="this.closest('.info').remove()">
+                    ✕
+                </button>
+            </div>
+
+            ${list.map(item => `
+                <div style="margin-top:12px;">
+                    <b>🔵 ${esc(item.title)}</b>
+                    <p>${esc(item.text)}</p>
+                </div>
+            `).join("")}
+
+            <div class="warning">
+                Нормативная ссылка не заменяет проверку
+                действующей редакции документа и проектной документации.
+            </div>
+
+        </div>
+    `;
+}
+
+
+/* ---------- АВТОЗАПУСК ---------- */
+
+setTimeout(() => {
+
+    try{
+        populatePowerVoltage();
+    }catch(e){}
+
+    try{
+        initNormatives();
+    }catch(e){}
+
+}, 100);
+
+</script><script>
 
 /* =========================
-   БАЗА ОПЫТА
-========================= */
+   PGSSTROY.PRO v0.6
+   BLOCK 4/6
+   БАЗА ОПЫТА + ДОКУМЕНТЫ + ПРОФИЛЬ
+   ========================= */
+
+
+/* ---------- БАЗА ОПЫТА ---------- */
 
 function renderKnowledge(){
 
-  const list =
-    document.getElementById(
-      "knowledgeList"
-    );
+    const box =
+        document.getElementById("knowledgeList");
 
-  const count =
-    document.getElementById(
-      "knowledgeCount"
-    );
+    if(!box) return;
 
-  if(!list){
-    return;
-  }
+    const items =
+        Array.isArray(db.knowledge)
+            ? db.knowledge
+            : [];
 
-  count.textContent =
-    db.knowledge.length;
+    if(!items.length){
 
-  if(db.knowledge.length === 0){
-
-    list.innerHTML =
-      `<div class="empty">
-        Пока нет материалов.
-      </div>`;
-
-    return;
-  }
-
-  list.innerHTML =
-    db.knowledge.map(item => `
-
-      <div class="card"
-           style="margin-bottom:10px;box-shadow:none;border:1px solid #e5e7eb;">
-
-        <div class="card-header">
-
-          <div>
-
-            <strong>
-              ${escapeHTML(item.title)}
-            </strong>
-
-            <div style="font-size:12px;color:#6b7280;">
-              ${escapeHTML(item.category)}
+        box.innerHTML = `
+            <div class="empty">
+                Пока нет записей.
+                Добавь первый практический опыт.
             </div>
-
-          </div>
-
-          <button
-            class="btn-danger btn-small"
-            onclick="deleteKnowledge('${item.id}')">
-            Удалить
-          </button>
-
-        </div>
-
-        <div style="margin-bottom:10px;">
-          <span class="badge">
-            ${escapeHTML(item.status)}
-          </span>
-        </div>
-
-        <div style="font-size:14px;line-height:1.5;">
-          ${escapeHTML(item.text)}
-        </div>
-
-      </div>
-
-    `).join("");
-
-}
-
-
-function deleteKnowledge(id){
-
-  db.knowledge =
-    db.knowledge.filter(
-      item => item.id !== id
-    );
-
-  saveDB();
-
-  renderKnowledge();
-}
-
-
-document
-  .getElementById("addKnowledgeBtn")
-  .addEventListener(
-    "click",
-    () => {
-
-      const title =
-        document
-          .getElementById("knowledgeTitle")
-          .value
-          .trim();
-
-      const text =
-        document
-          .getElementById("knowledgeText")
-          .value
-          .trim();
-
-      if(
-        !title ||
-        !text
-      ){
-
-        alert(
-          "Заполните заголовок и описание."
-        );
+        `;
 
         return;
-      }
+    }
 
-      db.knowledge.push({
+    box.innerHTML = items.map(item => `
+
+        <div class="card">
+
+            <div class="card-top">
+
+                <span class="badge">
+                    ${esc(item.type || "Опыт")}
+                </span>
+
+                <span class="status">
+                    ${item.status === "Подтверждено нормативом"
+                        ? "🔵 Подтверждено нормативом"
+                        : item.status === "Проверено специалистом"
+                            ? "🟣 Проверено специалистом"
+                            : "🟠 Практический опыт"}
+                </span>
+
+            </div>
+
+            <h3>
+                ${esc(item.title || "Без названия")}
+            </h3>
+
+            <p>
+                ${esc(item.description || "")}
+            </p>
+
+            ${
+                item.tags && item.tags.length
+                    ? `
+                        <div class="tags">
+                            ${item.tags.map(tag => `
+                                <span>${esc(tag)}</span>
+                            `).join("")}
+                        </div>
+                    `
+                    : ""
+            }
+
+            ${
+                item.source
+                    ? `
+                        <p class="muted">
+                            Источник:
+                            ${esc(item.sourceName || item.source)}
+                        </p>
+                    `
+                    : ""
+            }
+
+            <div class="actions">
+
+                <button onclick="viewKnowledge('${item.id}')">
+                    Подробнее
+                </button>
+
+                <button
+                    onclick="deleteKnowledge('${item.id}')">
+                    Удалить
+                </button>
+
+            </div>
+
+        </div>
+
+    `).join("");
+}
+
+
+function addKnowledge(){
+
+    const title =
+        val("knowledgeTitle");
+
+    const category =
+        val("knowledgeCategory");
+
+    const type =
+        val("knowledgeType");
+
+    const description =
+        val("knowledgeDescription");
+
+    const tagsRaw =
+        val("knowledgeTags");
+
+    if(!title){
+
+        alert("Укажи название записи.");
+
+        return;
+    }
+
+    db.knowledge.push({
 
         id:uid("knowledge"),
 
         title,
 
         category:
-          document
-            .getElementById("knowledgeCategory")
-            .value,
+            category || "Строительство",
 
-        text,
+        type:
+            type || "Практический опыт",
+
+        description:
+            description || "",
+
+        tags:
+            tagsRaw
+                ? tagsRaw
+                    .split(",")
+                    .map(x => x.trim())
+                    .filter(Boolean)
+                : [],
 
         status:
-          document
-            .getElementById("knowledgeStatus")
-            .value,
+            "Практический опыт",
+
+        source:"",
+        sourceName:"",
 
         createdAt:
-          new Date().toISOString()
+            today()
 
-      });
+    });
 
-      saveDB();
+    saveDB();
 
-      document
-        .getElementById("knowledgeTitle")
-        .value = "";
+    renderKnowledge();
 
-      document
-        .getElementById("knowledgeText")
-        .value = "";
+    [
+        "knowledgeTitle",
+        "knowledgeDescription",
+        "knowledgeTags"
+    ].forEach(id => {
 
-      renderKnowledge();
+        const el =
+            document.getElementById(id);
 
-    }
-  );
+        if(el) el.value = "";
 
+    });
 
-/* =========================
-   ПРОФИЛЬ
-========================= */
-
-function renderProfile(){
-
-  const profile =
-    db.profile || {};
-
-  document
-    .getElementById("profileName")
-    .value =
-      profile.name || "";
-
-  document
-    .getElementById("profileCity")
-    .value =
-      profile.city || "";
-
-  document
-    .getElementById("profileRegion")
-    .value =
-      profile.region ||
-      "Кабардино-Балкария";
-
-  document
-    .getElementById("profileRadius")
-    .value =
-      profile.radius ||
-      500;
-
+    alert("Запись добавлена в базу опыта.");
 }
 
 
-document
-  .getElementById("saveProfileBtn")
-  .addEventListener(
-    "click",
-    () => {
+function viewKnowledge(id){
 
-      db.profile = {
+    const item =
+        db.knowledge.find(
+            x => x.id === id
+        );
 
-        name:
-          document
-            .getElementById("profileName")
-            .value
-            .trim(),
+    if(!item) return;
 
-        city:
-          document
-            .getElementById("profileCity")
-            .value
-            .trim(),
+    const tags =
+        Array.isArray(item.tags)
+            ? item.tags.join(", ")
+            : "";
 
-        region:
-          document
-            .getElementById("profileRegion")
-            .value
-            .trim(),
+    alert(
+        `${item.title}\n\n` +
+        `${item.description || ""}\n\n` +
+        `Категория: ${item.category || "—"}\n` +
+        `Тип: ${item.type || "—"}\n` +
+        `Статус: ${item.status || "—"}\n` +
+        `Теги: ${tags || "—"}`
+    );
+}
 
-        radius:
-          num(
-            document
-              .getElementById("profileRadius")
-              .value
-          )
 
-      };
+function deleteKnowledge(id){
 
-      saveDB();
+    if(!confirm("Удалить эту запись?")) return;
 
-      document
-        .getElementById("profileResult")
-        .innerHTML = `
+    db.knowledge =
+        db.knowledge.filter(
+            x => x.id !== id
+        );
 
-          <div class="result">
-            Профиль сохранён.
-          </div>
+    saveDB();
 
+    renderKnowledge();
+}
+
+
+/* ---------- ДОБАВЛЕНИЕ ПРАКТИЧЕСКОГО ОПЫТА ---------- */
+
+function addPracticalExperience(){
+
+    const title =
+        val("experienceTitle");
+
+    const description =
+        val("experienceDescription");
+
+    const category =
+        val("experienceCategory");
+
+    if(!title){
+
+        alert("Укажи название опыта.");
+
+        return;
+    }
+
+    db.knowledge.push({
+
+        id:uid("experience"),
+
+        title,
+
+        category:
+            category || "Строительство",
+
+        type:
+            "Практический опыт",
+
+        description,
+
+        tags:[],
+
+        status:
+            "Практический опыт",
+
+        source:"",
+
+        sourceName:"",
+
+        createdAt:
+            today()
+
+    });
+
+    saveDB();
+
+    renderKnowledge();
+
+    alert("Практический опыт добавлен.");
+}
+
+
+/* ---------- ДОКУМЕНТЫ ОБЪЕКТА ---------- */
+
+function renderDocuments(){
+
+    const box =
+        document.getElementById("documentsList");
+
+    if(!box) return;
+
+    const documents =
+        Array.isArray(db.documents)
+            ? db.documents
+            : [];
+
+    if(!documents.length){
+
+        box.innerHTML = `
+            <div class="empty">
+                Документы пока не добавлены.
+            </div>
         `;
 
+        return;
     }
-  );
+
+    box.innerHTML =
+        documents.map(doc => `
+
+            <div class="card">
+
+                <div class="card-top">
+
+                    <span class="badge">
+                        ${esc(doc.type || "Документ")}
+                    </span>
+
+                    <span class="status">
+                        ${esc(doc.status || "Черновик")}
+                    </span>
+
+                </div>
+
+                <h3>
+                    ${esc(doc.name || "Без названия")}
+                </h3>
+
+                <p class="muted">
+                    Объект:
+                    ${esc(doc.objectName || "Не указан")}
+                </p>
+
+                <p>
+                    ${esc(doc.description || "")}
+                </p>
+
+                <div class="actions">
+
+                    ${
+                        doc.url
+                            ? `
+                                <button
+                                    class="primary"
+                                    onclick="window.open('${esc(doc.url)}','_blank')">
+                                    Открыть
+                                </button>
+                            `
+                            : ""
+                    }
+
+                    <button
+                        onclick="deleteDocument('${doc.id}')">
+                        Удалить
+                    </button>
+
+                </div>
+
+            </div>
+
+        `).join("");
+}
 
 
-/* =========================
-   ЗАПУСК ПРИЛОЖЕНИЯ
-========================= */
+function addDocument(){
 
-function initApp(){
+    const name =
+        val("documentName");
 
-  renderObjects();
+    const type =
+        val("documentType");
 
-  renderMaterials();
+    const objectName =
+        val("documentObject");
 
-  renderSuppliers();
+    const description =
+        val("documentDescription");
 
-  renderPrices();
+    const url =
+        val("documentURL");
 
-  renderKnowledge();
+    if(!name){
 
-  renderProfile();
+        alert("Укажи название документа.");
 
-  refreshObjectSelects();
+        return;
+    }
 
-  const dateInput =
-    document.getElementById(
-      "priceDate"
+    if(!Array.isArray(db.documents)){
+        db.documents = [];
+    }
+
+    db.documents.push({
+
+        id:uid("document"),
+
+        name,
+
+        type:
+            type || "Документ",
+
+        objectName:
+            objectName || "",
+
+        description:
+            description || "",
+
+        url:
+            url || "",
+
+        status:
+            "Черновик",
+
+        createdAt:
+            today()
+
+    });
+
+    saveDB();
+
+    renderDocuments();
+
+    [
+        "documentName",
+        "documentObject",
+        "documentDescription",
+        "documentURL"
+    ].forEach(id => {
+
+        const el =
+            document.getElementById(id);
+
+        if(el) el.value = "";
+
+    });
+
+    alert("Документ добавлен.");
+}
+
+
+function deleteDocument(id){
+
+    if(!confirm("Удалить документ?")) return;
+
+    db.documents =
+        db.documents.filter(
+            x => x.id !== id
+        );
+
+    saveDB();
+
+    renderDocuments();
+}
+
+
+/* ---------- ПРОФИЛЬ ---------- */
+
+function loadProfile(){
+
+    const profile =
+        db.profile || {};
+
+    const fields = {
+
+        profileName:
+            profile.name || "",
+
+        profileCompany:
+            profile.company || "",
+
+        profileCity:
+            profile.city || "",
+
+        profilePhone:
+            profile.phone || "",
+
+        profileEmail:
+            profile.email || "",
+
+        profileSpecialization:
+            profile.specialization || "",
+
+        profileAbout:
+            profile.about || ""
+
+    };
+
+    Object.entries(fields).forEach(
+        ([id,value]) => {
+
+            const el =
+                document.getElementById(id);
+
+            if(el){
+                el.value = value;
+            }
+
+        }
     );
+}
 
-  if(
-    dateInput &&
-    !dateInput.value
-  ){
-    dateInput.value = today();
-  }
+
+function saveProfile(){
+
+    db.profile = {
+
+        name:
+            val("profileName"),
+
+        company:
+            val("profileCompany"),
+
+        city:
+            val("profileCity"),
+
+        phone:
+            val("profilePhone"),
+
+        email:
+            val("profileEmail"),
+
+        specialization:
+            val("profileSpecialization"),
+
+        about:
+            val("profileAbout"),
+
+        updatedAt:
+            today()
+
+    };
+
+    saveDB();
+
+    alert("Профиль сохранён.");
+
+    updateDashboard();
+}
+
+
+/* ---------- ПРОФИЛЬ СПЕЦИАЛИСТА ---------- */
+
+function getProfileStatus(){
+
+    const profile =
+        db.profile || {};
+
+    const filled = [
+        profile.name,
+        profile.city,
+        profile.specialization,
+        profile.about
+    ].filter(Boolean).length;
+
+    if(filled >= 4){
+        return "Заполнен";
+    }
+
+    if(filled >= 2){
+        return "Заполняется";
+    }
+
+    return "Не заполнен";
+}
+
+
+function renderProfileStatus(){
+
+    const box =
+        document.getElementById("profileStatus");
+
+    if(!box) return;
+
+    const status =
+        getProfileStatus();
+
+    box.innerHTML = `
+        <div class="info">
+
+            <b>Профиль специалиста</b>
+
+            <div style="margin-top:8px;">
+                ${
+                    status === "Заполнен"
+                        ? "🟢 Профиль заполнен"
+                        : status === "Заполняется"
+                            ? "🟡 Профиль заполнен частично"
+                            : "⚪ Профиль не заполнен"
+                }
+            </div>
+
+        </div>
+    `;
+}
+
+
+/* ---------- ВЕРИФИКАЦИЯ СПЕЦИАЛИСТА ---------- */
+
+function requestVerification(){
+
+    const profile =
+        db.profile || {};
+
+    if(
+        !profile.name ||
+        !profile.city ||
+        !profile.specialization
+    ){
+
+        alert(
+            "Сначала заполни имя, город и специализацию."
+        );
+
+        return;
+    }
+
+    if(!db.profile.verification){
+
+        db.profile.verification = {
+            status:"На проверке",
+            requestedAt:today()
+        };
+
+    }else{
+
+        db.profile.verification.status =
+            "На проверке";
+
+        db.profile.verification.requestedAt =
+            today();
+
+    }
+
+    saveDB();
+
+    renderVerificationStatus();
+
+    alert(
+        "Заявка на проверку профиля создана."
+    );
+}
+
+
+function renderVerificationStatus(){
+
+    const box =
+        document.getElementById(
+            "verificationStatus"
+        );
+
+    if(!box) return;
+
+    const verification =
+        db.profile?.verification;
+
+    if(!verification){
+
+        box.innerHTML = `
+            <div class="warning">
+                🟠 Профиль ещё не проходил проверку.
+            </div>
+        `;
+
+        return;
+    }
+
+    let icon = "🟠";
+
+    if(
+        verification.status ===
+        "Проверено"
+    ){
+        icon = "🟣";
+    }
+
+    if(
+        verification.status ===
+        "Отклонено"
+    ){
+        icon = "🔴";
+    }
+
+    box.innerHTML = `
+        <div class="info">
+            ${icon}
+            Статус проверки:
+            <b>${esc(verification.status)}</b>
+        </div>
+    `;
+}
+
+
+/* ---------- ПОИСК ПО БАЗЕ ОПЫТА ---------- */
+
+function searchKnowledge(){
+
+    const input =
+        document.getElementById(
+            "knowledgeSearch"
+        );
+
+    const query =
+        input
+            ? input.value.trim().toLowerCase()
+            : "";
+
+    const box =
+        document.getElementById(
+            "knowledgeList"
+        );
+
+    if(!box) return;
+
+    const items =
+        (db.knowledge || []).filter(item => {
+
+            const text = [
+
+                item.title,
+                item.description,
+                item.category,
+                item.type,
+                ...(item.tags || [])
+
+            ].join(" ").toLowerCase();
+
+            return !query ||
+                text.includes(query);
+
+        });
+
+    if(!items.length){
+
+        box.innerHTML = `
+            <div class="empty">
+                По вашему запросу ничего не найдено.
+            </div>
+        `;
+
+        return;
+    }
+
+    box.innerHTML =
+        items.map(item => `
+
+            <div class="card">
+
+                <span class="badge">
+                    ${esc(item.type || "Опыт")}
+                </span>
+
+                <h3>
+                    ${esc(item.title)}
+                </h3>
+
+                <p>
+                    ${esc(item.description || "")}
+                </p>
+
+                <button
+                    onclick="viewKnowledge('${item.id}')">
+                    Подробнее
+                </button>
+
+            </div>
+
+        `).join("");
+}
+
+
+/* ---------- ФИЛЬТРЫ БАЗЫ ОПЫТА ---------- */
+
+function filterKnowledge(category){
+
+    const items =
+        (db.knowledge || []);
+
+    const filtered =
+        category === "Все"
+            ? items
+            : items.filter(
+                x => x.category === category
+            );
+
+    const box =
+        document.getElementById(
+            "knowledgeList"
+        );
+
+    if(!box) return;
+
+    box.innerHTML =
+        filtered.map(item => `
+
+            <div class="card">
+
+                <div class="card-top">
+
+                    <span class="badge">
+                        ${esc(item.category || "Строительство")}
+                    </span>
+
+                    <span class="status">
+                        ${esc(item.status || "")}
+                    </span>
+
+                </div>
+
+                <h3>
+                    ${esc(item.title)}
+                </h3>
+
+                <p>
+                    ${esc(item.description || "")}
+                </p>
+
+                <button
+                    onclick="viewKnowledge('${item.id}')">
+                    Подробнее
+                </button>
+
+            </div>
+
+        `).join("");
+}
+
+
+/* ---------- СТАТУСЫ И ТИПЫ ОПЫТА ---------- */
+
+function experienceLabel(status){
+
+    switch(status){
+
+        case "Подтверждено нормативом":
+            return "🔵 Подтверждено нормативом";
+
+        case "Проверено специалистом":
+            return "🟣 Проверено специалистом";
+
+        case "Практический опыт":
+            return "🟠 Практический опыт";
+
+        case "Требует проверки":
+            return "🟠 Требует проверки";
+
+        default:
+            return "⚪ Информация";
+
+    }
+}
+
+
+/* ---------- ПОДГОТОВКА ДАННЫХ ДЛЯ ЭКСПОРТА ---------- */
+
+function exportProjectData(){
+
+    const data = {
+
+        app:"PGSSTROY.PRO",
+
+        version:"0.6",
+
+        exportedAt:
+            new Date().toISOString(),
+
+        database:db
+
+    };
+
+    const blob =
+        new Blob(
+            [
+                JSON.stringify(
+                    data,
+                    null,
+                    2
+                )
+            ],
+            {
+                type:
+                    "application/json"
+            }
+        );
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const a =
+        document.createElement("a");
+
+    a.href = url;
+
+    a.download =
+        "pgsstroy-project-data.json";
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    a.remove();
+
+    URL.revokeObjectURL(url);
+}
+
+
+/* ---------- ИМПОРТ ДАННЫХ ---------- */
+
+function importProjectData(input){
+
+    const file =
+        input?.files?.[0];
+
+    if(!file) return;
+
+    const reader =
+        new FileReader();
+
+    reader.onload = function(e){
+
+        try{
+
+            const data =
+                JSON.parse(
+                    e.target.result
+                );
+
+            if(
+                !data ||
+                !data.database
+            ){
+
+                throw new Error(
+                    "Неверный формат"
+                );
+
+            }
+
+            db =
+                data.database;
+
+            saveDB();
+
+            location.reload();
+
+        }catch(error){
+
+            alert(
+                "Не удалось импортировать файл."
+            );
+
+        }
+
+    };
+
+    reader.readAsText(file);
+}
+
+
+/* ---------- СТАТИСТИКА ПОЛЬЗОВАТЕЛЯ ---------- */
+
+function renderUserStats(){
+
+    const box =
+        document.getElementById(
+            "userStats"
+        );
+
+    if(!box) return;
+
+    const objects =
+        db.objects?.length || 0;
+
+    const calculations =
+        db.calculations?.length || 0;
+
+    const knowledge =
+        db.knowledge?.length || 0;
+
+    const estimates =
+        db.estimates?.length || 0;
+
+    box.innerHTML = `
+
+        <div class="stat">
+            <b>${objects}</b>
+            <span>Объектов</span>
+        </div>
+
+        <div class="stat">
+            <b>${calculations}</b>
+            <span>Расчётов</span>
+        </div>
+
+        <div class="stat">
+            <b>${knowledge}</b>
+            <span>Записей опыта</span>
+        </div>
+
+        <div class="stat">
+            <b>${estimates}</b>
+            <span>Смет</span>
+        </div>
+
+    `;
+}
+
+
+/* ---------- ОБЩАЯ ОТРИСОВКА ---------- */
+
+function renderAll(){
+
+    try{
+        updateDashboard();
+    }catch(e){}
+
+    try{
+        renderKnowledge();
+    }catch(e){}
+
+    try{
+        renderDocuments();
+    }catch(e){}
+
+    try{
+        loadProfile();
+    }catch(e){}
+
+    try{
+        renderProfileStatus();
+    }catch(e){}
+
+    try{
+        renderVerificationStatus();
+    }catch(e){}
+
+    try{
+        renderUserStats();
+    }catch(e){}
+
+    try{
+        renderNormativeCategories();
+    }catch(e){}
+
+    try{
+        renderNormatives();
+    }catch(e){}
 
 }
 
 
-initApp();
+/* ---------- ОТКРЫТИЕ СТРАНИЦ ---------- */
+
+function openKnowledge(){
+
+    showPage("knowledge");
+
+    renderKnowledge();
+
+}
+
+
+function openDocuments(){
+
+    showPage("documents");
+
+    renderDocuments();
+
+}
+
+
+function openProfile(){
+
+    showPage("profile");
+
+    loadProfile();
+
+    renderProfileStatus();
+
+    renderVerificationStatus();
+
+    renderUserStats();
+
+}
+
+
+/* ---------- БЫСТРЫЕ ДЕЙСТВИЯ ---------- */
+
+function quickConcrete(){
+
+    showPage("concrete");
+
+    const field =
+        document.getElementById(
+            "concreteLength"
+        );
+
+    if(field){
+        field.focus();
+    }
+}
+
+
+function quickRebar(){
+
+    showPage("rebar");
+
+    const field =
+        document.getElementById(
+            "rebarLength"
+        );
+
+    if(field){
+        field.focus();
+    }
+}
+
+
+function quickEstimate(){
+
+    showPage("estimate");
+
+    calculateEstimate();
+
+}
+
+
+function quickPower(){
+
+    showPage("power");
+
+    const field =
+        document.getElementById(
+            "powerLength"
+        );
+
+    if(field){
+        field.focus();
+    }
+}
+
+
+/* ---------- ПОДГОТОВКА ЛЭП ---------- */
+
+function initPowerForm(){
+
+    const voltage =
+        document.getElementById(
+            "powerVoltage"
+        );
+
+    if(
+        voltage &&
+        voltage.options.length <= 1
+    ){
+        populatePowerVoltage();
+    }
+
+    const reserve =
+        document.getElementById(
+            "powerReserve"
+        );
+
+    if(
+        reserve &&
+        !reserve.value
+    ){
+        reserve.value = 5;
+    }
+
+    const circuits =
+        document.getElementById(
+            "powerCircuits"
+        );
+
+    if(
+        circuits &&
+        !circuits.value
+    ){
+        circuits.value = 1;
+    }
+
+}
+
+
+/* ---------- СОХРАНЕНИЕ ЧЕРНОВИКА ---------- */
+
+function saveDraft(key,data){
+
+    try{
+
+        localStorage.setItem(
+            `pgsstroy_draft_${key}`,
+            JSON.stringify(data)
+        );
+
+    }catch(e){}
+
+}
+
+
+function loadDraft(key){
+
+    try{
+
+        const raw =
+            localStorage.getItem(
+                `pgsstroy_draft_${key}`
+            );
+
+        return raw
+            ? JSON.parse(raw)
+            : null;
+
+    }catch(e){
+
+        return null;
+
+    }
+}
+
+
+/* ---------- ЧЕРНОВИК ЛЭП ---------- */
+
+function savePowerDraft(){
+
+    const fields = [
+
+        "powerVoltage",
+        "powerMW",
+        "powerLength",
+        "powerCircuits",
+        "powerSpan",
+        "powerAngles",
+        "powerRoadCross",
+        "powerWaterCross",
+        "powerForest",
+        "powerSettlements",
+        "powerSupportIntermediate",
+        "powerSupportAnchor",
+        "powerSupportAngle",
+        "powerSupportEnd",
+        "powerFoundationDepth",
+        "powerFoundationWidth",
+        "powerFoundationLength",
+        "powerConductorSection",
+        "powerConductorsPerPhase",
+        "powerReserve"
+
+    ];
+
+    const data = {};
+
+    fields.forEach(id => {
+
+        const el =
+            document.getElementById(id);
+
+        if(el){
+            data[id] = el.value;
+        }
+
+    });
+
+    saveDraft(
+        "power",
+        data
+    );
+
+    alert("Черновик ЛЭП сохранён.");
+}
+
+
+function restorePowerDraft(){
+
+    const data =
+        loadDraft("power");
+
+    if(!data) return;
+
+    Object.entries(data).forEach(
+        ([id,value]) => {
+
+            const el =
+                document.getElementById(id);
+
+            if(el){
+                el.value = value;
+            }
+
+        }
+    );
+
+}
+
+
+/* ---------- ПРОВЕРКА ЦЕНЫ ---------- */
+
+function priceStatus(price){
+
+    if(!price){
+        return "🔴 Цена не найдена";
+    }
+
+    if(price.type === "fgis_cs"){
+        return "🔵 ФГИС ЦС";
+    }
+
+    if(price.type === "market"){
+        return "🟡 Рыночная цена";
+    }
+
+    if(price.type === "user"){
+        return "🟣 Цена объекта";
+    }
+
+    return "⚪ Источник не указан";
+}
+
+
+/* ---------- ИНФОРМАЦИЯ О ЦЕНЕ ---------- */
+
+function priceSourceText(price){
+
+    if(!price){
+        return "Нет данных";
+    }
+
+    const source =
+        price.source ||
+        "Источник не указан";
+
+    const date =
+        price.date ||
+        "дата не указана";
+
+    const region =
+        price.region ||
+        "регион не указан";
+
+    return `
+        ${esc(source)}
+        · ${esc(region)}
+        · ${esc(date)}
+    `;
+}
+
+
+/* ---------- ФИНАЛЬНАЯ ИНИЦИАЛИЗАЦИЯ ---------- */
+
+function initializePGSSTROY(){
+
+    try{
+
+        if(
+            typeof db === "undefined" ||
+            !db
+        ){
+            db = loadDB();
+        }
+
+    }catch(e){
+
+        console.error(e);
+
+    }
+
+
+    if(!db.schemaVersion){
+
+        db.schemaVersion = 6;
+
+    }
+
+
+    if(!Array.isArray(db.documents)){
+        db.documents = [];
+    }
+
+    if(!Array.isArray(db.knowledge)){
+        db.knowledge = [];
+    }
+
+    if(!Array.isArray(db.calculations)){
+        db.calculations = [];
+    }
+
+    if(!Array.isArray(db.estimates)){
+        db.estimates = [];
+    }
+
+    if(!Array.isArray(db.prices)){
+        db.prices = [];
+    }
+
+    if(!Array.isArray(db.materials)){
+        db.materials = [];
+    }
+
+    if(!Array.isArray(db.objects)){
+        db.objects = [];
+    }
+
+    if(!Array.isArray(db.suppliers)){
+        db.suppliers = [];
+    }
+
+
+    if(!db.profile){
+        db.profile = {};
+    }
+
+
+    saveDB();
+
+    renderAll();
+
+    initPowerForm();
+
+}
+
+
+/* ---------- ЗАПУСК ---------- */
+
+if(
+    document.readyState === "loading"
+){
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        initializePGSSTROY
+    );
+
+}else{
+
+    initializePGSSTROY();
+
+}
+
+</script><script>
+
+/* ==========================================
+   PGSSTROY.PRO v0.6
+   BLOCK 5/6
+   УЛУЧШЕНИЕ UI + СМЕТА + ЦЕНЫ + ЭКСПОРТ
+   ========================================== */
+
+
+/* ---------- ОБНОВЛЕНИЕ ДАШБОРДА ---------- */
+
+function refreshDashboard(){
+
+    try{
+        updateDashboard();
+    }catch(e){
+        console.error("Dashboard:", e);
+    }
+
+    try{
+        renderUserStats();
+    }catch(e){}
+
+}
+
+
+/* ---------- ФИЛЬТР ЦЕН ---------- */
+
+function filterPrices(){
+
+    const search =
+        val("priceSearch").toLowerCase();
+
+    const type =
+        val("priceType");
+
+    const region =
+        val("priceRegion");
+
+    const box =
+        document.getElementById(
+            "pricesList"
+        );
+
+    if(!box) return;
+
+    const prices =
+        (db.prices || []).filter(price => {
+
+            const text = [
+
+                price.name,
+                price.material,
+                price.category,
+                price.unit,
+                price.source,
+                price.region
+
+            ].join(" ").toLowerCase();
+
+            const searchOK =
+                !search ||
+                text.includes(search);
+
+            const typeOK =
+                !type ||
+                type === "Все" ||
+                price.type === type;
+
+            const regionOK =
+                !region ||
+                region === "Все" ||
+                price.region === region;
+
+            return (
+                searchOK &&
+                typeOK &&
+                regionOK
+            );
+
+        });
+
+
+    if(!prices.length){
+
+        box.innerHTML = `
+            <div class="empty">
+                По заданным параметрам цены не найдены.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    box.innerHTML =
+        prices.map(price => `
+
+            <div class="card">
+
+                <div class="card-top">
+
+                    <span class="badge">
+                        ${esc(price.type || "Источник")}
+                    </span>
+
+                    <span>
+                        ${priceStatus(price)}
+                    </span>
+
+                </div>
+
+                <h3>
+                    ${esc(
+                        price.name ||
+                        price.material ||
+                        "Материал"
+                    )}
+                </h3>
+
+                <div class="price-big">
+                    ${money(
+                        Number(price.price || 0)
+                    )}
+                    <small>
+                        ${esc(price.unit || "")}
+                    </small>
+                </div>
+
+                <p>
+                    ${priceSourceText(price)}
+                </p>
+
+                <div class="price-meta">
+
+                    <span>
+                        Регион:
+                        <b>
+                            ${esc(
+                                price.region ||
+                                "—"
+                            )}
+                        </b>
+                    </span>
+
+                    <span>
+                        НДС:
+                        <b>
+                            ${
+                                price.vat !== undefined
+                                    ? esc(String(price.vat)) + "%"
+                                    : "—"
+                            }
+                        </b>
+                    </span>
+
+                    <span>
+                        Доставка:
+                        <b>
+                            ${
+                                price.delivery
+                                    ? money(price.delivery)
+                                    : "—"
+                            }
+                        </b>
+                    </span>
+
+                </div>
+
+                <div class="actions">
+
+                    <button
+                        onclick="editPrice('${price.id}')">
+                        Изменить
+                    </button>
+
+                    <button
+                        onclick="deletePrice('${price.id}')">
+                        Удалить
+                    </button>
+
+                </div>
+
+            </div>
+
+        `).join("");
+}
+
+
+/* ---------- УДАЛЕНИЕ ЦЕНЫ ---------- */
+
+function deletePrice(id){
+
+    if(
+        !confirm(
+            "Удалить эту цену из базы?"
+        )
+    ){
+        return;
+    }
+
+    db.prices =
+        (db.prices || []).filter(
+            x => x.id !== id
+        );
+
+    saveDB();
+
+    try{
+        filterPrices();
+    }catch(e){}
+
+}
+
+
+/* ---------- РЕДАКТИРОВАНИЕ ЦЕНЫ ---------- */
+
+function editPrice(id){
+
+    const price =
+        (db.prices || []).find(
+            x => x.id === id
+        );
+
+    if(!price) return;
+
+    const name =
+        prompt(
+            "Название материала:",
+            price.name || ""
+        );
+
+    if(name === null) return;
+
+    const value =
+        prompt(
+            "Цена:",
+            price.price || ""
+        );
+
+    if(value === null) return;
+
+    const numeric =
+        Number(
+            String(value)
+                .replace(",", ".")
+        );
+
+    if(
+        !Number.isFinite(numeric) ||
+        numeric < 0
+    ){
+
+        alert("Некорректная цена.");
+
+        return;
+    }
+
+    price.name = name;
+    price.price = numeric;
+
+    saveDB();
+
+    filterPrices();
+
+}
+
+
+/* ---------- ДОБАВЛЕНИЕ ЦЕНЫ ---------- */
+
+function addPrice(){
+
+    const name =
+        val("newPriceName");
+
+    const priceValue =
+        val("newPriceValue");
+
+    const unit =
+        val("newPriceUnit");
+
+    const type =
+        val("newPriceType") ||
+        "market";
+
+    const region =
+        val("newPriceRegion");
+
+    const source =
+        val("newPriceSource");
+
+    const date =
+        val("newPriceDate") ||
+        today();
+
+    const vat =
+        val("newPriceVAT");
+
+    const delivery =
+        val("newPriceDelivery");
+
+    if(!name){
+
+        alert(
+            "Укажи название материала."
+        );
+
+        return;
+    }
+
+    const numeric =
+        Number(
+            String(priceValue)
+                .replace(",", ".")
+        );
+
+    if(
+        !Number.isFinite(numeric) ||
+        numeric < 0
+    ){
+
+        alert(
+            "Укажи корректную цену."
+        );
+
+        return;
+    }
+
+
+    db.prices.push({
+
+        id:
+            uid("price"),
+
+        name,
+
+        material:
+            name,
+
+        category:
+            val("newPriceCategory") ||
+            "Материалы",
+
+        unit:
+            unit || "шт.",
+
+        price:
+            numeric,
+
+        type,
+
+        region:
+            region || "КБР",
+
+        city:
+            val("newPriceCity") ||
+            "Нальчик",
+
+        date,
+
+        vat:
+            vat !== ""
+                ? Number(vat)
+                : null,
+
+        delivery:
+            delivery !== ""
+                ? Number(delivery)
+                : 0,
+
+        source:
+            source ||
+            "Источник не указан",
+
+        ksr:
+            val("newPriceKSR") ||
+            "",
+
+        period:
+            val("newPricePeriod") ||
+            "",
+
+        confidence:
+            type === "fgis_cs"
+                ? "Высокая"
+                : "Проверить",
+
+        createdAt:
+            today()
+
+    });
+
+
+    saveDB();
+
+    filterPrices();
+
+    [
+        "newPriceName",
+        "newPriceValue",
+        "newPriceSource",
+        "newPriceKSR",
+        "newPricePeriod",
+        "newPriceDelivery"
+    ].forEach(id => {
+
+        const el =
+            document.getElementById(id);
+
+        if(el){
+            el.value = "";
+        }
+
+    });
+
+
+    alert(
+        "Цена добавлена в базу."
+    );
+
+}
+
+
+/* ---------- ИНДЕКС / ИНФОРМАЦИЯ О ФГИС ЦС ---------- */
+
+function showFGISInfo(){
+
+    const box =
+        document.getElementById(
+            "fgisInfo"
+        );
+
+    if(!box) return;
+
+    box.innerHTML = `
+
+        <div class="info">
+
+            <h3>
+                🔵 ФГИС ЦС
+            </h3>
+
+            <p>
+                Для сметных расчётов PGSSTROY.PRO
+                предусматривается использование
+                актуальных данных ФГИС ЦС с учётом
+                региона, ценовой зоны, периода,
+                единицы измерения и НДС.
+            </p>
+
+            <p>
+                Рыночные цены и цены,
+                введённые пользователем,
+                должны отображаться отдельно
+                от нормативной ценовой базы.
+            </p>
+
+            <div class="warning">
+                ⚠️ Перед выпуском рабочей сметы
+                необходимо проверить актуальность
+                исходных цен и их область применения.
+            </div>
+
+            <button
+                class="primary"
+                onclick="window.open(
+                    'https://fgiscs.minstroyrf.ru/prices',
+                    '_blank'
+                )">
+                Открыть ФГИС ЦС
+            </button>
+
+        </div>
+
+    `;
+
+}
+
+
+/* ---------- СОЗДАНИЕ СМЕТЫ ИЗ РАСЧЁТОВ ---------- */
+
+function buildEstimateLines(){
+
+    const calculations =
+        db.calculations || [];
+
+    return calculations.map(calc => {
+
+        const price =
+            findPrice(
+                calc.name,
+                calc.unit
+            );
+
+        const qty =
+            Number(
+                calc.value || 0
+            );
+
+        const unitPrice =
+            price
+                ? Number(price.price || 0)
+                : 0;
+
+        const total =
+            qty * unitPrice;
+
+        return {
+
+            id:
+                uid("line"),
+
+            calculationId:
+                calc.id,
+
+            name:
+                calc.name,
+
+            qty,
+
+            unit:
+                calc.unit,
+
+            price:
+                unitPrice,
+
+            total,
+
+            source:
+                price
+                    ? price.source
+                    : "",
+
+            priceType:
+                price
+                    ? price.type
+                    : "",
+
+            priceId:
+                price
+                    ? price.id
+                    : null
+
+        };
+
+    });
+
+}
+
+
+/* ---------- ПРЕДПРОСМОТР СМЕТЫ ---------- */
+
+function previewEstimate(){
+
+    const lines =
+        buildEstimateLines();
+
+    const box =
+        document.getElementById(
+            "estimatePreview"
+        );
+
+    if(!box) return;
+
+
+    let direct = 0;
+
+    lines.forEach(line => {
+
+        direct +=
+            Number(line.total || 0);
+
+    });
+
+
+    const overhead =
+        Number(
+            val("estimateOverhead") || 0
+        );
+
+    const delivery =
+        Number(
+            val("estimateDelivery") || 0
+        );
+
+    const reserve =
+        Number(
+            val("estimateReserve") || 0
+        );
+
+
+    const overheadValue =
+        direct *
+        overhead /
+        100;
+
+    const deliveryValue =
+        direct *
+        delivery /
+        100;
+
+    const reserveValue =
+        (
+            direct +
+            overheadValue +
+            deliveryValue
+        ) *
+        reserve /
+        100;
+
+    const total =
+        direct +
+        overheadValue +
+        deliveryValue +
+        reserveValue;
+
+
+    box.innerHTML = `
+
+        <div class="card">
+
+            <h3>
+                Предварительная смета
+            </h3>
+
+            ${
+                lines.length
+                    ? `
+                        <div class="table-wrap">
+
+                            <table>
+
+                                <thead>
+                                    <tr>
+                                        <th>Позиция</th>
+                                        <th>Кол-во</th>
+                                        <th>Ед.</th>
+                                        <th>Цена</th>
+                                        <th>Сумма</th>
+                                        <th>Источник</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    ${lines.map(line => `
+
+                                        <tr>
+
+                                            <td>
+                                                ${esc(line.name)}
+                                            </td>
+
+                                            <td>
+                                                ${numberRU(line.qty)}
+                                            </td>
+
+                                            <td>
+                                                ${esc(line.unit)}
+                                            </td>
+
+                                            <td>
+                                                ${
+                                                    line.price
+                                                        ? money(line.price)
+                                                        : "—"
+                                                }
+                                            </td>
+
+                                            <td>
+                                                ${
+                                                    line.total
+                                                        ? money(line.total)
+                                                        : "—"
+                                                }
+                                            </td>
+
+                                            <td>
+                                                ${
+                                                    line.price
+                                                        ? priceStatus({
+                                                            type:
+                                                                line.priceType
+                                                        })
+                                                        : "🔴 Нет цены"
+                                                }
+                                            </td>
+
+                                        </tr>
+
+                                    `).join("")}
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+                    `
+                    : `
+                        <div class="empty">
+                            Нет сохранённых расчётов.
+                        </div>
+                    `
+            }
+
+
+            <div class="estimate-total">
+
+                <div>
+                    Прямые затраты:
+                    <b>
+                        ${money(direct)}
+                    </b>
+                </div>
+
+                <div>
+                    Накладные:
+                    <b>
+                        ${money(overheadValue)}
+                    </b>
+                </div>
+
+                <div>
+                    Доставка:
+                    <b>
+                        ${money(deliveryValue)}
+                    </b>
+                </div>
+
+                <div>
+                    Резерв:
+                    <b>
+                        ${money(reserveValue)}
+                    </b>
+                </div>
+
+                <div class="total">
+                    ИТОГО:
+                    <b>
+                        ${money(total)}
+                    </b>
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* ---------- ЭКСПОРТ СМЕТЫ JSON ---------- */
+
+function exportEstimateJSON(){
+
+    const lines =
+        buildEstimateLines();
+
+    const data = {
+
+        application:
+            "PGSSTROY.PRO",
+
+        version:
+            "0.6",
+
+        createdAt:
+            today(),
+
+        estimate:{
+
+            lines,
+
+            overhead:
+                Number(
+                    val("estimateOverhead") || 0
+                ),
+
+            delivery:
+                Number(
+                    val("estimateDelivery") || 0
+                ),
+
+            reserve:
+                Number(
+                    val("estimateReserve") || 0
+                )
+
+        }
+
+    };
+
+
+    const blob =
+        new Blob(
+            [
+                JSON.stringify(
+                    data,
+                    null,
+                    2
+                )
+            ],
+            {
+                type:
+                    "application/json"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const a =
+        document.createElement("a");
+
+    a.href = url;
+
+    a.download =
+        "pgsstroy-estimate.json";
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    a.remove();
+
+    URL.revokeObjectURL(url);
+
+}
+
+
+/* ---------- ПЕЧАТЬ СМЕТЫ ---------- */
+
+function printEstimate(){
+
+    const printArea =
+        document.getElementById(
+            "estimatePreview"
+        );
+
+    if(!printArea){
+
+        alert(
+            "Сначала сформируй смету."
+        );
+
+        return;
+    }
+
+    const original =
+        document.body.innerHTML;
+
+    document.body.innerHTML = `
+
+        <div style="
+            max-width:1100px;
+            margin:30px auto;
+            font-family:Arial,sans-serif;
+        ">
+
+            <h1>
+                PGSSTROY.PRO
+            </h1>
+
+            <h2>
+                Предварительная смета
+            </h2>
+
+            <p>
+                Дата:
+                ${today()}
+            </p>
+
+            ${printArea.innerHTML}
+
+        </div>
+
+    `;
+
+    window.print();
+
+    location.reload();
+
+}
+
+
+/* ---------- СОХРАНЕНИЕ СМЕТЫ ---------- */
+
+function saveEstimateSnapshot(){
+
+    const lines =
+        buildEstimateLines();
+
+    if(!lines.length){
+
+        alert(
+            "Нет расчётов для сохранения."
+        );
+
+        return;
+    }
+
+
+    const name =
+        prompt(
+            "Название сметы:",
+            `Смета ${today()}`
+        );
+
+    if(!name) return;
+
+
+    let direct = 0;
+
+    lines.forEach(line => {
+
+        direct +=
+            Number(line.total || 0);
+
+    });
+
+
+    const overhead =
+        Number(
+            val("estimateOverhead") || 0
+        );
+
+    const delivery =
+        Number(
+            val("estimateDelivery") || 0
+        );
+
+    const reserve =
+        Number(
+            val("estimateReserve") || 0
+        );
+
+
+    const total =
+        direct +
+        direct * overhead / 100 +
+        direct * delivery / 100 +
+        direct *
+        (
+            overhead +
+            delivery
+        ) / 100 *
+        reserve / 100;
+
+
+    db.estimates.push({
+
+        id:
+            uid("estimate"),
+
+        name,
+
+        lines,
+
+        direct,
+
+        overhead,
+
+        delivery,
+
+        reserve,
+
+        total,
+
+        createdAt:
+            today()
+
+    });
+
+
+    saveDB();
+
+    updateDashboard();
+
+    alert(
+        "Смета сохранена."
+    );
+
+}
+
+
+/* ---------- СПИСОК СОХРАНЁННЫХ СМЕТ ---------- */
+
+function renderSavedEstimates(){
+
+    const box =
+        document.getElementById(
+            "savedEstimates"
+        );
+
+    if(!box) return;
+
+    const estimates =
+        db.estimates || [];
+
+
+    if(!estimates.length){
+
+        box.innerHTML = `
+            <div class="empty">
+                Сохранённых смет нет.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    box.innerHTML =
+        estimates.map(item => `
+
+            <div class="card">
+
+                <div class="card-top">
+
+                    <span class="badge">
+                        Смета
+                    </span>
+
+                    <span>
+                        ${esc(item.createdAt || "")}
+                    </span>
+
+                </div>
+
+                <h3>
+                    ${esc(item.name)}
+                </h3>
+
+                <div class="price-big">
+                    ${money(item.total || 0)}
+                </div>
+
+                <p>
+                    Позиций:
+                    ${
+                        item.lines
+                            ? item.lines.length
+                            : 0
+                    }
+                </p>
+
+                <div class="actions">
+
+                    <button
+                        onclick="viewSavedEstimate('${item.id}')">
+                        Открыть
+                    </button>
+
+                    <button
+                        onclick="deleteSavedEstimate('${item.id}')">
+                        Удалить
+                    </button>
+
+                </div>
+
+            </div>
+
+        `).join("");
+
+}
+
+
+function viewSavedEstimate(id){
+
+    const estimate =
+        (db.estimates || []).find(
+            x => x.id === id
+        );
+
+    if(!estimate) return;
+
+
+    const lines =
+        estimate.lines || [];
+
+
+    const text =
+        lines.map(line => {
+
+            return (
+                `${line.name}: ` +
+                `${numberRU(line.qty)} ` +
+                `${line.unit} × ` +
+                `${money(line.price || 0)} = ` +
+                `${money(line.total || 0)}`
+            );
+
+        }).join("\n");
+
+
+    alert(
+
+        `${estimate.name}\n\n` +
+
+        `${text}\n\n` +
+
+        `Прямые затраты: ` +
+        `${money(estimate.direct || 0)}\n` +
+
+        `Накладные: ` +
+        `${estimate.overhead || 0}%\n` +
+
+        `Доставка: ` +
+        `${estimate.delivery || 0}%\n` +
+
+        `Резерв: ` +
+        `${estimate.reserve || 0}%\n\n` +
+
+        `ИТОГО: ` +
+        `${money(estimate.total || 0)}`
+
+    );
+
+}
+
+
+function deleteSavedEstimate(id){
+
+    if(
+        !confirm(
+            "Удалить сохранённую смету?"
+        )
+    ){
+        return;
+    }
+
+
+    db.estimates =
+        (db.estimates || []).filter(
+            x => x.id !== id
+        );
+
+
+    saveDB();
+
+    renderSavedEstimates();
+
+    updateDashboard();
+
+}
+
+
+/* ---------- ПРОВЕРКА БАЗЫ ЦЕН ---------- */
+
+function checkMissingPrices(){
+
+    const calculations =
+        db.calculations || [];
+
+    const missing =
+        calculations.filter(calc => {
+
+            return !findPrice(
+                calc.name,
+                calc.unit
+            );
+
+        });
+
+
+    if(!missing.length){
+
+        alert(
+            "🟢 Для всех сохранённых расчётов найдены цены."
+        );
+
+        return;
+    }
+
+
+    const names =
+        missing.map(
+            x => `• ${x.name}`
+        ).join("\n");
+
+
+    alert(
+        "🔴 Не найдены цены:\n\n" +
+        names +
+        "\n\nДобавь их в раздел «Цены»."
+    );
+
+}
+
+
+/* ---------- ИСТОЧНИКИ ЦЕН ---------- */
+
+function getPriceSourceLabel(type){
+
+    switch(type){
+
+        case "fgis_cs":
+            return "🔵 ФГИС ЦС";
+
+        case "market":
+            return "🟡 Рыночная";
+
+        case "user":
+            return "🟣 Цена объекта";
+
+        default:
+            return "⚪ Не указан";
+
+    }
+
+}
+
+
+/* ---------- ВСПОМОГАТЕЛЬНОЕ ОКНО ---------- */
+
+function showInfoModal(title,text){
+
+    let modal =
+        document.getElementById(
+            "simpleInfoModal"
+        );
+
+
+    if(!modal){
+
+        modal =
+            document.createElement("div");
+
+        modal.id =
+            "simpleInfoModal";
+
+        modal.className =
+            "modal";
+
+        document.body.appendChild(
+            modal
+        );
+
+    }
+
+
+    modal.innerHTML = `
+
+        <div class="modal-content">
+
+            <div class="modal-head">
+
+                <h2>
+                    ${esc(title)}
+                </h2>
+
+                <button
+                    onclick="
+                        document
+                        .getElementById(
+                            'simpleInfoModal'
+                        )
+                        .classList
+                        .remove('open')
+                    ">
+                    ✕
+                </button>
+
+            </div>
+
+            <div style="white-space:pre-line;">
+                ${esc(text)}
+            </div>
+
+        </div>
+
+    `;
+
+
+    modal.classList.add("open");
+
+}
+
+
+/* ---------- ГЛАВНЫЕ ПОДСКАЗКИ ---------- */
+
+function showConstructionNotice(){
+
+    showInfoModal(
+
+        "PGSSTROY.PRO",
+
+        "Платформа предназначена для " +
+        "расчётов, предварительной оценки, " +
+        "хранения опыта и организации " +
+        "строительных работ.\n\n" +
+
+        "Нормативные требования, проектные " +
+        "решения и инженерные расчёты должны " +
+        "проверяться по действующей документации."
+
+    );
+
+}
+
+
+/* ---------- ЗАПУСК БЛОКА 5 ---------- */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        try{
+            filterPrices();
+        }catch(e){}
+
+        try{
+            renderSavedEstimates();
+        }catch(e){}
+
+        try{
+            showFGISInfo();
+        }catch(e){}
+
+        try{
+            refreshDashboard();
+        }catch(e){}
+
+    }
+);
+
+</script><script>
+
+/* ==========================================
+   PGSSTROY.PRO v0.6
+   BLOCK 6/6
+   ФИНАЛЬНАЯ ИНИЦИАЛИЗАЦИЯ + ЗАЩИТА
+   ========================================== */
+
+
+/* ---------- БЕЗОПАСНЫЙ ВЫЗОВ ---------- */
+
+function safeRun(fn){
+
+    try{
+        if(typeof fn === "function"){
+            fn();
+        }
+    }catch(error){
+        console.error(
+            "PGSSTROY.PRO:",
+            error
+        );
+    }
+
+}
+
+
+/* ---------- ЗАПОЛНЕНИЕ ДАТ ---------- */
+
+function initDates(){
+
+    const ids = [
+
+        "newPriceDate",
+        "estimateDate",
+        "documentDate"
+
+    ];
+
+    ids.forEach(id => {
+
+        const el =
+            document.getElementById(id);
+
+        if(
+            el &&
+            !el.value
+        ){
+            el.value = today();
+        }
+
+    });
+
+}
+
+
+/* ---------- ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ ---------- */
+
+function initDefaults(){
+
+    const defaults = {
+
+        estimateOverhead:"10",
+
+        estimateDelivery:"0",
+
+        estimateReserve:"5",
+
+        powerReserve:"5",
+
+        powerCircuits:"1",
+
+        powerConductorsPerPhase:"1",
+
+        powerFoundationDepth:"2",
+
+        powerFoundationWidth:"1",
+
+        powerFoundationLength:"2",
+
+        newPriceRegion:"КБР",
+
+        newPriceCity:"Нальчик",
+
+        newPriceVAT:"20"
+
+    };
+
+
+    Object.entries(defaults)
+        .forEach(([id,value]) => {
+
+            const el =
+                document.getElementById(id);
+
+            if(
+                el &&
+                (
+                    el.value === "" ||
+                    el.value === null
+                )
+            ){
+
+                el.value = value;
+
+            }
+
+        });
+
+}
+
+
+/* ---------- КЛАВИША ESC ---------- */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if(event.key !== "Escape"){
+            return;
+        }
+
+
+        document
+            .querySelectorAll(".modal.open")
+            .forEach(modal => {
+
+                modal.classList.remove(
+                    "open"
+                );
+
+            });
+
+    }
+);
+
+
+/* ---------- ЗАКРЫТИЕ MODAL ПО ФОНУ ---------- */
+
+document.addEventListener(
+    "click",
+    event => {
+
+        if(
+            event.target.classList &&
+            event.target.classList.contains(
+                "modal"
+            )
+        ){
+
+            event.target.classList.remove(
+                "open"
+            );
+
+        }
+
+    }
+);
+
+
+/* ---------- АВТОСОХРАНЕНИЕ ПРОФИЛЯ ---------- */
+
+function autoSaveProfile(){
+
+    if(
+        typeof db === "undefined" ||
+        !db
+    ){
+        return;
+    }
+
+
+    const profile =
+        db.profile || {};
+
+
+    const fields = {
+
+        name:
+            document.getElementById(
+                "profileName"
+            )?.value,
+
+        company:
+            document.getElementById(
+                "profileCompany"
+            )?.value,
+
+        city:
+            document.getElementById(
+                "profileCity"
+            )?.value,
+
+        phone:
+            document.getElementById(
+                "profilePhone"
+            )?.value,
+
+        email:
+            document.getElementById(
+                "profileEmail"
+            )?.value,
+
+        specialization:
+            document.getElementById(
+                "profileSpecialization"
+            )?.value,
+
+        about:
+            document.getElementById(
+                "profileAbout"
+            )?.value
+
+    };
+
+
+    const hasData =
+        Object.values(fields)
+            .some(Boolean);
+
+
+    if(!hasData){
+        return;
+    }
+
+
+    db.profile = {
+
+        ...profile,
+
+        ...fields,
+
+        draftUpdatedAt:
+            today()
+
+    };
+
+
+    saveDB();
+
+}
+
+
+/* ---------- СТАТУС БАЗЫ ---------- */
+
+function databaseHealth(){
+
+    if(
+        typeof db === "undefined" ||
+        !db
+    ){
+
+        return {
+            ok:false,
+            message:
+                "База данных не загружена."
+        };
+
+    }
+
+
+    const required = [
+
+        "objects",
+        "materials",
+        "calculations",
+        "prices",
+        "suppliers",
+        "knowledge",
+        "estimates"
+
+    ];
+
+
+    const missing =
+        required.filter(
+            key =>
+                !Array.isArray(db[key])
+        );
+
+
+    if(missing.length){
+
+        return {
+
+            ok:false,
+
+            message:
+                "Отсутствуют разделы: " +
+                missing.join(", ")
+
+        };
+
+    }
+
+
+    return {
+
+        ok:true,
+
+        message:
+            "База данных работает."
+
+    };
+
+}
+
+
+/* ---------- ИНДИКАТОР СОСТОЯНИЯ ---------- */
+
+function renderDatabaseHealth(){
+
+    const box =
+        document.getElementById(
+            "databaseHealth"
+        );
+
+    if(!box) return;
+
+
+    const health =
+        databaseHealth();
+
+
+    box.innerHTML = `
+
+        <div class="
+            ${
+                health.ok
+                    ? "info"
+                    : "warning"
+            }
+        ">
+
+            ${
+                health.ok
+                    ? "🟢"
+                    : "🟠"
+            }
+
+            ${esc(health.message)}
+
+        </div>
+
+    `;
+
+}
+
+
+/* ---------- СТАТИСТИКА БАЗЫ ---------- */
+
+function getDatabaseStats(){
+
+    return {
+
+        objects:
+            db.objects?.length || 0,
+
+        calculations:
+            db.calculations?.length || 0,
+
+        materials:
+            db.materials?.length || 0,
+
+        prices:
+            db.prices?.length || 0,
+
+        suppliers:
+            db.suppliers?.length || 0,
+
+        knowledge:
+            db.knowledge?.length || 0,
+
+        estimates:
+            db.estimates?.length || 0,
+
+        documents:
+            db.documents?.length || 0
+
+    };
+
+}
+
+
+function showDatabaseStats(){
+
+    const s =
+        getDatabaseStats();
+
+
+    showInfoModal(
+
+        "Статистика PGSSTROY.PRO",
+
+        "Объекты: " +
+        s.objects +
+
+        "\nРасчёты: " +
+        s.calculations +
+
+        "\nМатериалы: " +
+        s.materials +
+
+        "\nЦены: " +
+        s.prices +
+
+        "\nПоставщики: " +
+        s.suppliers +
+
+        "\nБаза опыта: " +
+        s.knowledge +
+
+        "\nСметы: " +
+        s.estimates +
+
+        "\nДокументы: " +
+        s.documents
+
+    );
+
+}
+
+
+/* ---------- ОЧИСТКА ТЕСТОВЫХ ДАННЫХ ---------- */
+
+function clearLocalDatabase(){
+
+    const answer =
+        prompt(
+            "Для полного удаления локальных данных " +
+            "введи: УДАЛИТЬ"
+        );
+
+
+    if(answer !== "УДАЛИТЬ"){
+        return;
+    }
+
+
+    localStorage.removeItem(
+        DB_KEY
+    );
+
+
+    alert(
+        "Локальная база PGSSTROY.PRO очищена."
+    );
+
+
+    location.reload();
+
+}
+
+
+/* ---------- РЕЗЕРВНАЯ КОПИЯ ---------- */
+
+function createBackup(){
+
+    const backup = {
+
+        application:
+            "PGSSTROY.PRO",
+
+        version:
+            "0.6",
+
+        createdAt:
+            new Date().toISOString(),
+
+        database:
+            db
+
+    };
+
+
+    const blob =
+        new Blob(
+            [
+                JSON.stringify(
+                    backup,
+                    null,
+                    2
+                )
+            ],
+            {
+                type:
+                    "application/json"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(blob);
+
+
+    const a =
+        document.createElement("a");
+
+
+    a.href = url;
+
+    a.download =
+        `pgsstroy-backup-${today()}.json`;
+
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    a.remove();
+
+
+    URL.revokeObjectURL(url);
+
+}
+
+
+/* ---------- ОБНОВЛЕНИЕ ВСЕХ РАЗДЕЛОВ ---------- */
+
+function refreshApplication(){
+
+    safeRun(updateDashboard);
+
+    safeRun(renderKnowledge);
+
+    safeRun(renderDocuments);
+
+    safeRun(loadProfile);
+
+    safeRun(renderProfileStatus);
+
+    safeRun(renderVerificationStatus);
+
+    safeRun(renderUserStats);
+
+    safeRun(renderNormativeCategories);
+
+    safeRun(renderNormatives);
+
+    safeRun(filterPrices);
+
+    safeRun(renderSavedEstimates);
+
+    safeRun(renderDatabaseHealth);
+
+    safeRun(initDates);
+
+    safeRun(initDefaults);
+
+}
+
+
+/* ---------- ПЕРЕХОД В НОРМАТИВЫ ---------- */
+
+function openNormatives(){
+
+    showPage("normatives");
+
+    safeRun(
+        renderNormativeCategories
+    );
+
+    safeRun(
+        renderNormatives
+    );
+
+}
+
+
+/* ---------- ПЕРЕХОД В ЦЕНЫ ---------- */
+
+function openPrices(){
+
+    showPage("prices");
+
+    safeRun(filterPrices);
+
+    safeRun(showFGISInfo);
+
+}
+
+
+/* ---------- ПЕРЕХОД В СМЕТУ ---------- */
+
+function openEstimates(){
+
+    showPage("estimate");
+
+    safeRun(renderSavedEstimates);
+
+    safeRun(previewEstimate);
+
+}
+
+
+/* ---------- ПЕРЕХОД В ЛЭП ---------- */
+
+function openPower(){
+
+    showPage("power");
+
+    safeRun(initPowerForm);
+
+}
+
+
+/* ---------- ПЕРЕХОД В БАЗУ ОПЫТА ---------- */
+
+function openExperience(){
+
+    showPage("knowledge");
+
+    safeRun(renderKnowledge);
+
+}
+
+
+/* ---------- ПЕРЕХОД В ДОКУМЕНТЫ ---------- */
+
+function openProjectDocuments(){
+
+    showPage("documents");
+
+    safeRun(renderDocuments);
+
+}
+
+
+/* ---------- ФИНАЛЬНАЯ ПРОВЕРКА ---------- */
+
+function finalApplicationCheck(){
+
+    const health =
+        databaseHealth();
+
+
+    console.log(
+        "PGSSTROY.PRO v0.6"
+    );
+
+    console.log(
+        "Database:",
+        health
+    );
+
+
+    console.log(
+        "Normatives:",
+        normativeDocuments.length
+    );
+
+
+    console.log(
+        "Calculations:",
+        db.calculations?.length || 0
+    );
+
+
+    console.log(
+        "Prices:",
+        db.prices?.length || 0
+    );
+
+
+    console.log(
+        "Knowledge:",
+        db.knowledge?.length || 0
+    );
+
+}
+
+
+/* ---------- ПЕРВЫЙ ЗАПУСК ---------- */
+
+function bootPGSSTROY(){
+
+    safeRun(initializePGSSTROY);
+
+    safeRun(initDates);
+
+    safeRun(initDefaults);
+
+    safeRun(initPowerForm);
+
+    safeRun(renderAll);
+
+    safeRun(renderDatabaseHealth);
+
+    safeRun(finalApplicationCheck);
+
+}
+
+
+/* ---------- ЗАПУСК ПРИ ЗАГРУЗКЕ ---------- */
+
+if(
+    document.readyState ===
+    "loading"
+){
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        bootPGSSTROY,
+        {
+            once:true
+        }
+    );
+
+}else{
+
+    bootPGSSTROY();
+
+}
+
+
+/* ---------- АВТОСОХРАНЕНИЕ ---------- */
+
+setInterval(
+    () => {
+
+        try{
+
+            autoSaveProfile();
+
+        }catch(e){
+
+            console.error(e);
+
+        }
+
+    },
+    30000
+);
+
+
+/* ---------- ЗАЩИТА ОТ ПОТЕРИ ДАННЫХ ---------- */
+
+window.addEventListener(
+    "beforeunload",
+    () => {
+
+        try{
+
+            if(
+                typeof db !== "undefined" &&
+                db
+            ){
+
+                saveDB();
+
+            }
+
+        }catch(e){}
+
+    }
+);
+
+
+/* ---------- ГЛОБАЛЬНАЯ ОБРАБОТКА ОШИБОК ---------- */
+
+window.addEventListener(
+    "error",
+    event => {
+
+        console.error(
+            "PGSSTROY.PRO error:",
+            event.error ||
+            event.message
+        );
+
+    }
+);
+
+
+/* ---------- ВЕРСИЯ ---------- */
+
+window.PGSSTROY = {
+
+    version:"0.6",
+
+    name:"PGSSTROY.PRO",
+
+    description:
+        "Строительная и инженерная платформа",
+
+    modules:[
+
+        "Объекты",
+        "Бетон",
+        "Арматура",
+        "Материалы",
+        "Опалубка",
+        "Смета",
+        "Поставщики",
+        "Цены",
+        "ЛЭП",
+        "Нормативы",
+        "База опыта",
+        "Документы",
+        "Профиль"
+
+    ]
+
+};
+
 
 </script>
 
