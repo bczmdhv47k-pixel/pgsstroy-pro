@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PGSSTROY.PRO — Dashboard</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0b1118;
+      color: #f4f7fa;
+    }
+
+    .dashboard {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .header p {
+      margin: 6px 0 0;
+      color: #9aa7b4;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .card {
+      background: #101923;
+      border: 1px solid #263442;
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .stat-title {
+      color: #9aa7b4;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-size: 26px;
+      font-weight: 700;
+    }
+
+    .section {
+      margin-top: 18px;
+    }
+
+    .section h2 {
+      font-size: 19px;
+      margin: 0 0 12px;
+    }
+
+    .object-card {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .object-name {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .muted {
+      color: #9aa7b4;
+      margin-top: 6px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,138,31,.14);
+      color: #ff9d42;
+      font-size: 13px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    button {
+      border: 1px solid #334454;
+      background: #16222d;
+      color: #fff;
+      border-radius: 12px;
+      padding: 13px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #ff8a1f;
+    }
+
+    .primary {
+      background: #ff8a1f;
+      border-color: #ff8a1f;
+      color: #111;
+      font-weight: 700;
+    }
+
+    .activity {
+      display: grid;
+      gap: 10px;
+    }
+
+    .activity-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #263442;
+    }
+
+    .activity-item:last-child {
+      border-bottom: 0;
+    }
+
+    @media (max-width: 800px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .actions {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 500px) {
+      .dashboard {
+        padding: 14px;
+      }
+
+      .grid,
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .object-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="dashboard">
+
+    <div class="header">
+      <div>
+        <h1>🏗️ PGSSTROY.PRO</h1>
+        <p>Панель управления строительными проектами</p>
+      </div>
+
+      <span class="badge">Dashboard</span>
+    </div>
+
+    <section class="grid">
+
+      <div class="card">
+        <div class="stat-title">🏗️ Активные объекты</div>
+        <div class="stat-value" id="objectsCount">0</div>
+      </div>
+
+      <div class="card">
+        <div class="stat-title">📐 Расчёты</div>
+        <div class="stat-value" id="calculationsCount">0</div>
+      </div>
+
+      <div class="card">
+        <div class="stat-title">📦 Материалы</div>
+        <div class="stat-value" id="materialsCount">0</div>
+      </div>
+
+      <div class="card">
+        <div class="stat-title">⭐ Избранные</div>
+        <div class="stat-value" id="favoritesCount">0</div>
+      </div>
+
+    </section>
+
+    <section class="section">
+      <h2>🏗️ Текущий объект</h2>
+
+      <div class="card object-card">
+        <div>
+          <div class="object-name" id="currentObjectName">
+            Объект не выбран
+          </div>
+
+          <div class="muted" id="currentObjectAddress">
+            Выберите объект в PGSSTROY.PRO
+          </div>
+        </div>
+
+        <span class="badge" id="currentObjectStatus">
+          Нет объекта
+        </span>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>⚡ Быстрые действия</h2>
+
+      <div class="actions">
+
+        <button class="primary" onclick="goToMain()">
+          🏠 Главная
+        </button>
+
+        <button onclick="goToCalculations()">
+          📐 Расчёты
+        </button>
+
+        <button onclick="goToMaterials()">
+          📦 Материалы
+        </button>
+
+        <button onclick="goToObjects()">
+          🏗️ Объекты
+        </button>
+
+      </div>
+    </section>
+
+    <section class="section">
+
+      <h2>📋 Последние операции</h2>
+
+      <div class="card activity">
+
+        <div class="activity-item">
+          <span>Объекты</span>
+          <span id="activityObjects">0</span>
+        </div>
+
+        <div class="activity-item">
+          <span>Расчёты</span>
+          <span id="activityCalculations">0</span>
+        </div>
+
+        <div class="activity-item">
+          <span>Материалы</span>
+          <span id="activityMaterials">0</span>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <script>
+    function loadDashboard() {
+
+      const data = localStorage.getItem("pgsstroy_db");
+
+      if (!data) {
+        return;
+      }
+
+      try {
+
+        const db = JSON.parse(data);
+
+        const objects = Array.isArray(db.objects)
+          ? db.objects.filter(o => !o.archived)
+          : [];
+
+        const calculations = Array.isArray(db.calculations)
+          ? db.calculations
+          : [];
+
+        const materials = Array.isArray(db.materials)
+          ? db.materials
+          : [];
+
+        const favorites = objects.filter(o => o.favorite);
+
+        document.getElementById("objectsCount").textContent =
+          objects.length;
+
+        document.getElementById("calculationsCount").textContent =
+          calculations.length;
+
+        document.getElementById("materialsCount").textContent =
+          materials.length;
+
+        document.getElementById("favoritesCount").textContent =
+          favorites.length;
+
+        document.getElementById("activityObjects").textContent =
+          objects.length;
+
+        document.getElementById("activityCalculations").textContent =
+          calculations.length;
+
+        document.getElementById("activityMaterials").textContent =
+          materials.length;
+
+        const current = objects.find(
+          o => String(o.id) === String(db.currentObjectId)
+        );
+
+        if (current) {
+
+          document.getElementById("currentObjectName").textContent =
+            current.name || "Без названия";
+
+          document.getElementById("currentObjectAddress").textContent =
+            current.address || "Адрес не указан";
+
+          document.getElementById("currentObjectStatus").textContent =
+            current.status || "Активный";
+
+        }
+
+      } catch (error) {
+
+        console.error("Dashboard error:", error);
+
+      }
+    }
+
+    function goToMain() {
+      window.location.href = "index.html";
+    }
+
+    function goToCalculations() {
+      window.location.href = "index.html";
+    }
+
+    function goToMaterials() {
+      window.location.href = "index.html";
+    }
+
+    function goToObjects() {
+      window.location.href = "index.html";
+    }
+
+    loadDashboard();
+  </script>
+
+</body>
+</html>
