@@ -673,7 +673,6 @@ function cloudLogout(){
   refreshAccountUI();
   closeAccountModal();
   notify('Вы вышли из облачного аккаунта');}
-}
 async function doCloudLogin(){try{if(!PGSSTROY_API_URL)return alert("Backend ещё не подключён. Укажите PGSSTROY_API_URL.");const email=$("cloudLoginEmail")?.value.trim(),password=$("cloudLoginPassword")?.value||"";if(!email||!password)return alert("Введите email и пароль.");await cloudLogin(email,password);closeAccountModal();notify("Вход в облако выполнен")}catch(e){alert("Не удалось войти: "+(e.data?.error||e.message))}}
 async function createCloudAccount(){try{if(!PGSSTROY_API_URL)return alert("Backend ещё не подключён. Укажите PGSSTROY_API_URL.");const name=$("newAccountName")?.value.trim(),email=$("newAccountEmail")?.value.trim(),org=$("newAccountOrg")?.value.trim();const password=prompt("Придумайте пароль (минимум 6 символов):");if(!name||!email||!password)return alert("Заполните имя, email и пароль.");await cloudRegister(name,email,password,org);closeAccountModal();notify("Облачный аккаунт создан")}catch(e){alert("Не удалось зарегистрировать: "+(e.data?.error||e.message))}}
 function closeAccountModal(){if($("accountModal"))$("accountModal").style.display="none"}
