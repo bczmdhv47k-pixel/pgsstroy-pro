@@ -1400,43 +1400,239 @@ function renderLepDrawingCardsV10(){
   if(!b)return;
 
   const drawings=[
+
     {
-      stage:'Фундаменты',
-      title:'Чертежи фундаментов опор',
-      desc:'Рабочие чертежи фундаментов и элементов фундаментов для конкретных марок опор.',
-      status:'Подключение чертежей'
+      category:'Опоры',
+      type:'Промежуточная',
+      voltage:'35–110 кВ',
+      material:'Стальная',
+      series:'3.407.2-170',
+      title:'Промежуточные стальные опоры ВЛ 35–110 кВ',
+      desc:'Рабочие чертежи КМ: монтажные схемы, геометрия, узлы и расчётные листы.',
+      drawing:'https://ru.djvu.online/file/IInmvr42qXhLW'
     },
+
     {
-      stage:'Монтаж опор',
-      title:'Чертежи установки опор',
-      desc:'Схемы и рабочие чертежи по установке опор ЛЭП.',
-      status:'Подключение чертежей'
+      category:'Опоры',
+      type:'Анкерно-угловая',
+      voltage:'35–110 кВ',
+      material:'Стальная',
+      series:'3.407.2-170',
+      title:'Анкерно-угловые стальные опоры ВЛ 35–110 кВ',
+      desc:'Рабочие чертежи КМ конструкций и узлов.',
+      drawing:'https://ohranatruda.ru/ot_biblio/norma/402145/'
     },
+
     {
-      stage:'Сборка опор',
-      title:'Чертежи сборки опор',
-      desc:'Схемы сборки, секций, траверс и элементов опор.',
-      status:'Подключение чертежей'
+      category:'Опоры',
+      type:'Промежуточная',
+      voltage:'220 кВ',
+      material:'Стальная',
+      series:'3.407.2-145',
+      title:'Промежуточные стальные опоры ВЛ 220 кВ',
+      desc:'Рабочие чертежи КМ, монтажные схемы и узлы.',
+      drawing:'https://meganorm.ru/Index2/1/4293844/4293844580.htm'
+    },
+
+    {
+      category:'Опоры',
+      type:'Промежуточная',
+      voltage:'330 кВ',
+      material:'Стальная',
+      series:'3.407.2-145',
+      title:'Промежуточные стальные опоры ВЛ 330 кВ',
+      desc:'Рабочие чертежи КМ, монтажные схемы, геометрия и узлы.',
+      drawing:'https://meganorm.ru/Index2/1/4293844/4293844579.htm'
+    },
+
+    {
+      category:'Опоры',
+      type:'Анкерно-угловая',
+      voltage:'220–330 кВ',
+      material:'Стальная',
+      series:'3.407.2-145',
+      title:'Анкерно-угловые стальные опоры ВЛ 220–330 кВ',
+      desc:'Рабочие чертежи КМ конструкции и узлов.',
+      drawing:'https://meganorm.ru/Index2/1/4293844/4293844577.htm'
+    },
+
+    {
+      category:'Опоры',
+      type:'Промежуточная',
+      voltage:'500 кВ',
+      material:'Стальная',
+      series:'3.407.2-155',
+      title:'Промежуточные стальные опоры ВЛ 500 кВ',
+      desc:'Монтажные схемы, узлы, траверсы, стойки и спецификации.',
+      drawing:'https://meganorm.ru/Index2/1/4293844/4293844502.htm'
+    },
+
+    {
+      category:'Опоры',
+      type:'Анкерно-угловая',
+      voltage:'500 кВ',
+      material:'Стальная',
+      series:'3.407.2-155',
+      title:'Анкерно-угловые и промежуточно-угловые опоры ВЛ 500 кВ',
+      desc:'Монтажные схемы, узлы, стойки, траверсы и спецификации.',
+      drawing:'https://files.stroyinf.ru/Index2/1/4293844/4293844501.htm'
+    },
+
+    {
+      category:'Опоры',
+      type:'Концевая',
+      voltage:'220–330 кВ',
+      material:'Стальная',
+      series:'3.407-95',
+      title:'Концевые опоры для больших переходов ВЛ 220–330 кВ',
+      desc:'Монтажные схемы, узлы и рабочие чертежи конструкций К220-1, К220-2, К330-1, К330-2.',
+      drawing:'https://meganorm.ru/Index2/1/4293815/4293815084.htm'
+    },
+
+    {
+      category:'Опоры',
+      type:'Переходная / специальная',
+      voltage:'35–330 кВ',
+      material:'Стальная',
+      series:'3.407.2-168',
+      title:'Переходные опоры ВЛ 35–330 кВ',
+      desc:'Рабочие чертежи КМ свободностоящих переходных опор высотой до 100 м.',
+      drawing:'https://www.studmed.ru/seriya-34072-168-unificirovannye-konstrukcii-svobodnostoyaschih-perehodnyh-opor-vl-35-330-kv-vysotoy-do-100-m-vypusk-3-perehodnye-opory-330-kv-rabochie-chertezhi-km_d08bcb6fa9b.html'
+    },
+
+    {
+      category:'Опоры',
+      type:'Промежуточная',
+      voltage:'35–220 кВ',
+      material:'Железобетонная',
+      series:'3.407.1-175',
+      title:'Промежуточные одностоечные ЖБ опоры ВЛ 35–220 кВ',
+      desc:'Схемы расположения элементов, металлические и железобетонные рабочие чертежи.',
+      drawing:'https://meganorm.ru/Index2/1/4293844/4293844815.htm'
+    },
+
+    {
+      category:'Опоры',
+      type:'Промежуточная',
+      voltage:'35–500 кВ',
+      material:'Железобетонная',
+      series:'3.407.1-152',
+      title:'Промежуточные двухстоечные ЖБ опоры ВЛ 35–500 кВ',
+      desc:'Схемы расположения элементов, металлические и железобетонные рабочие чертежи.',
+      drawing:'https://ohranatruda.ru/ot_biblio/norma/402123/'
+    },
+
+    {
+      category:'Опоры',
+      type:'Анкерно-угловая',
+      voltage:'330–500 кВ',
+      material:'Железобетонная',
+      series:'3.407.1-167',
+      title:'Анкерно-угловые ЖБ опоры ВЛ 330–500 кВ',
+      desc:'Схемы расположения элементов, металлические и железобетонные рабочие чертежи.',
+      drawing:'https://meganorm.ru/Index2/1/4293844/4293844816.htm'
+    },
+
+    {
+      category:'Фундаменты',
+      type:'Сборный ЖБ',
+      voltage:'35–330 кВ',
+      material:'Железобетон',
+      series:'3.407-115',
+      title:'Фундаменты под металлические опоры ВЛ 35–330 кВ',
+      desc:'Рабочие чертежи фундаментных конструкций, плит, ригелей и элементов закрепления опор.',
+      drawing:'https://ohranatruda.ru/ot_biblio/norma/402175/'
+    },
+
+    {
+      category:'Фундаменты',
+      type:'Сборный ЖБ',
+      voltage:'500 кВ',
+      material:'Железобетон',
+      series:'3.407-115',
+      title:'Фундаменты под металлические опоры ВЛ 500 кВ',
+      desc:'Отдельный выпуск фундаментных конструкций для опор 500 кВ.',
+      drawing:'https://files.stroyinf.ru/Data2/1/4293833/4293833466.htm'
+    },
+
+    {
+      category:'Фундаменты',
+      type:'Свайный',
+      voltage:'35–500 кВ',
+      material:'ЖБ / металл',
+      series:'3.407-115',
+      title:'Свайные фундаменты и металлические ростверки',
+      desc:'Вибрированные и центрифугированные сваи, свайные фундаменты и металлические ростверки.',
+      drawing:'https://ohranatruda.ru/ot_biblio/norma/402175/'
+    },
+
+    {
+      category:'Фундаменты',
+      type:'Элементы фундамента',
+      voltage:'35–500 кВ',
+      material:'ЖБ / металл',
+      series:'3.407-115',
+      title:'Плиты, ригели и детали закрепления опор',
+      desc:'Рабочие чертежи плит, ригелей, анкерных элементов, подпятников и металлических деталей.',
+      drawing:'https://meganorm.ru/Index2/1/4293833/4293833464.htm'
     }
   ];
 
-  b.innerHTML=drawings.map(x=>`
-    <div class="item">
+  const grouped={};
+  drawings.forEach(x=>{
+    if(!grouped[x.category])grouped[x.category]=[];
+    grouped[x.category].push(x);
+  });
+
+  b.innerHTML=Object.entries(grouped).map(([category,items])=>`
+    <div class="item" style="margin-top:12px">
       <div class="price-line">
-        <b>${esc(x.title)}</b>
-        <span class="tag">${esc(x.stage)}</span>
+        <b>${esc(category)}</b>
+        <span class="tag">${items.length} комплектов</span>
       </div>
 
-      <p>${esc(x.desc)}</p>
+      ${items.map(x=>`
+        <div class="item" style="margin-top:10px">
+          <div class="price-line">
+            <b>${esc(x.title)}</b>
+            <span class="tag">${esc(x.voltage)}</span>
+          </div>
 
-      <div class="notice">
-        📐 ${esc(x.status)}
-      </div>
+          <div style="margin-top:7px">
+            <span class="tag">${esc(x.type)}</span>
+            <span class="tag">${esc(x.material)}</span>
+            <span class="tag">${esc(x.series)}</span>
+          </div>
 
-      <button class="secondary" type="button"
-        onclick="notify('Загрузка чертежей будет подключена на следующем этапе')">
-        📎 Добавить чертёж
-      </button>
+          <p>${esc(x.desc)}</p>
+
+          <div class="toolbar">
+            <a class="secondary"
+               href="${x.drawing}"
+               target="_blank"
+               rel="noopener"
+               style="display:inline-block;text-decoration:none">
+              📐 Рабочие чертежи
+            </a>
+
+            <a class="secondary"
+               href="${x.drawing}"
+               target="_blank"
+               rel="noopener"
+               style="display:inline-block;text-decoration:none">
+              🔩 Сборка / узлы
+            </a>
+
+            <a class="secondary"
+               href="${x.drawing}"
+               target="_blank"
+               rel="noopener"
+               style="display:inline-block;text-decoration:none">
+              🏗️ Монтаж / установка
+            </a>
+          </div>
+        </div>
+      `).join('')}
     </div>
   `).join('');
 }
