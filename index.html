@@ -1303,7 +1303,181 @@ const lepCatalog={support:[
  {v:'110 кВ',name:'Монолитный фундамент',type:'Монолитный ЖБ',drawings:['План','Разрез','Армирование','Закладные'],source:'По проекту; типовой чертёж зависит от конструкции'},
  {v:'220 кВ',name:'Свайный фундамент',type:'Свайный',drawings:['Схема свайного поля','Ростверк','Армирование'],source:'По проекту и инженерно-геологическим условиям'}
 ]};
-function renderLepCatalog(){const kind=$('refKind')?.value||'support',v=$('refVoltage')?.value||'110 кВ',items=(lepCatalog[kind]||[]).filter(x=>x.v===v);const sel=$('refItem');if(sel){sel.innerHTML=(items.length?items:[{name:'Нет карточки для выбранного фильтра'}]).map((x,i)=>`<option value="${i}">${esc(x.name)}</option>`).join('')}const x=items[Number(sel?.value)||0];const box=$('lepCatalogResult');if(!box)return;if(!x){box.innerHTML='<div class="empty">Для этой комбинации пока нет карточки. Не подменяем отсутствующий чертёж выдуманным.</div>';return}box.innerHTML=`<div class="item"><h3>${esc(x.name)}</h3><div class="muted">${esc(x.v)} · ${esc(x.type)}</div><h4 style="margin-top:12px">📐 Доступные материалы</h4><ul>${x.drawings.map(d=>`<li>${esc(d)} — PDF после подключения разрешённого источника</li>`).join('')}</ul><div class="notice">Источник: ${esc(x.source)}<br>⚠️ Чертёж должен соответствовать конкретной марке конструкции, проекту и актуальной редакции документации.</div><button class="secondary" disabled>⬇️ Скачать комплект PDF — источник ещё не подключён</button></div>`}
+function renderLepCatalog(){
+  const kind=$('refKind')?.value||'support';
+  const v=$('refVoltage')?.value||'110 кВ';
+  const items=(lepCatalog[kind]||[]).filter(x=>x.v===v);
+  const sel=$('refItem');
+
+  if(sel){
+    sel.innerHTML=(items.length?items:[{name:'Нет карточки для выбранного фильтра'}])
+      .map((x,i)=>`<option value="${i}">${esc(x.name)}</option>`)
+      .join('');
+  }
+
+  const x=items[Number(sel?.value)||0];
+  const box=$('lepCatalogResult');
+
+  if(!box)return;
+
+  if(!x){
+    box.innerHTML='<div class="empty">Для этой комбинации пока нет карточки.</div>';
+    return;
+  }
+
+  /*
+   * Официальные документы.
+   * Ссылки ведут на официальный реестр ПАО «Россети».
+   * Точный рабочий чертёж должен соответствовать марке опоры
+   * и проектной документации конкретной ВЛ.
+   */
+  const officialDocs=[];
+
+  if(v==='110 кВ'){
+    officialDocs.push({
+      title:'СТО 34.01-2.2-038.2-2025',
+      desc:'Технологические карты на сборку и установку железобетонных опор и фундаментов ВЛ 110 кВ.',
+      type:'Сборка и установка',
+      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
+    });
+
+    officialDocs.push({
+      title:'СТО 34.01-2.2-038.1-2025',
+      desc:'Руководство по проектированию и применению железобетонных опор ВЛ 110 кВ.',
+      type:'Проектирование / конструкция',
+      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
+    });
+  }
+
+  if(v==='220 кВ'){
+    officialDocs.push({
+      title:'СТО 34.01-2.2-043-2025',
+      desc:'Стальные решетчатые опоры новой унификации ВЛ 220 кВ.',
+      type:'Опоры',
+      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
+    });
+
+    officialDocs.push({
+      title:'СТО 34.01-2.2-046-2025',
+      desc:'Унифицированные железобетонные фундаментные конструкции опор ВЛ 220–500 кВ.',
+      type:'Фундаменты',
+      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
+    });
+  }
+
+  if(v==='330 кВ'){
+    officialDocs.push({
+      title:'СТО 34.01-2.2-044-2025',
+      desc:'Стальные решетчатые опоры новой унификации ВЛ 330 кВ.',
+      type:'Опоры',
+      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
+    });
+
+    officialDocs.push({
+      title:'СТО 34.01-2.2-046-2025',
+      desc:'Унифицированные железобетонные фундаментные конструкции опор ВЛ 220–500 кВ.',
+      type:'Фундаменты',
+      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
+    });
+  }
+
+  if(v==='500 кВ'){
+    officialDocs.push({
+      title:'СТО 34.01-2.2-045-2025',
+      desc:'Стальные решетчатые опоры новой унификации ВЛ 500 кВ.',
+      type:'Опоры',
+      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
+    });
+
+    officialDocs.push({
+      title:'СТО 34.01-2.2-046-2025',
+      desc:'Унифицированные железобетонные фундаментные конструкции опор ВЛ 220–500 кВ.',
+      type:'Фундаменты',
+      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
+    });
+  }
+
+  if(v==='35 кВ'){
+    officialDocs.push({
+      title:'СТО 34.01-2.2-035-2018',
+      desc:'Железобетонные вибрированные стойки для опор ВЛ 0,4–35 кВ. Общие технические требования.',
+      type:'Опоры',
+      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
+    });
+  }
+
+  const docsHtml=officialDocs.length
+    ? officialDocs.map(d=>`
+        <div class="item">
+          <div class="price-line">
+            <b>📄 ${esc(d.title)}</b>
+            <span class="tag">${esc(d.type)}</span>
+          </div>
+
+          <p>${esc(d.desc)}</p>
+
+          <a
+            href="${d.url}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="secondary"
+            style="display:inline-block;text-decoration:none"
+          >
+            📂 Открыть официальную документацию
+          </a>
+        </div>
+      `).join('')
+    : `
+      <div class="notice">
+        Для выбранного напряжения автоматическая привязка
+        официального документа пока не настроена.
+      </div>
+    `;
+
+  box.innerHTML=`
+    <div class="item">
+      <h3>${esc(x.name)}</h3>
+
+      <div class="muted">
+        ${esc(x.v)} · ${esc(x.type)}
+      </div>
+
+      <h4 style="margin-top:14px">
+        📐 Конструкция и материалы
+      </h4>
+
+      <ul>
+        ${x.drawings.map(d=>`
+          <li>${esc(d)}</li>
+        `).join('')}
+      </ul>
+
+      <h4 style="margin-top:18px">
+        📚 Автоматически подобранная документация
+      </h4>
+
+      ${docsHtml}
+
+      <div class="notice">
+        <b>Источник:</b> ${esc(x.source)}
+        <br><br>
+        ⚠️ Документ подбирается по напряжению и виду конструкции.
+        Точный рабочий чертёж должен дополнительно соответствовать
+        конкретной марке опоры, фундаменту и проекту ВЛ.
+      </div>
+
+      <a
+        href="https://rosseti.ru/suppliers/technical-policy/organization-standards/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="primary"
+        style="display:inline-block;text-decoration:none;margin-top:10px"
+      >
+        🔎 Открыть реестр документов Россетей
+      </a>
+    </div>
+  `;
+}
 
 function showLepTechV08(){const v=$('ltV').value,s=$('ltS').value,f=$('ltF').value;const steps=['Проверить проект и типовую/рабочую документацию на применимость к конкретной опоре','Подготовить трассу и площадку, обеспечить геодезическую разбивку','Разработать котлован/подготовить основание согласно проекту','Установить элементы фундамента, выполнить выверку и контроль отметок','Выполнить бетонирование/монтаж сборных элементов по проекту','Выполнить обратную засыпку и уплотнение с предусмотренным контролем','Собрать опору по ведомости элементов и технологической карте','Выполнить строповку и подъём с применением предусмотренного механизма','Установить опору, выполнить выверку и закрепление','Смонтировать траверсы, изоляторы и линейную арматуру','После монтажа — выполнить предусмотренный проектом контроль и оформить ИД'];$('lepTechResult').innerHTML=`<div class="module-result"><b>${esc(v)} · ${esc(s)} · ${esc(f)}</b><ol>${steps.map(x=>`<li style="margin:7px 0">${esc(x)}</li>`).join('')}</ol><span class="mini">Чек-лист не заменяет рабочую документацию, ППР/ТК и проектные решения.</span></div>`}
 function renderLepNormsV08(){const a=[['ГОСТ Р 51872-2024','Исполнительная геодезическая документация — действует с 01.11.2024.'],['ПУЭ, глава 2.5','Воздушные линии электропередачи напряжением выше 1 кВ; требования к опорам, фундаментам и условиям трассы.'],['СП 76.13330.2016','Электротехнические устройства; применяется с учётом актуальности и области применения конкретной работы.']];$('lepNormsV08').innerHTML=a.map(x=>`<div class="item"><b>${x[0]}</b><br><span class="mini">${x[1]}</span></div>`).join('')}
