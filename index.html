@@ -657,7 +657,17 @@ function toggleAccountMenu(){
 function openAccountProfile(){
   const menu=$("accountMenu");
   if(menu)menu.style.display="none";
-  openLoginModal();
+
+  const a=db?.account||{};
+  const org=db?.profile?.orgName||"";
+
+  alert(
+    "Профиль аккаунта\n\n"+
+    "Имя: "+(a.name||"—")+"\n"+
+    "Email: "+(a.email||"—")+"\n"+
+    "Организация: "+(org||"—")+"\n"+
+    "ID: "+(a.id||"—")
+  );
 }
 function refreshAccountUI(){
  const a=db?.account||{};
