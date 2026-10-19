@@ -1321,121 +1321,124 @@ function renderLepCatalog(){
   if(!box)return;
 
   if(!x){
-    box.innerHTML='<div class="empty">Для этой комбинации пока нет карточки.</div>';
+    box.innerHTML=`
+      <div class="empty">
+        Для выбранной комбинации пока нет карточки.
+      </div>`;
     return;
   }
 
-  /*
-   * Официальные документы.
-   * Ссылки ведут на официальный реестр ПАО «Россети».
-   * Точный рабочий чертёж должен соответствовать марке опоры
-   * и проектной документации конкретной ВЛ.
-   */
-  const officialDocs=[];
+  let docs=[];
 
-  if(v==='110 кВ'){
-    officialDocs.push({
-      title:'СТО 34.01-2.2-038.2-2025',
-      desc:'Технологические карты на сборку и установку железобетонных опор и фундаментов ВЛ 110 кВ.',
-      type:'Сборка и установка',
-      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
+  if(kind==='support'){
+
+    if(x.type==='Анкерно-угловая'){
+      docs.push({
+        title:'Серия 3.407.1-151',
+        subtitle:'Унифицированные конструкции анкерно-угловых железобетонных опор ВЛ 35–220 кВ',
+        parts:[
+          'Выпуск 1 — схемы расположения элементов',
+          'Выпуск 2 — металлоконструкции, рабочие чертежи',
+          'Выпуск 3 — железобетонные конструкции, рабочие чертежи'
+        ],
+        url:'https://ohranatruda.ru/ot_biblio/norma/402123/'
+      });
+    }
+
+    if(x.type==='Промежуточная'){
+      docs.push({
+        title:'Серия 3.407.1-175',
+        subtitle:'Промежуточные одностоечные железобетонные опоры ВЛ 35–220 кВ',
+        parts:[
+          'Выпуск 1 — схемы расположения элементов',
+          'Выпуск 2 — металлические изделия, рабочие чертежи',
+          'Выпуск 3 — железобетонные изделия, рабочие чертежи'
+        ],
+        url:'https://ohranatruda.ru/ot_biblio/norma/402122/'
+      });
+
+      docs.push({
+        title:'Серия 3.407.1-152',
+        subtitle:'Промежуточные двухстоечные железобетонные опоры ВЛ 35–500 кВ',
+        parts:[
+          'Выпуск 1 — схемы расположения элементов',
+          'Выпуск 2 — металлоконструкции, рабочие чертежи',
+          'Выпуск 3 — железобетонные конструкции, рабочие чертежи'
+        ],
+        url:'https://ohranatruda.ru/ot_biblio/norma/402123/'
+      });
+    }
+  }
+
+  if(kind==='foundation'){
+
+    docs.push({
+      title:'Серия 3.407.1-144',
+      subtitle:'Унифицированные конструкции фундаментов для стальных опор ВЛ 35–500 кВ',
+      parts:[
+        'Выпуск 0 — материалы для проектирования',
+        'Выпуск 1 — рабочие чертежи'
+      ],
+      url:'https://ohranatruda.ru/ot_biblio/norma/402117/'
     });
 
-    officialDocs.push({
-      title:'СТО 34.01-2.2-038.1-2025',
-      desc:'Руководство по проектированию и применению железобетонных опор ВЛ 110 кВ.',
-      type:'Проектирование / конструкция',
-      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
+    docs.push({
+      title:'Серия 3.407-115',
+      subtitle:'Унифицированные фундаментные конструкции ВЛ 35–500 кВ',
+      parts:[
+        'Выпуск 2 — фундаменты под металлические опоры 35–330 кВ',
+        'Выпуск 3 — фундаменты под металлические опоры 500 кВ',
+        'Выпуск 4 — вибрированные и центрифугированные сваи',
+        'Выпуск 5 — плиты, ригели и детали закрепления',
+        'Выпуск 6 — свайные фундаменты и металлические ростверки'
+      ],
+      url:'https://files.stroyinf.ru/Index2/1/4293833/4293833466.htm'
     });
   }
 
-  if(v==='220 кВ'){
-    officialDocs.push({
-      title:'СТО 34.01-2.2-043-2025',
-      desc:'Стальные решетчатые опоры новой унификации ВЛ 220 кВ.',
-      type:'Опоры',
-      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
-    });
+  const docsHtml=docs.length
+    ? docs.map(d=>`
+      <div class="item" style="margin-top:10px">
 
-    officialDocs.push({
-      title:'СТО 34.01-2.2-046-2025',
-      desc:'Унифицированные железобетонные фундаментные конструкции опор ВЛ 220–500 кВ.',
-      type:'Фундаменты',
-      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
-    });
-  }
-
-  if(v==='330 кВ'){
-    officialDocs.push({
-      title:'СТО 34.01-2.2-044-2025',
-      desc:'Стальные решетчатые опоры новой унификации ВЛ 330 кВ.',
-      type:'Опоры',
-      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
-    });
-
-    officialDocs.push({
-      title:'СТО 34.01-2.2-046-2025',
-      desc:'Унифицированные железобетонные фундаментные конструкции опор ВЛ 220–500 кВ.',
-      type:'Фундаменты',
-      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
-    });
-  }
-
-  if(v==='500 кВ'){
-    officialDocs.push({
-      title:'СТО 34.01-2.2-045-2025',
-      desc:'Стальные решетчатые опоры новой унификации ВЛ 500 кВ.',
-      type:'Опоры',
-      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
-    });
-
-    officialDocs.push({
-      title:'СТО 34.01-2.2-046-2025',
-      desc:'Унифицированные железобетонные фундаментные конструкции опор ВЛ 220–500 кВ.',
-      type:'Фундаменты',
-      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
-    });
-  }
-
-  if(v==='35 кВ'){
-    officialDocs.push({
-      title:'СТО 34.01-2.2-035-2018',
-      desc:'Железобетонные вибрированные стойки для опор ВЛ 0,4–35 кВ. Общие технические требования.',
-      type:'Опоры',
-      url:'https://rosseti.ru/suppliers/technical-policy/organization-standards/'
-    });
-  }
-
-  const docsHtml=officialDocs.length
-    ? officialDocs.map(d=>`
-        <div class="item">
-          <div class="price-line">
-            <b>📄 ${esc(d.title)}</b>
-            <span class="tag">${esc(d.type)}</span>
-          </div>
-
-          <p>${esc(d.desc)}</p>
-
-          <a
-            href="${d.url}"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="secondary"
-            style="display:inline-block;text-decoration:none"
-          >
-            📂 Открыть официальную документацию
-          </a>
+        <div class="price-line">
+          <b>📐 ${esc(d.title)}</b>
+          <span class="tag">
+            Рабочие чертежи
+          </span>
         </div>
-      `).join('')
+
+        <p>
+          ${esc(d.subtitle)}
+        </p>
+
+        <ul>
+          ${d.parts.map(p=>`
+            <li>${esc(p)}</li>
+          `).join('')}
+        </ul>
+
+        <a
+          href="${d.url}"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="primary"
+          style="display:inline-block;text-decoration:none;margin-top:6px"
+        >
+          📄 Открыть комплект чертежей
+        </a>
+
+      </div>
+    `).join('')
     : `
       <div class="notice">
-        Для выбранного напряжения автоматическая привязка
-        официального документа пока не настроена.
+        Для выбранной конструкции проверенный комплект
+        рабочих чертежей пока не найден.
       </div>
     `;
 
   box.innerHTML=`
     <div class="item">
+
       <h3>${esc(x.name)}</h3>
 
       <div class="muted">
@@ -1443,7 +1446,7 @@ function renderLepCatalog(){
       </div>
 
       <h4 style="margin-top:14px">
-        📐 Конструкция и материалы
+        📐 Состав конструкции
       </h4>
 
       <ul>
@@ -1453,28 +1456,18 @@ function renderLepCatalog(){
       </ul>
 
       <h4 style="margin-top:18px">
-        📚 Автоматически подобранная документация
+        📚 Рабочие чертежи и документация
       </h4>
 
       ${docsHtml}
 
-      <div class="notice">
-        <b>Источник:</b> ${esc(x.source)}
-        <br><br>
-        ⚠️ Документ подбирается по напряжению и виду конструкции.
-        Точный рабочий чертёж должен дополнительно соответствовать
-        конкретной марке опоры, фундаменту и проекту ВЛ.
+      <div class="notice" style="margin-top:14px">
+        ⚠️ Автоматическая привязка выполнена по типу конструкции
+        и диапазону напряжения. Перед применением на объекте необходимо
+        проверить соответствие конкретной марке опоры, фундаменту
+        и проектной документации.
       </div>
 
-      <a
-        href="https://rosseti.ru/suppliers/technical-policy/organization-standards/"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="primary"
-        style="display:inline-block;text-decoration:none;margin-top:10px"
-      >
-        🔎 Открыть реестр документов Россетей
-      </a>
     </div>
   `;
 }
