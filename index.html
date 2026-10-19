@@ -1391,7 +1391,51 @@ function renderLepFullStepsV10(){const b=$('lepFullSteps');if(!b)return;b.innerH
 function renderLepFullQcV10(){const b=$('lepFullQc');if(!b)return;b.innerHTML=`<table><tr><th>Контроль</th><th>Что фиксируем</th><th>Когда</th></tr>${LEP_QC_V10.map(x=>`<tr><td><b>${esc(x[0])}</b></td><td>${esc(x[1])}</td><td>${esc(x[2])}</td></tr>`).join('')}</table>`}
 function renderLepDocsV10(){const stage=$('lepDocStage')?.value||'Фундаменты',a=LEP_DOCS_V10[stage]||[];$('lepFullDocs').innerHTML=`<div class="item"><h3>${esc(stage)}</h3><ol>${a.map(x=>`<li style="margin:7px 0">${esc(x)}</li>`).join('')}</ol><span class="mini">Состав уточняется по проекту, договору, требованиям заказчика и применимым НД.</span></div>`}
 function renderLepFullNormsV10(){const a=[['ГрК РФ, ст. 52','Строительство осуществляется по проектной/рабочей документации; ведётся исполнительная документация.','https://www.consultant.ru/document/cons_doc_LAW_51040/df32b8231cf067c4d4e864c717eb6b398358b504/'],['ГОСТ Р 51872-2024','Исполнительная геодезическая документация; действует с 01.11.2024.','https://protect.gost.ru/gost/details/201cb77e-3cec-42a6-a47e-bad3caac224b'],['ГОСТ Р 70108-2025','Формирование и ведение исполнительной документации в электронном виде; действует с 01.10.2025.','https://protect.gost.ru/gost/details/23f0a882-4624-475d-86c0-e4ae8f262177'],['СП 76.13330.2016','Электротехнические устройства — использовать с учётом области применения и актуальных изменений.','https://protect.gost.ru/'],['ПУЭ, гл. 2.5','Воздушные линии электропередачи выше 1 кВ; конкретные требования проверяются по действующей редакции.','https://docs.cntd.ru/']];$('lepFullNorms').innerHTML=a.map(x=>`<div class="item"><b>${esc(x[0])}</b><p>${esc(x[1])}</p><a href="${x[2]}" target="_blank" rel="noopener">Открыть источник</a></div>`).join('')}
-function renderLepDrawingCardsV10(){const a=[['Опоры 110 кВ','ЖБ опоры из центрифугированных секционированных стоек','Технологические карты на сборку и установку опор и фундаментов. Реальный комплект идентифицирован; сам PDF/альбом не встраивается без проверки права распространения.','Источник подтверждён · PDF не встроен','СТО 34.01-2.2-038.2-2025','https://rosseti.ru/suppliers/technical-policy/organization-standards/'],['Фундаменты 35–750 кВ','ЖБ фундаменты и элементы фундаментов','Типовые технические требования; реальные рабочие чертежи конкретных марок должны привязываться к соответствующему альбому/производителю.','Источник подтверждён · конкретный чертёж выбирается по марке','СТО 34.01-2.2-039-2024','https://rosseti.ru/suppliers/technical-policy/organization-standards/'],['Маркировка опор','35–750 кВ','Требования к маркировке опор воздушных линий.','Источник подтверждён · PDF не встроен','СТО 34.01-2.2-040-2024','https://rosseti.ru/suppliers/technical-policy/organization-standards/'],['Опоры 220 кВ','Стальные решётчатые опоры новой унификации','Указания по применению новой унификации при проектировании ВЛ 220 кВ.','Источник подтверждён · PDF не встроен','СТО 34.01-2.2-043-2025','https://rosseti.ru/suppliers/technical-policy/organization-standards/'],['Опоры 330 кВ','Стальные решётчатые опоры новой унификации','Указания по применению новой унификации при проектировании ВЛ 330 кВ.','Источник подтверждён · PDF не встроен','СТО 34.01-2.2-044-2025','https://rosseti.ru/suppliers/technical-policy/organization-standards/'],['Опоры 500 кВ','Стальные решётчатые опоры новой унификации','Указания по применению новой унификации при проектировании ВЛ 500 кВ.','Источник подтверждён · PDF не встроен','СТО 34.01-2.2-045-2025','https://rosseti.ru/suppliers/technical-policy/organization-standards/'],['Фундаменты 220–500 кВ','Унифицированные железобетонные фундаментные конструкции','Идентифицирован реальный комплект рабочих чертежей 7.ФК.01-КЖ; пример марок ФС2н-2/ФС2н-А. Это источник для карточки, а не разрешение на свободное копирование PDF.','Реальный комплект идентифицирован · PDF не встроен','СТО 34.01-2.2-039-2024 · рабочие чертежи 7.ФК.01-КЖ','https://xn--90ajh5f.xn--p1ai/catalog/00000_%D0%BA%D0%B0%D1%82%D0%B0%D0%BB%D0%BE%D0%B3/01000_%D0%B6%D0%B5%D0%BB%D0%B5%D0%B7%D0%BE%D0%B1%D0%B5%D1%82%D0%BE%D0%BD%D0%BD%D1%8B%D0%B5_%D0%B8%D0%B7%D0%B4%D0%B5%D0%BB%D0%B8%D1%8F/01010_%D0%B3%D1%80%D0%B8%D0%B1%D0%BE%D0%B2%D0%B8%D0%B4%D0%BD%D1%8B%D0%B5_%D1%84%D1%83%D0%BD%D0%B4%D0%B0%D0%BC%D0%B5%D0%BD%D1%82%D1%8B/0101003_%D1%84%D1%83%D0%BD%D0%B4%D0%B0%D0%BC%D0%B5%D0%BD%D1%82%D1%8B_%D0%BF%D0%BE_%D1%87%D0%B5%D1%80%D1%82%D0%B5%D0%B6%D0%B0%D0%BC_7_%D0%A4%D0%9A_01_%D0%9A%D0%96/']];$('lepDrawingCards').innerHTML=a.map(x=>`<div class="item"><div class="price-line"><b>${esc(x[0])}</b><span class="tag">${esc(x[3])}</span></div><p><b>Конструкция:</b> ${esc(x[1])}</p><p>${esc(x[2])}</p><p><b>Проверенный нормативный источник:</b> ${esc(x[4])}</p><a href="${x[5]}" target="_blank" rel="noopener">Открыть официальный реестр Россетей</a><div class="notice">Чертёж PDF намеренно не подменяется схемой из базы. Для конкретной марки подключается только официальный/разрешённый комплект; у документации на опоры Россетей могут быть лицензионные ограничения.</div></div>`).join('')}
+function renderLepDrawingCardsV10(){
+  const b=$('lepDrawingCards');
+  if(!b)return;
+
+  const drawings=[
+    {
+      stage:'Фундаменты',
+      title:'Чертежи фундаментов опор',
+      desc:'Рабочие чертежи фундаментов и элементов фундаментов для конкретных марок опор.',
+      status:'Подключение чертежей'
+    },
+    {
+      stage:'Монтаж опор',
+      title:'Чертежи установки опор',
+      desc:'Схемы и рабочие чертежи по установке опор ЛЭП.',
+      status:'Подключение чертежей'
+    },
+    {
+      stage:'Сборка опор',
+      title:'Чертежи сборки опор',
+      desc:'Схемы сборки, секций, траверс и элементов опор.',
+      status:'Подключение чертежей'
+    }
+  ];
+
+  b.innerHTML=drawings.map(x=>`
+    <div class="item">
+      <div class="price-line">
+        <b>${esc(x.title)}</b>
+        <span class="tag">${esc(x.stage)}</span>
+      </div>
+
+      <p>${esc(x.desc)}</p>
+
+      <div class="notice">
+        📐 ${esc(x.status)}
+      </div>
+
+      <button class="secondary" type="button"
+        onclick="notify('Загрузка чертежей будет подключена на следующем этапе')">
+        📎 Добавить чертёж
+      </button>
+    </div>
+  `).join('');
+}
 function initLepFullV10(){renderLepFullStepsV10();renderLepFullQcV10();renderLepDocsV10();renderLepFullNormsV10();renderLepDrawingCardsV10()}
 
 
