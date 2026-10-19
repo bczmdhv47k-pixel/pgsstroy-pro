@@ -8,7 +8,11 @@ require('dotenv').config();
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
-const JWT_SECRET = process.env.JWT_SECRET || 'CHANGE_ME_IN_RAILWAY';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  throw new Error('JWT_SECRET is missing or too short');
+}
 const DATABASE_URL = process.env.DATABASE_URL;
 
 if (!DATABASE_URL) console.warn('DATABASE_URL is not set');
