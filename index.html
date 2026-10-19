@@ -666,20 +666,6 @@ function openAccountProfile(){
 function closeProfileModal(){
  $("profileModal").style.display="none";
 }
-  const menu=$("accountMenu");
-  if(menu)menu.style.display="none";
-
-  const a=db?.account||{};
-  const org=db?.profile?.orgName||"";
-
-  alert(
-    "Профиль аккаунта\n\n"+
-    "Имя: "+(a.name||"—")+"\n"+
-    "Email: "+(a.email||"—")+"\n"+
-    "Организация: "+(org||"—")+"\n"+
-    "ID: "+(a.id||"—")
-  );
-}
 function refreshAccountUI(){
  const a=db?.account||{};
  const chip=$("accountChip");if(chip)chip.textContent=(a.name||"Локальный аккаунт")+(a.email?" · "+a.email:"");
