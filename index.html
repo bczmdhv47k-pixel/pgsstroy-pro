@@ -1573,6 +1573,33 @@ function selectBillingPlanV13(id){
 }
 </script>
 <div id="accountModal" class="modal-backdrop" style="display:none"><div class="modal" style="max-width:620px"><div class="row"><h2 id="accountModalTitle">Вход</h2><button class="secondary" onclick="closeAccountModal()">✕</button></div><div id="accountModalBody"></div></div></div>
+<div id="profileModal" class="modal-backdrop" style="display:none">
+  <div class="modal" style="max-width:420px">
+    <div class="row">
+      <h2>👤 Профиль</h2>
+      <button class="secondary" onclick="closeProfileModal()">✕</button>
+    </div>
+
+    <div class="grid">
+      <div>
+        <label>Имя</label>
+        <input id="profileName" readonly>
+      </div>
+      <div>
+        <label>Email</label>
+        <input id="profileEmail" readonly>
+      </div>
+      <div>
+        <label>Организация</label>
+        <input id="profileOrg" readonly>
+      </div>
+      <div>
+        <label>ID аккаунта</label>
+        <input id="profileId" readonly>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="stage8Marker" style="display:none">OBJECTS_STAGE8</div><button id="pwaInstallBtn" type="button">Установить PGSSTROY.PRO</button>
 <script>(function(){let deferred=null;const b=document.getElementById('pwaInstallBtn');window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;b.style.display='block';});b&&b.addEventListener('click',async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice;deferred=null;b.style.display='none';});window.addEventListener('appinstalled',()=>{if(b)b.style.display='none';});if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}})();</script>
 </body>
