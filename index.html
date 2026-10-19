@@ -649,6 +649,10 @@ function refreshAccountUI(){
 function refreshAccountUI(){
  const a=db?.account||{};
  const chip=$("accountChip");if(chip)chip.textContent=(a.name||"Локальный аккаунт")+(a.email?" · "+a.email:"");
+const loginBtn=$("headerLoginBtn"),registerBtn=$("headerRegisterBtn"),logoutBtn=$("headerLogoutBtn");
+if(loginBtn)loginBtn.style.display=cloudSession?"none":"inline-block";
+if(registerBtn)registerBtn.style.display=cloudSession?"none":"inline-block";
+if(logoutBtn)logoutBtn.style.display=cloudSession?"inline-block":"none";
  ["accountNameView","accountEmailView","accountOrgView","accountIdView"].forEach(id=>{const x=$(id);if(x)x.value=""});
  if($("accountNameView"))$("accountNameView").value=a.name||"";
  if($("accountEmailView"))$("accountEmailView").value=a.email||"";
