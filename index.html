@@ -666,6 +666,13 @@ function openRegisterModal(){
  $("accountModalBody").innerHTML='<div class="grid"><div><label>Имя / название аккаунта</label><input id="newAccountName" placeholder="Например: Марат / ПГС Строй"></div><div><label>Email</label><input id="newAccountEmail" type="email" placeholder="mail@example.com"></div><div><label>Организация</label><input id="newAccountOrg" placeholder="ООО / ИП"></div></div><div class="notice">В текущем прототипе это локальный профиль без пароля и серверной авторизации. Если задан адрес backend, регистрация может создать облачный аккаунт; без него профиль остаётся локальным.</div><div class="toolbar"><button class="primary" onclick="createLocalAccount()">Создать локально</button><button class="secondary" onclick="createCloudAccount()">Создать облачный аккаунт</button><button class="secondary" onclick="openLoginModal()">Отмена</button></div>';
  $("accountModal").style.display="flex";
 }
+function cloudLogout(){
+  cloudSession=null;
+  localStorage.removeItem('pgsstroy_cloud_session');
+  refreshAccountUI();
+  closeAccountModal();
+  notify('Вы вышли из облачного аккаунта');
+}
 async function doCloudLogin(){try{if(!PGSSTROY_API_URL)return alert("Backend ещё не подключён. Укажите PGSSTROY_API_URL.");const email=$("cloudLoginEmail")?.value.trim(),password=$("cloudLoginPassword")?.value||"";if(!email||!password)return alert("Введите email и пароль.");await cloudLogin(email,password);closeAccountModal();notify("Вход в облако выполнен")}catch(e){alert("Не удалось войти: "+(e.data?.error||e.message))}}
 async function createCloudAccount(){try{if(!PGSSTROY_API_URL)return alert("Backend ещё не подключён. Укажите PGSSTROY_API_URL.");const name=$("newAccountName")?.value.trim(),email=$("newAccountEmail")?.value.trim(),org=$("newAccountOrg")?.value.trim();const password=prompt("Придумайте пароль (минимум 6 символов):");if(!name||!email||!password)return alert("Заполните имя, email и пароль.");await cloudRegister(name,email,password,org);closeAccountModal();notify("Облачный аккаунт создан")}catch(e){alert("Не удалось зарегистрировать: "+(e.data?.error||e.message))}}
 function closeAccountModal(){if($("accountModal"))$("accountModal").style.display="none"}
