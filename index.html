@@ -648,6 +648,11 @@ function save(){
     },500);
  }
 }
+function toggleAccountMenu(){
+  const menu=$("accountMenu");
+  if(!menu)return;
+  menu.style.display=menu.style.display==="none"?"block":"none";
+}
 function refreshAccountUI(){
 }
 function refreshAccountUI(){
