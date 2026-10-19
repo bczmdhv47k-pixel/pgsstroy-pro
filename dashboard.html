@@ -278,96 +278,167 @@
 
   </main>
 
-  <script>
-    function loadDashboard() {
+ <script>
+async function loadDashboard() {
 
-      const data = localStorage.getItem("pgsstroy_db");
+  const API = "https://pgsstroy-pro-production.up.railway.app";
 
-      if (!data) {
-        return;
+  try {
+
+    const sessionRaw =
+      localStorage.getItem("pgsstroy_cloud_session");
+
+    if (!sessionRaw) {
+      showNoSession();
+      return;
+    }
+
+    const session = JSON.parse(sessionRaw);
+
+    if (!session?.token) {
+      showNoSession();
+      return;
+    }
+
+    const response = await fetch(API + "/api/data", {
+      headers: {
+        "Authorization": "Bearer " + session.token
       }
+    });
 
-      try {
-
-        const db = JSON.parse(data);
-
-        const objects = Array.isArray(db.objects)
-          ? db.objects.filter(o => !o.archived)
-          : [];
-
-        const calculations = Array.isArray(db.calculations)
-          ? db.calculations
-          : [];
-
-        const materials = Array.isArray(db.materials)
-          ? db.materials
-          : [];
-
-        const favorites = objects.filter(o => o.favorite);
-
-        document.getElementById("objectsCount").textContent =
-          objects.length;
-
-        document.getElementById("calculationsCount").textContent =
-          calculations.length;
-
-        document.getElementById("materialsCount").textContent =
-          materials.length;
-
-        document.getElementById("favoritesCount").textContent =
-          favorites.length;
-
-        document.getElementById("activityObjects").textContent =
-          objects.length;
-
-        document.getElementById("activityCalculations").textContent =
-          calculations.length;
-
-        document.getElementById("activityMaterials").textContent =
-          materials.length;
-
-        const current = objects.find(
-          o => String(o.id) === String(db.currentObjectId)
-        );
-
-        if (current) {
-
-          document.getElementById("currentObjectName").textContent =
-            current.name || "Без названия";
-
-          document.getElementById("currentObjectAddress").textContent =
-            current.address || "Адрес не указан";
-
-          document.getElementById("currentObjectStatus").textContent =
-            current.status || "Активный";
-
-        }
-
-      } catch (error) {
-
-        console.error("Dashboard error:", error);
-
-      }
+    if (!response.ok) {
+      throw new Error("Не удалось получить данные из облака");
     }
 
-    function goToMain() {
-      window.location.href = "index.html";
-    }
+    const result = await response.json();
 
-    function goToCalculations() {
-      window.location.href = "index.html";
-    }
+    const db = result.payload || {};
 
-    function goToMaterials() {
-      window.location.href = "index.html";
-    }
+    renderDashboard(db);
 
-    function goToObjects() {
-      window.location.href = "index.html";
-    }
+  } catch (error) {
 
-    loadDashboard();
-  </script>
+    console.error("Dashboard error:", error);
+
+    document.getElementById("currentObjectName").textContent =
+      "Ошибка загрузки";
+
+    document.getElementById("currentObjectAddress").textContent =
+      error.message || "Не удалось загрузить данные";
+
+    document.getElementById("currentObjectStatus").textContent =
+      "Ошибка";
+
+  }
+}
+
+
+function renderDashboard(db) {
+
+  const objects = Array.isArray(db.objects)
+    ? db.objects.filter(o => !o.archived)
+    : [];
+
+  const calculations = Array.isArray(db.calculations)
+    ? db.calculations
+    : [];
+
+  const materials = Array.isArray(db.materials)
+    ? db.materials
+    : [];
+
+  const favorites = objects.filter(o => o.favorite);
+
+
+  document.getElementById("objectsCount").textContent =
+    objects.length;
+
+  document.getElementById("calculationsCount").textContent =
+    calculations.length;
+
+  document.getElementById("materialsCount").textContent =
+    materials.length;
+
+  document.getElementById("favoritesCount").textContent =
+    favorites.length;
+
+
+  document.getElementById("activityObjects").textContent =
+    objects.length;
+
+  document.getElementById("activityCalculations").textContent =
+    calculations.length;
+
+  document.getElementById("activityMaterials").textContent =
+    materials.length;
+
+
+  const currentObject = objects.find(
+    o => String(o.id) === String(db.currentObjectId)
+  );
+
+
+  if (currentObject) {
+
+    document.getElementById("currentObjectName").textContent =
+      currentObject.name || "Без названия";
+
+    document.getElementById("currentObjectAddress").textContent =
+      currentObject.address || "Адрес не указан";
+
+    document.getElementById("currentObjectStatus").textContent =
+      currentObject.status || "Активный";
+
+  } else {
+
+    document.getElementById("currentObjectName").textContent =
+      "Объект не выбран";
+
+    document.getElementById("currentObjectAddress").textContent =
+      objects.length
+        ? "Выберите текущий объект в PGSSTROY.PRO"
+        : "Объектов пока нет";
+
+    document.getElementById("currentObjectStatus").textContent =
+      objects.length
+        ? "Нет выбора"
+        : "Нет объектов";
+  }
+}
+
+
+function showNoSession() {
+
+  document.getElementById("currentObjectName").textContent =
+    "Войдите в аккаунт";
+
+  document.getElementById("currentObjectAddress").textContent =
+    "Dashboard работает с облачными данными PGSSTROY.PRO";
+
+  document.getElementById("currentObjectStatus").textContent =
+    "Не выполнен вход";
+}
+
+
+function goToMain() {
+  window.location.href = "index.html";
+}
+
+function goToCalculations() {
+  window.location.href = "index.html";
+}
+
+function goToMaterials() {
+  window.location.href = "index.html";
+}
+
+function goToObjects() {
+  window.location.href = "index.html";
+}
+
+
+loadDashboard();
+</script>
 
 </body>
 </html>
