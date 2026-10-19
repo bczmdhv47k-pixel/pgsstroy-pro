@@ -659,7 +659,7 @@ function openLoginModal(){
  const body=$("accountModalBody");if(!body)return;
  $("accountModalTitle").textContent="Войти в локальный аккаунт";
  body.innerHTML='<p class="muted">Выберите локальный аккаунт или войдите в облачный аккаунт.</p><div class="grid"><div><label>Email</label><input id="cloudLoginEmail" type="email" placeholder="mail@example.com"></div><div><label>Пароль</label><input id="cloudLoginPassword" type="password" placeholder="Минимум 6 символов"></div></div><div class="toolbar"><button class="primary" onclick="doCloudLogin()">Войти в облако</button><button class="secondary" onclick="cloudSyncNow()">Синхронизировать</button></div>' + '<div class="account-list">'+accountRegistry.accounts.map(a=>`<div class="account-option ${a.id===db.account.id?'account-current':''}"><div><b>${esc(a.name||'Без имени')}</b><span class="mini">${esc(a.email||'Локальный аккаунт')} · ${a.snapshot?.objects?.filter(o=>!o.archived).length||0} активных объектов</span></div><div><button class="primary" onclick="switchAccount('${a.id}')">${a.id===db.account.id?'Текущий':'Войти'}</button>${a.id!==db.account.id?`<button class="secondary danger account-delete" onclick="removeLocalAccount('${a.id}')">Удалить</button>`:''}</div></div>`).join('')+'</div><div class="toolbar"><button class="secondary" onclick="openRegisterModal()">＋ Создать аккаунт</button></div>';
- <button class="secondary danger" onclick="cloudLogout()">Выйти из облака</button>
+ 
 $("accountModal").style.display="flex";
 }
 function openRegisterModal(){
@@ -672,7 +672,7 @@ function cloudLogout(){
   localStorage.removeItem('pgsstroy_cloud_session');
   refreshAccountUI();
   closeAccountModal();
-  notify('Вы вышли из облачного аккаунта');
+  notify('Вы вышли из облачного аккаунта');}
 }
 async function doCloudLogin(){try{if(!PGSSTROY_API_URL)return alert("Backend ещё не подключён. Укажите PGSSTROY_API_URL.");const email=$("cloudLoginEmail")?.value.trim(),password=$("cloudLoginPassword")?.value||"";if(!email||!password)return alert("Введите email и пароль.");await cloudLogin(email,password);closeAccountModal();notify("Вход в облако выполнен")}catch(e){alert("Не удалось войти: "+(e.data?.error||e.message))}}
 async function createCloudAccount(){try{if(!PGSSTROY_API_URL)return alert("Backend ещё не подключён. Укажите PGSSTROY_API_URL.");const name=$("newAccountName")?.value.trim(),email=$("newAccountEmail")?.value.trim(),org=$("newAccountOrg")?.value.trim();const password=prompt("Придумайте пароль (минимум 6 символов):");if(!name||!email||!password)return alert("Заполните имя, email и пароль.");await cloudRegister(name,email,password,org);closeAccountModal();notify("Облачный аккаунт создан")}catch(e){alert("Не удалось зарегистрировать: "+(e.data?.error||e.message))}}
