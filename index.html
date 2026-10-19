@@ -659,7 +659,6 @@ function openAccountProfile(){
   if(menu)menu.style.display="none";
   openLoginModal();
 }
-}
 function refreshAccountUI(){
  const a=db?.account||{};
  const chip=$("accountChip");if(chip)chip.textContent=(a.name||"Локальный аккаунт")+(a.email?" · "+a.email:"");
