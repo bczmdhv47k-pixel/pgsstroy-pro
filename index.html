@@ -740,7 +740,7 @@ function notify(text){alert(text);}
 function showPage(id){
  document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
  const page=$(id); if(page) page.classList.add("active");
- document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===id));
+ document.querySelectorAll("nav button[data-page]").forEach
  if(id==="objects"){renderObjects();renderAccessList();}
  if(id==="prices")renderPrices();
  if(id==="suppliers")renderSuppliers();
@@ -751,7 +751,7 @@ function showPage(id){
  if(id==="standards")renderStandards();if(id==="billing")renderBillingV13();
  window.scrollTo(0,0);
 }
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+document.querySelectorAll("nav button[data-page]").forEach(b=>b.onclick=()=>showPage(b.dataset.page));
 
 const normativeDocuments=[
  {id:"fz384",designation:"384-ФЗ",title:"Технический регламент о безопасности зданий и сооружений",type:"ФЗ",category:"Безопасность",status:"Действует",authority:"Российская Федерация",effectiveDate:"01.07.2010",changes:"Изменение №8 и др.",scope:"Безопасность зданий, сооружений и процессов на этапах жизненного цикла",sourceUrl:"https://protect.gost.ru/tr/details/eed5147e-0bfe-4743-bb74-7fee2f2aa1bf",sourceName:"Росстандарт"},
@@ -1626,13 +1626,5 @@ function selectBillingPlanV13(id){
 </div>
 <div id="stage8Marker" style="display:none">OBJECTS_STAGE8</div><button id="pwaInstallBtn" type="button">Установить PGSSTROY.PRO</button>
 <script>(function(){let deferred=null;const b=document.getElementById('pwaInstallBtn');window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;b.style.display='block';});b&&b.addEventListener('click',async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice;deferred=null;b.style.display='none';});window.addEventListener('appinstalled',()=>{if(b)b.style.display='none';});if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}})();</script>
-document.addEventListener("click", function(e){
-  const b = e.target.closest('nav button[data-page="dashboard"]');
-  if(!b) return;
-
-  e.preventDefault();
-  e.stopImmediatePropagation();
-  window.location.href = "dashboard.html";
-}, true);
 </body>
 </html>
