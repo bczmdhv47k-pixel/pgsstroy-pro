@@ -622,7 +622,26 @@ function save(){
  accountRegistry.activeId=db.account.id;
  localStorage.setItem(ACCOUNT_STORE_KEY,JSON.stringify(accountRegistry));
  refreshAccountUI();
- if(cloudSession && PGSSTROY_API_URL){clearTimeout(window.__cloudSaveTimer);window.__cloudSaveTimer=setTimeout(()=>cloudPush().catch(()=>{}),500);}
+ if(cloudSession && PGSSTROY_API_URL){
+  clearTimeout(window.__cloudSaveTimer);
+  window.__cloudSaveTimer=setTimeout(async()=>{
+    try{
+      await cloudPush();
+    }catch(e){
+      if(e.status===409){
+        const latest=await cloudPull();
+        if(latest?.version!=null){
+          try{
+            await cloudPush();
+          }catch(retryError){
+            console.error('Cloud save retry failed:',retryError);
+          }
+        }
+      }else{
+        console.error('Cloud save failed:',e);
+      }
+    }
+  },500);
 }
 function refreshAccountUI(){
  const a=db?.account||{};
