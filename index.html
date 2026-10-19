@@ -592,7 +592,7 @@ function normalizeDB(data){
  if(!db.currentObjectId && db.objects.some(o=>!o.archived))db.currentObjectId=db.objects.find(o=>!o.archived).id;
  return db;
 }
-const PGSSTROY_API_URL=(window.PGSSTROY_API_URL||localStorage.getItem("PGSSTROY_API_URL")||"").replace(/\/$/,"");
+const PGSSTROY_API_URL=(window.PGSSTROY_API_URL||localStorage.getItem("PGSSTROY_API_URL")||window.location.origin).replace(/\/$/,"");
 let cloudSession=JSON.parse(localStorage.getItem("pgsstroy_cloud_session")||"null");
 function cloudHeaders(){return cloudSession?.token?{"Content-Type":"application/json","Authorization":"Bearer "+cloudSession.token}:{"Content-Type":"application/json"}}
 async function cloudRequest(path,options={}){if(!PGSSTROY_API_URL)return null;const r=await fetch(PGSSTROY_API_URL+path,{...options,headers:{...cloudHeaders(),...(options.headers||{})}});const data=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(data.error||"cloud_error"),{status:r.status,data});return data}
