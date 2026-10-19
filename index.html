@@ -98,7 +98,7 @@ button.primary{background:var(--accent);color:#1b1107}button.secondary{backgroun
 </div><span id="cloudStatusChip" class="auth-chip">Локальный режим</span><button id="headerLoginBtn" class="secondary" onclick="openLoginModal()">Войти</button><button id="headerRegisterBtn" class="primary" onclick="openRegisterModal()">Регистрация</button><button id="headerLogoutBtn" class="secondary danger" onclick="cloudLogout()">Выйти</button></div>
 <div class="object-bar"><span>🏗️ Текущий объект:</span><select id="currentObjectSelect" onchange="setCurrentObject(this.value)"></select><button class="secondary" onclick="showPage('objects')">Управление объектами</button></div>
 <nav id="nav">
-  <button data-page="dashboard" onclick="window.location.href='dashboard.html'">📊 Dashboard</button>
+ <a href="dashboard.html" style="display:inline-block;white-space:nowrap;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--accent);color:#17110a;text-decoration:none">📊 Dashboard</a>
 <button data-page="objects">🏗️ Объекты</button>
 <button data-page="concrete">🧱 Бетон</button>
 <button data-page="rebar">🔩 Арматура</button>
