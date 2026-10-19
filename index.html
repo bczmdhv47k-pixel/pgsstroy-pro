@@ -91,7 +91,7 @@ button.primary{background:var(--accent);color:#1b1107}button.secondary{backgroun
 <header><div class="wrap">
 <div class="brand">PGSSTROY.PRO</div>
 <div class="sub">Строительный сервис и инженерные расчёты</div>
-<div class="auth-area"><span id="accountChip" class="auth-chip">Локальный аккаунт</span><span id="cloudStatusChip" class="auth-chip">Локальный режим</span><button class="secondary" onclick="openLoginModal()">Войти</button><button class="primary" onclick="openRegisterModal()">Регистрация</button><button class="secondary danger" onclick="cloudLogout()">Выйти</button></div>
+<div class="auth-area"><span id="accountChip" class="auth-chip">Локальный аккаунт</span><span id="cloudStatusChip" class="auth-chip">Локальный режим</span><button id="headerLoginBtn" class="secondary" onclick="openLoginModal()">Войти</button><button id="headerRegisterBtn" class="primary" onclick="openRegisterModal()">Регистрация</button><button id="headerLogoutBtn" class="secondary danger" onclick="cloudLogout()">Выйти</button></div>
 <div class="object-bar"><span>🏗️ Текущий объект:</span><select id="currentObjectSelect" onchange="setCurrentObject(this.value)"></select><button class="secondary" onclick="showPage('objects')">Управление объектами</button></div>
 <nav id="nav">
 <button data-page="objects">🏗️ Объекты</button>
