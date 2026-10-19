@@ -657,10 +657,16 @@ function toggleAccountMenu(){
 function openAccountProfile(){
  const a=db?.account||{};
  const org=db?.profile?.orgName||"";
+ const activeObjects=(db?.objects||[]).filter(o=>!o.archived);
+ const favoriteObjects=activeObjects.filter(o=>o.favorite);
+
  $("profileName").value=a.name||"—";
  $("profileEmail").value=a.email||"—";
  $("profileOrg").value=org||"—";
  $("profileId").value=a.id||"—";
+ $("profileObjects").value=activeObjects.length;
+ $("profileFavorites").value=favoriteObjects.length;
+
  $("profileModal").style.display="flex";
 }
 function closeProfileModal(){
