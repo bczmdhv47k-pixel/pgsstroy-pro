@@ -72,12 +72,48 @@ function safeName(v) { return String(v || '').trim().slice(0, 160); }
 function signUser(user, organization) {
   return jwt.sign({ userId: String(user.id), organizationId: String(organization.id) }, JWT_SECRET, { expiresIn: '30d' });
 }
-function auth(req, res, next) {
+async function auth(req, res, next) {
   const h = req.headers.authorization || '';
   const token = h.startsWith('Bearer ') ? h.slice(7) : '';
-  if (!token) return res.status(401).json({ error: 'auth_required' });
-  try { req.auth = jwt.verify(token, JWT_SECRET); next(); }
-  catch { return res.status(401).json({ error: 'invalid_token' }); }
+
+  if (!token) {
+    return res.status(401).json({ error: 'auth_required' });
+  }
+
+  try {
+    const claims = jwt.verify(token, JWT_SECRET);
+
+    const q = await pool.query(
+      `SELECT u.id, u.name, u.email, m.organization_id, m.role
+       FROM users u
+       JOIN organization_members m ON m.user_id = u.id
+       WHERE u.id = $1 AND m.organization_id = $2
+       LIMIT 1`,
+      [claims.userId, claims.organizationId]
+    );
+
+    if (!q.rowCount) {
+      return res.status(403).json({ error: 'membership_required' });
+    }
+
+    req.auth = {
+      ...claims,
+      role: q.rows[0].role
+    };
+
+    next();
+  } catch (e) {
+    if (
+      e.name === 'JsonWebTokenError' ||
+      e.name === 'TokenExpiredError' ||
+      e.name === 'NotBeforeError'
+    ) {
+      return res.status(401).json({ error: 'invalid_token' });
+    }
+
+    console.error('Auth error', e);
+    return res.status(500).json({ error: 'auth_failed' });
+  }
 }
 
 app.get('/health', async (_req, res) => {
