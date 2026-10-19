@@ -649,16 +649,16 @@ function save(){
  }
 }
 function toggleAccountMenu(){
-  function openAccountProfile(){
-  const menu=$("accountMenu");
-  if(menu)menu.style.display="none";
-  openLoginModal();
-}
   const menu=$("accountMenu");
   if(!menu)return;
   menu.style.display=menu.style.display==="none"?"block":"none";
 }
-function refreshAccountUI(){
+
+function openAccountProfile(){
+  const menu=$("accountMenu");
+  if(menu)menu.style.display="none";
+  openLoginModal();
+}
 }
 function refreshAccountUI(){
  const a=db?.account||{};
