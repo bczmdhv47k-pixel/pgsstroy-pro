@@ -1,6 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
@@ -29,6 +30,7 @@ const pool = new Pool({
 
 // CORS не требуется: frontend и API работают на одном origin.
 app.use(express.json({ limit: '5mb' }));
+app.use(cookieParser());
 
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -88,6 +90,15 @@ function normalizeEmail(v) { return String(v || '').trim().toLowerCase(); }
 function safeName(v) { return String(v || '').trim().slice(0, 160); }
 function signUser(user, organization) {
   return jwt.sign({ userId: String(user.id), organizationId: String(organization.id) }, JWT_SECRET, { expiresIn: '30d' });
+}
+function setAuthCookie(res, token) {
+  res.cookie('pgsstroy_token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    path: '/'
+  });
 }
 async function auth(req, res, next) {
   const h = req.headers.authorization || '';
@@ -160,6 +171,8 @@ app.post('/api/auth/register', async (req, res) => {
     await client.query('INSERT INTO data_snapshots(organization_id,version,payload) VALUES($1,1,$2)', [o.rows[0].id, JSON.stringify(DEFAULT_PAYLOAD)]);
     await client.query('COMMIT');
     const user = u.rows[0], organization = o.rows[0];
+    const token = signUser(user, organization);
+setAuthCookie(res, token);
     res.status(201).json({ token: signUser(user, organization), user: { id: String(user.id), name: user.name, email: user.email, organizationId: String(organization.id), organization: organization.name }, version: 1 });
   } catch (e) { await client.query('ROLLBACK'); console.error(e); res.status(500).json({ error: 'register_failed' }); }
   finally { client.release(); }
@@ -173,8 +186,10 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
       FROM users u JOIN organization_members m ON m.user_id=u.id JOIN organizations o ON o.id=m.organization_id
       WHERE u.email=$1 ORDER BY m.role='owner' DESC LIMIT 1`, [email]);
     if (!q.rowCount || !(await bcrypt.compare(password, q.rows[0].password_hash))) return res.status(401).json({ error: 'invalid_credentials' });
-    const r=q.rows[0];
-    res.json({ token: signUser(r,{id:r.organization_id}), user:{id:String(r.id),name:r.name,email:r.email,organizationId:String(r.organization_id),organization:r.organization} });
+    const r = q.rows[0];
+const token = signUser(r, { id: r.organization_id });
+setAuthCookie(res, token);
+res.json({ token, user:{id:String(r.id),name:r.name,email:r.email,organizationId:String(r.organization_id),organization:r.organization} });
   } catch (e) { console.error(e); res.status(500).json({ error: 'login_failed' }); }
 });
 
