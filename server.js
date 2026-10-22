@@ -38,6 +38,14 @@ app.use((req, res, next) => {
   next();
 });
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'too_many_login_attempts' }
+});
+
 const DEFAULT_PAYLOAD = {
   schemaVersion: 11,
   account: {}, objects: [], materials: [], calculations: [], prices: [], suppliers: [],
@@ -157,7 +165,7 @@ app.post('/api/auth/register', async (req, res) => {
   finally { client.release(); }
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
   const email = normalizeEmail(req.body?.email);
   const password = String(req.body?.password || '');
   try {
