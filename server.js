@@ -143,7 +143,40 @@ if (!token) {
     return res.status(500).json({ error: 'auth_failed' });
   }
 }
+app.get('/api/auth/me', auth, async (req, res) => {
+  try {
+    const q = await pool.query(
+      `SELECT u.id, u.name, u.email, m.organization_id, m.role, o.name AS organization
+       FROM users u
+       JOIN organization_members m ON m.user_id = u.id
+       JOIN organizations o ON o.id = m.organization_id
+       WHERE u.id = $1 AND m.organization_id = $2
+       LIMIT 1`,
+      [req.auth.userId, req.auth.organizationId]
+    );
 
+    if (!q.rowCount) {
+      return res.status(404).json({ error: 'user_not_found' });
+    }
+
+    const r = q.rows[0];
+
+    res.json({
+      authenticated: true,
+      user: {
+        id: String(r.id),
+        name: r.name,
+        email: r.email,
+        organizationId: String(r.organization_id),
+        organization: r.organization,
+        role: r.role
+      }
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'auth_check_failed' });
+  }
+});
 app.get('/health', async (_req, res) => {
   try {
     await pool.query('SELECT 1');
