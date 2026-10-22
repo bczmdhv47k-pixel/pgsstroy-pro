@@ -102,12 +102,12 @@ function setAuthCookie(res, token) {
 }
 async function auth(req, res, next) {
   const h = req.headers.authorization || '';
-  const token = h.startsWith('Bearer ') ? h.slice(7) : '';
+const bearerToken = h.startsWith('Bearer ') ? h.slice(7) : '';
+const token = req.cookies.pgsstroy_token || bearerToken;
 
-  if (!token) {
-    return res.status(401).json({ error: 'auth_required' });
-  }
-
+if (!token) {
+  return res.status(401).json({ error: 'auth_required' });
+}
   try {
     const claims = jwt.verify(token, JWT_SECRET);
 
