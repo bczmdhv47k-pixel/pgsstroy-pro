@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PGSSTROY.PRO v1.1 — Stage 13.1</title>
+<title>PGSSTROY.PRO v1.1 — Stage 13.2</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f4f6f8;color:#17202a}
@@ -83,6 +83,8 @@ button.primary{background:var(--accent);color:#1b1107}button.secondary{backgroun
 /* Stage 6 official-style document rendering */
 .official-doc{font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.35}.official-doc .doc-brand{font-size:10px;color:#777;text-align:right;margin-bottom:8px}.form-top{display:flex;justify-content:space-between;font-size:11px;margin-bottom:10px}.form-title{text-align:center;font-size:17px;margin:12px 0 18px}.official-table{width:100%;border-collapse:collapse;margin:12px 0}.official-table th,.official-table td{border:1px solid #222;padding:5px 6px;vertical-align:top}.official-table th{text-align:center;background:#f3f3f3}.doc-meta table,.sign-table{width:100%;border-collapse:collapse;margin:10px 0}.doc-meta td{border:1px solid #444;padding:7px;vertical-align:top}.sign-table td{border:0;border-bottom:1px solid #bbb;padding:7px 4px}.rep-list{line-height:1.8;margin:10px 0}.rd-mark{font-size:10px;text-align:right;color:#555;margin-bottom:8px}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}.doc-foot{font-size:10px;color:#777}
 @media print{.official-doc{font-size:11px}.official-doc .form-title{font-size:15px}.official-table th,.official-table td{padding:3px 4px}.doc-brand{display:none!important}}
+/* Stage 13.2 */
+.muted{color:var(--muted)}
 </style>
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0b1220"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="PGSSTROY.PRO">
 <style>#pwaInstallBtn{display:none;position:fixed;right:16px;bottom:16px;z-index:9999;border:0;border-radius:12px;padding:12px 16px;font-weight:700;box-shadow:0 8px 28px #0004;cursor:pointer}#pwaStatus{font-size:12px;opacity:.75}</style>
@@ -263,7 +265,7 @@ button.primary{background:var(--accent);color:#1b1107}button.secondary{backgroun
 <div><label>Срок выполнения</label><input id="cpTerm" placeholder="45 календарных дней"></div>
 <div><label>Условия оплаты</label><input id="cpPayment" placeholder="30% аванс / 70% по факту"></div>
 </div><br><textarea id="cpIntro" placeholder="Краткое описание предложения"></textarea><br><br><textarea id="cpConditions" placeholder="Дополнительные условия, исключения, допущения"></textarea><br><br><button class="primary" onclick="createCommercialProposalV11()">➕ Создать КП из сметы</button> <button class="secondary" onclick="previewCommercialV11()">👁️ Предпросмотр</button></div>
-<div class="card"><h2>3. Предпросмотр</h2><div id="commercialPreview" class="official-doc"></div><div class="toolbar"><button class="primary" onclick="printCommercialV11()">🖨️ Печать / PDF</button><button class="secondary" onclick="exportCommercialTxtV11()">⬇️ TXT</button><button class="secondary" onclick="exportCommercialCsvV11()">⬇️ CSV</button></div></div>
+<div class="card"><h2>3. Предпросмотр</h2><div id="commercialPreview" class="doc-preview official-doc"></div><div class="toolbar"><button class="primary" onclick="printCommercialV11()">🖨️ Печать / PDF</button><button class="secondary" onclick="exportCommercialTxtV11()">⬇️ TXT</button><button class="secondary" onclick="exportCommercialCsvV11()">⬇️ CSV</button></div></div>
 <div class="card"><h2>4. КП и статусы</h2><div class="toolbar"><button class="secondary" onclick="renderCommercialV11()">Обновить</button></div><div id="commercialProposalsList"></div></div>
 <div class="card"><div class="notice"><b>Юридический статус:</b> это коммерческое предложение. Оно не объявляется «утверждённой государственной формой». Для государственных контрактов смета контракта и проектная смета — разные документы; применяемые формы и основания зависят от режима договора и законодательства.</div></div>
 </section>
@@ -273,7 +275,7 @@ button.primary{background:var(--accent);color:#1b1107}button.secondary{backgroun
 <div class="notice">
 <b>Типы цен разделены:</b> сметная — нормативный источник; рыночная — поставщик; моя — фактическая цена пользователя.
 </div>
-<div class="card" style="margin:14px 0;background:#f7fafc;border:1px solid #d9e2ec"><h3>🏛️ ФГИС ЦС</h3><p class="muted">Официальная сметная цена определяется по точному коду КСР, субъекту РФ, ценовой зоне и кварталу. Встроенный контур не подменяет данные ФГИС ЦС и не принимает приблизительные совпадения.</p><div class="grid"><div><label>Код КСР</label><input id="pKsrCode" placeholder="например 03.2.01.01-0036"></div><div><label>Субъект РФ</label><input id="pFgisSubject" placeholder="Кабардино-Балкарская Республика"></div><div><label>Ценовая зона</label><input id="pFgisZone" placeholder="КБР / зона объекта"></div><div><label>Квартал</label><select id="pFgisPeriod"><option>III квартал 2026</option><option>II квартал 2026</option><option>I квартал 2026</option><option>IV квартал 2025</option></select></div></div><div class="toolbar"><button class="secondary" onclick="fillFgisFromProfile()">📍 Заполнить из профиля</button><button class="secondary" onclick="fgisLookupNotice()">🔎 Проверить ФГИС ЦС</button><button class="secondary" onclick="document.getElementById('fgisImportFile').click()">⬆️ Импорт официальной выгрузки</button><input id="fgisImportFile" type="file" accept=".json,.csv,.txt" style="display:none" onchange="importFgisFile(this)"></div><div id="fgisStatus" class="notice">Статус: локальный контур ФГИС ЦС. Для live-запросов нужен серверный адаптер к публичному интерфейсу ФГИС ЦС.</div></div>
+<div class="card" style="margin:14px 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12)"><h3>🏛️ ФГИС ЦС</h3><p class="muted">Официальная сметная цена определяется по точному коду КСР, субъекту РФ, ценовой зоне и кварталу. Встроенный контур не подменяет данные ФГИС ЦС и не принимает приблизительные совпадения.</p><div class="grid"><div><label>Код КСР</label><input id="pKsrCode" placeholder="например 03.2.01.01-0036"></div><div><label>Субъект РФ</label><input id="pFgisSubject" placeholder="Кабардино-Балкарская Республика"></div><div><label>Ценовая зона</label><input id="pFgisZone" placeholder="КБР / зона объекта"></div><div><label>Квартал</label><select id="pFgisPeriod"><option>III квартал 2026</option><option>II квартал 2026</option><option>I квартал 2026</option><option>IV квартал 2025</option></select></div></div><div class="toolbar"><button class="secondary" onclick="fillFgisFromProfile()">📍 Заполнить из профиля</button><button class="secondary" onclick="fgisLookupNotice()">🔎 Проверить ФГИС ЦС</button><button class="secondary" onclick="document.getElementById('fgisImportFile').click()">⬆️ Импорт официальной выгрузки</button><input id="fgisImportFile" type="file" accept=".json,.csv,.txt" style="display:none" onchange="importFgisFile(this)"></div><div id="fgisStatus" class="notice">Статус: локальный контур ФГИС ЦС. Для live-запросов нужен серверный адаптер к публичному интерфейсу ФГИС ЦС.</div></div>
 <h3 style="margin-top:15px">Добавить цену</h3>
 <div class="grid">
 <div><label>Материал</label><input id="pMaterial" placeholder="Бетон B25"></div>
@@ -454,7 +456,7 @@ button.primary{background:var(--accent);color:#1b1107}button.secondary{backgroun
 <section id="finance" class="page">
 <div class="hero07"><div class="eyebrow">PROJECT FINANCE</div><h1>📊 Финансы объекта</h1><p>Договор → план → выполнено → оплачено → затраты → дебиторка → прибыль. Все суммы привязаны к объекту и могут анализироваться в режиме план/факт.</p></div>
 <div class="card"><h2>1. Финансовая карточка объекта</h2><div class="grid">
-<div><label>Объект</label><select id="finObject" onchange="renderFinanceV10()"></select></div>
+<div><label>Объект</label><select id="finObject" onchange="financeInitV10()"></select></div>
 <div><label>Номер договора</label><input id="finContract" placeholder="Договор №..."/></div>
 <div><label>Договорная стоимость, ₽</label><input id="finContractAmount" type="number" step="0.01"/></div>
 <div><label>Аванс, ₽</label><input id="finAdvance" type="number" step="0.01" value="0"/></div>
@@ -500,9 +502,9 @@ button.primary{background:var(--accent);color:#1b1107}button.secondary{backgroun
 </section>
 
 </main>
-<div class="wrap no-print" style="font-size:11px;color:#667085;text-align:right;padding:0 0 6px">Build: v1.0 · static · index.html</div>
+<div class="wrap no-print" style="font-size:11px;color:#667085;text-align:right;padding:0 0 6px">Build: v1.1 · static · index.html</div>
 
-<section id="lepfull" class="page">
+<section id="lepfull" class="page wrap" style="padding:18px 14px">
 <div class="hero07"><div class="eyebrow">OVERHEAD LINE · FULL CYCLE</div><h1>⚡ ЛЭП: полный цикл</h1><p>Рабочий контур ВЛ: трасса → геодезия → фундаменты → опоры → арматура и линейная арматура → провод/грозотрос/ОКГТ → заземление → переходы → контроль → исполнительная документация. Проектные решения и фактические параметры вводятся пользователем и не подменяются автоматическими расчётами.</p></div>
 <div class="card"><h2>1. Паспорт линии</h2><div class="grid">
 <div><label>Напряжение</label><select id="lfVoltage"><option>35 кВ</option><option selected>110 кВ</option><option>220 кВ</option><option>330 кВ</option><option>500 кВ</option><option>750 кВ</option></select></div>
@@ -519,9 +521,9 @@ button.primary{background:var(--accent);color:#1b1107}button.secondary{backgroun
 
 <div class="card"><h2>4. Комплект исполнительной документации</h2><div class="grid"><div><label>Этап</label><select id="lepDocStage"><option>Подготовка трассы</option><option>Фундаменты</option><option>Монтаж опор</option><option>Монтаж проводов и тросов</option><option>Заземление</option><option>Испытания и сдача</option></select></div><div style="display:flex;align-items:end"><button class="secondary" onclick="renderLepDocsV10()">Показать комплект</button></div></div><div id="lepFullDocs"></div></div>
 
-<div class="card"><h2>5. Нормативная база</h2><div id="lepFullNorms"></div><div class="notice">Нормативы показываются как справочная база. Для конкретной ВЛ применяются проектная и рабочая документация, ППР/ТК и актуальные НД по объекту. Исполнительная документация должна отражать фактическое исполнение решений проекта. </div></div>
+<div class="card"><h2>5. Нормативная база</h2><div id="lepFullNorms"></div><div class="notice">Нормативы показываются как справочная база. Для конкретной ВЛ применяются проектная и рабочая документация, ППР/ТК и актуальные НД по объекту. Исполнительная документация должна отражать фактическое исполнение решений проекта. </div></div>
 
-<div class="card"><h2>6. Чертежи и типовые конструкции</h2><div id="lepDrawingCards"></div><div class="notice">PGSSTROY не подменяет проектные чертежи выдуманными схемами. Здесь показываются только подтверждённые нормативные источники и идентифицированные комплекты; сам PDF показывается только после подключения разрешённого файла.</div></div>
+<div class="card"><h2>6. Чертежи и типовые конструкции</h2><div id="lepFullDrawingCards"></div><div class="notice">PGSSTROY не подменяет проектные чертежи выдуманными схемами. Здесь показываются только подтверждённые нормативные источники и идентифицированные комплекты; сам PDF показывается только после подключения разрешённого файла.</div></div>
 </section>
 
 <footer class="wrap" style="text-align:center;padding:18px;color:#7b8490;font-size:12px">PGSSTROY.PRO · v1.1 · объекты · цены · документы · ЛЭП · тарифы</footer>
@@ -693,7 +695,7 @@ if(logoutBtn)logoutBtn.style.display=cloudSession?"inline-block":"none";
 function openLoginModal(){
  const body=$("accountModalBody");if(!body)return;
  $("accountModalTitle").textContent="Войти в локальный аккаунт";
- body.innerHTML='<p class="muted">Выберите локальный аккаунт или войдите в облачный аккаунт.</p><div class="grid"><div><label>Email</label><input id="cloudLoginEmail" type="email" placeholder="mail@example.com"></div><div><label>Пароль</label><input id="cloudLoginPassword" type="password" placeholder="Минимум 6 символов"></div></div><div class="toolbar"><button class="primary" onclick="doCloudLogin()">Войти в облако</button><button class="secondary" onclick="cloudSyncNow()">Синхронизировать</button><button class="secondary danger" onclick="cloudLogout()">Выйти из облака</button>">  </div>' + '<div class="account-list">'+accountRegistry.accounts.map(a=>`<div class="account-option ${a.id===db.account.id?'account-current':''}"><div><b>${esc(a.name||'Без имени')}</b><span class="mini">${esc(a.email||'Локальный аккаунт')} · ${a.snapshot?.objects?.filter(o=>!o.archived).length||0} активных объектов</span></div><div><button class="primary" onclick="switchAccount('${a.id}')">${a.id===db.account.id?'Текущий':'Войти'}</button>${a.id!==db.account.id?`<button class="secondary danger account-delete" onclick="removeLocalAccount('${a.id}')">Удалить</button>`:''}</div></div>`).join('')+'</div><div class="toolbar"><button class="secondary" onclick="openRegisterModal()">＋ Создать аккаунт</button></div>';
+ body.innerHTML='<p class="muted">Выберите локальный аккаунт или войдите в облачный аккаунт.</p><div class="grid"><div><label>Email</label><input id="cloudLoginEmail" type="email" placeholder="mail@example.com"></div><div><label>Пароль</label><input id="cloudLoginPassword" type="password" placeholder="Минимум 6 символов"></div></div><div class="toolbar"><button class="primary" onclick="doCloudLogin()">Войти в облако</button><button class="secondary" onclick="cloudSyncNow()">Синхронизировать</button><button class="secondary danger" onclick="cloudLogout()">Выйти из облака</button></div>' + '<div class="account-list">'+accountRegistry.accounts.map(a=>`<div class="account-option ${a.id===db.account.id?'account-current':''}"><div><b>${esc(a.name||'Без имени')}</b><span class="mini">${esc(a.email||'Локальный аккаунт')} · ${a.snapshot?.objects?.filter(o=>!o.archived).length||0} активных объектов</span></div><div><button class="primary" onclick="switchAccount('${a.id}')">${a.id===db.account.id?'Текущий':'Войти'}</button>${a.id!==db.account.id?`<button class="secondary danger account-delete" onclick="removeLocalAccount('${a.id}')">Удалить</button>`:''}</div></div>`).join('')+'</div><div class="toolbar"><button class="secondary" onclick="openRegisterModal()">＋ Создать аккаунт</button></div>';
  
 $("accountModal").style.display="flex";
 }
@@ -731,7 +733,7 @@ function removeLocalAccount(id){
 
 function getCurrentObject(){return db.objects.find(o=>String(o.id)===String(db.currentObjectId)&&!o.archived)||null}
 function requireCurrentObject(){const o=getCurrentObject();if(!o){alert("Сначала выберите активный объект в верхней панели.");showPage("objects");
-financeInitV10();return null}return o}
+return null}return o}
 function refreshCurrentObject(){const s=$("currentObjectSelect");if(!s)return;const active=db.objects.filter(o=>!o.archived);if(!active.length){s.innerHTML="<option value=''>Нет активных объектов</option>";return;}s.innerHTML=active.map(function(o){const sel=String(o.id)===String(db.currentObjectId)?" selected":"";const star=o.favorite?"⭐ ":"";return "<option value='"+o.id+"'"+sel+">"+esc(star+o.name)+"</option>"}).join("")}
 function setCurrentObject(id){db.currentObjectId=id?Number(id):null;save();refreshCurrentObject();renderObjects()}
 function openAuthStub(register=false){alert(register?"Регистрация будет подключена на серверном этапе. Сейчас данные изолированы локально в этом аккаунте.":"Вход будет подключён на серверном этапе. Сейчас используется локальный аккаунт на устройстве.")}
@@ -744,7 +746,6 @@ function notify(text){alert(text);}
 function showPage(id){
  document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
  const page=$(id); if(page) page.classList.add("active");
- document.querySelectorAll("nav button[data-page]").forEach
  if(id==="objects"){renderObjects();renderAccessList();}
  if(id==="prices")renderPrices();
  if(id==="suppliers")renderSuppliers();
@@ -817,7 +818,6 @@ function calcPowerLine(){
  el.powerResult.innerHTML=html;
 }
 
-
 function genAccessCode(){const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<4;i++)s+=chars[Math.floor(Math.random()*chars.length)];return s}
 function createAccessKey(objectId){
  const o=db.objects.find(x=>x.id===objectId); if(!o)return;
@@ -844,7 +844,6 @@ function addObject(){
  db.objects.unshift(obj); db.currentObjectId=obj.id; save(); refreshCurrentObject();
  el.objName.value="";el.objAddress.value="";
  renderObjects();
-renderLepCatalog();
 }
 function renderObjects(){
  refreshCurrentObject();
@@ -921,12 +920,18 @@ function saveMaterialNeed(){
 function renderMaterials(){
  el.materialList.innerHTML=db.materials.length?db.materials.map(x=>`<div class="item"><b>${esc(x.name)}</b> — ${Number(x.qty).toFixed(2)} ${esc(x.unit||"")}. <span class="muted">${esc(x.date)}</span><div class="edit-actions"><button class="secondary" onclick="editRecord('material',${x.id})">✏️ Изменить</button><button class="secondary danger" onclick="deleteRecord('material',${x.id})">Удалить</button></div></div>`).join(""):'<div class="empty">Потребности не добавлены.</div>';
 }
+function addSupplier(){
+ const n=el.sName.value.trim(),c=el.sCity.value.trim();
+ if(!n||!c)return alert("Укажите название и город");
+ db.suppliers.unshift({id:Date.now(),name:n,city:c,contact:el.sContact.value.trim(),desc:el.sDesc.value.trim(),date:today()});
+ save();el.sName.value="";el.sCity.value="";el.sContact.value="";el.sDesc.value="";renderSuppliers();
+}
 function renderSuppliers(){
  el.supplierList.innerHTML=db.suppliers.length?db.suppliers.map(x=>`<div class="item"><h3>${esc(x.name)}</h3><div class="muted">📍 ${esc(x.city)} · ${esc(x.date)}</div>${x.desc?`<div>${esc(x.desc)}</div>`:""}${x.contact?`<div class="muted">Контакт: ${esc(x.contact)}</div>`:""}<div class="edit-actions"><button class="secondary" onclick="editRecord('supplier',${x.id})">✏️ Изменить</button><button class="secondary danger" onclick="deleteRecord('supplier',${x.id})">Удалить</button></div></div>`).join(""):'<div class="empty">Поставщики пока не добавлены.</div>';
 }
 function normalizeRegion(v){return String(v||"").toLowerCase().trim().replace(/ё/g,"е").replace(/республика\s+/g,"").replace(/область/g,"").replace(/край/g,"").replace(/-+/g," ").replace(/\s+/g," ")}
-function profileRegion(){return String(db.profile?.region||"").trim()}
-function profileCity(){return String(db.profile?.city||"").trim()}
+function profileRegion(){return String(db.profile?.profRegion||db.profile?.region||"").trim()}
+function profileCity(){return String(db.profile?.profCity||db.profile?.city||"").trim()}
 function regionMatches(value, target){const a=normalizeRegion(value),b=normalizeRegion(target);return !b||a===b||a.includes(b)||b.includes(a)}
 function useProfileRegionForPrices(){if($('searchRegion'))$('searchRegion').value=profileRegion();if($('searchCity'))$('searchCity').value=profileCity();renderPrices()}
 function clearPriceFilters(){['searchMaterial','searchCity','searchRegion'].forEach(id=>{if($(id))$(id).value=''});if($('searchType'))$('searchType').value='';renderPrices()}
@@ -973,7 +978,7 @@ function importFgisFile(input){
    rows.forEach(r=>{
     const material=String(r.material||r.name||r.наименование||r.resourceName||'').trim();
     const price=Number(String(r.price??r.сметнаяЦена??r.estimatePrice??'').replace(/\s/g,'').replace(',','.'));
-    const unit=String(r.unit||r.еиница||r.единица||r.measure||'').trim();
+    const unit=String(r.unit||r.единица||r.measure||'').trim();
     const ksr=String(r.ksrCode||r.ksr||r.кодКСР||r.код||'').trim();
     if(!material||!(price>0))return;
     const item={id:Date.now()+count,material,price,unit:unit||'₽/шт',type:'Сметная',city:String(r.city||''),region:String(r.region||r.subject||$('pFgisSubject')?.value||''),date:today(),vat:Number(r.vat||0)||0,delivery:String(r.delivery||'Включена'),source:'ФГИС ЦС',ksrCode:ksr,priceZone:String(r.zone||r.priceZone||$('pFgisZone')?.value||''),fgisPeriod:String(r.period||r.quarter||$('pFgisPeriod')?.value||''),fgisVerified:true};
@@ -1022,98 +1027,6 @@ function renderPrices(){
 }
 function delPrice(id){db.prices=db.prices.filter(x=>x.id!==id);save();renderPrices();}
 
-function findPrice(material, wantedType){
- const target=String(material||'').toLowerCase().trim();
- const pr=String(wantedType||$('estimatePriceType')?.value||'Сметная').trim();
- const ksr=String(arguments[2]||'').trim();
- const region=String($('estimateRegion')?.value||profileRegion()||'').trim();
- const city=profileCity();
- const pool=db.prices.filter(x=>{
-   const m=String(x.material||'').toLowerCase().trim();
-   return (m===target||target.includes(m)||m.includes(target)) && (!pr||x.type===pr) && (pr!=='Сметная'||x.fgisVerified===true) && (!ksr||String(x.ksrCode||'')===ksr);
- });
- if(!pool.length)return null;
- const score=x=>{let s=0;
-   if(String(x.material||'').toLowerCase().trim()===target)s+=100;
-   if(region&&regionMatches(x.region,region))s+=80;
-   if(city&&String(x.city||'').toLowerCase().trim()===city.toLowerCase().trim())s+=40;
-   if(x.date)s+=1;
-   return s;
- };
- return pool.slice().sort((a,b)=>score(b)-score(a))[0]||null;
-}
-
-function calcLineCost(item){
- const p=findPrice(item.name, $('estimatePriceType')?.value||'Сметная');
- if(!p)return {...item,unitPrice:null,total:0,priceType:null,source:null};
- const compatible =
-   (item.unit==="м³" && p.unit==="₽/м³") ||
-   (item.unit==="кг" && p.unit==="₽/кг") ||
-   (item.unit==="шт" && p.unit==="₽/шт") ||
-   (item.unit==="м" && p.unit==="₽/м") ||
-   (item.unit==="т" && p.unit==="₽/т");
- if(!compatible)return {...item,unitPrice:null,total:0,priceType:null,source:null};
- return {...item,unitPrice:p.price,total:Number(item.qty)*Number(p.price),priceType:p.type,source:p.source||"База цен",priceDate:p.date};
-}
-
-function recalculateEstimate(){
- renderEstimate();
-}
-
-function renderEstimate(){
- const priced=db.calculations.map(calcLineCost);
- let direct=priced.reduce((sum,x)=>sum+(x.total||0),0);
- const overhead=Number(el.estOverhead.value)||0;
- const reserve=Number(el.estReserve.value)||0;
- const delivery=Number(el.estDelivery.value)||0;
- const overheadSum=direct*overhead/100;
- const reserveBase=direct+overheadSum+delivery;
- const reserveSum=reserveBase*reserve/100;
- const grand=direct+overheadSum+delivery+reserveSum;
-
- if(!priced.length){
-   el.estimateBox.innerHTML='<div class="empty">Расчётов пока нет. Сначала выполните расчёт бетона, арматуры или опалубки.</div>';
-   return;
- }
-
- let html=`
- <div class="stat">
- <div>Позиций<b>${priced.length}</b></div>
- <div>С ценой<b>${priced.filter(x=>x.unitPrice!==null).length}</b></div>
- <div>Без цены<b>${priced.filter(x=>x.unitPrice===null).length}</b></div>
- </div>
- <div class="item">
- <h3>Позиции сметы</h3>`;
-
- priced.slice().reverse().forEach(x=>{
-   html+=`<div class="price-line">
-   <div><b>${esc(x.type)}</b> · ${esc(x.name)}<br>
-   <span class="muted">${Number(x.qty).toFixed(2)} ${esc(x.unit)}</span>
-   ${x.unitPrice!==null?` · ${money(x.unitPrice)}/${esc(x.unit.replace("³","³"))}`:` · <span style="color:#b42318">цена не найдена</span>`}
-   ${x.priceType?` · <span class="tag">${esc(x.priceType)}</span>`:""}
-   </div>
-   <b>${x.unitPrice!==null?money(x.total):"—"}</b>
-   </div>`;
-   if(x.type==="Опалубка"&&x.meta){
-     html+=`<div class="muted">Площадь ${Number(x.meta.totalArea).toFixed(2)} м² · ${x.qty} щит. · фактическая площадь ${Number(x.meta.actualArea).toFixed(2)} м²</div>`;
-   }
- });
- html+=`</div>
- <div class="item">
- <div class="price-line"><span>Материалы / прямые затраты</span><b>${money(direct)}</b></div>
- <div class="price-line"><span>Накладные ${overhead}%</span><b>${money(overheadSum)}</b></div>
- <div class="price-line"><span>Доставка</span><b>${money(delivery)}</b></div>
- <div class="price-line"><span>Резерв ${reserve}%</span><b>${money(reserveSum)}</b></div>
- <div style="margin-top:12px">ИТОГО</div><div class="total">${money(grand)}</div>
- </div>`;
-
- const missing=priced.filter(x=>x.unitPrice===null);
- if(missing.length){
-   html+=`<div class="notice">⚠️ Для ${missing.length} позиции(й) нет подходящей цены. Добавьте её в разделе «Цены», затем снова нажмите «Пересчитать смету».</div>`;
- }
- el.estimateBox.innerHTML=html;
-}
-
 function addKnowledge(){
  const t=el.kTitle.value.trim(),x=el.kText.value.trim();
  if(!t||!x)return alert("Заполните название и описание");
@@ -1126,11 +1039,6 @@ function renderKnowledge(){
  <span class="tag">${esc(x.cat)}</span><div style="margin-top:7px">${esc(x.text)}</div>
  <div class="muted" style="margin-top:6px">${esc(x.date)}</div></div>`).join("")
  :'<div class="empty">Публикаций пока нет.</div>';
-}
-
-function saveProfile(){
- db.profile={name:el.profName.value.trim(),city:el.profCity.value.trim(),region:el.profRegion.value.trim(),radius:el.profRadius.value};
- save();alert("Настройки сохранены");
 }
 
 el.pDate.value=today();
@@ -1146,7 +1054,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showPageV07(b.d
    This keeps the preview working on mobile browsers even if inline onchange is skipped. */
 ['docType','docObject','docNumber','docDate'].forEach(id=>{const n=$(id);if(n){n.addEventListener('change',previewDocument);n.addEventListener('input',previewDocument);}});
 
-function loadProfileV07(){const p=db.profile||{};['profName','profPhone','profEmail','profCity','profRegion','profRadius','orgName','orgInn','orgKpp','orgOgrn','orgAddress','orgBank','orgBik','orgAccount','orgDirector','orgBasis'].forEach(id=>{if($(id)&&p[id]!==undefined)$(id).value=p[id]});if($('searchRegion')&&p.region&&!$('searchRegion').value)$('searchRegion').value=p.region;if($('estimateRegion')&&p.region&&!$('estimateRegion').value)$('estimateRegion').value=p.region;syncPriceFormDefaults();}
+function loadProfileV07(){const p=db.profile||{};['profName','profPhone','profEmail','profCity','profRegion','profRadius','orgName','orgInn','orgKpp','orgOgrn','orgAddress','orgBank','orgBik','orgAccount','orgDirector','orgBasis'].forEach(id=>{if($(id)&&p[id]!==undefined)$(id).value=p[id]});if($('estimateRegion')&&profileRegion()&&!$('estimateRegion').value)$('estimateRegion').value=profileRegion();syncPriceFormDefaults();}
 function saveProfileV07(){
  db.account.name=(el.profName?.value||db.account.name||"Локальный аккаунт").trim()||"Локальный аккаунт";
  db.account.email=(el.profEmail?.value||db.account.email||"").trim();
@@ -1156,10 +1064,7 @@ function exportBackupV07(){downloadV07('pgsstroy-backup.json',JSON.stringify(db,
 function importBackupV07(e){const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x||typeof x!=='object')throw Error();db=Object.assign(structuredClone(emptyDB),x);db.schemaVersion=8;save();refreshObjectSelectsV07();loadProfileV07();renderObjects();notify('База импортирована')}catch(err){alert('Не удалось импортировать JSON')}};r.readAsText(f);e.target.value=''}
 function resetDBV07(){if(!confirm('Удалить все локальные данные PGSSTROY.PRO?'))return;localStorage.removeItem(KEY);loadDB();refreshObjectSelectsV07();renderObjects();loadProfileV07();notify('Локальная база очищена')}
 function docContextV07(){const oid=$('docObject')?.value||'';return {oid,obj:db.objects.find(o=>String(o.id)===String(oid))||null,date:$('docDate')?.value||today(),number:$('docNumber')?.value||'01',profile:db.profile||{}}}
-/* ===== Documents reliability fix =====
-   The document renderer used linesForObjectV07(), but that helper was missing.
-   As a result the default КС-2 preview threw before writing into #documentPreview.
-*/
+/* ===== Documents reliability fix ===== */
 function linesForObjectV07(oid){
  const list=Array.isArray(db.calculations)?db.calculations:[];
  const filtered=list.filter(x=>!oid || String(x.objectId||'')===String(oid));
@@ -1172,9 +1077,12 @@ function linesForObjectV07(oid){
 }
 function setDocumentObjectDefault(){
  const s=$('docObject'); if(!s)return;
- const current=String(db.currentObjectId||'');
- if(current && [...s.options].some(o=>String(o.value)===current)) s.value=current; else if(!s.value && s.options.length) s.selectedIndex=0;
  if($('docDate') && !$('docDate').value) $('docDate').value=today();
+ const cur=String(db.currentObjectId||'');
+ if(s.dataset.autoFor!==cur){
+   s.dataset.autoFor=cur;
+   if(cur && [...s.options].some(o=>String(o.value)===cur)) s.value=cur; else if(!s.value && s.options.length) s.selectedIndex=0;
+ }
 }
 
 function docVal(v, fallback='________________'){return esc(v||fallback)}
@@ -1190,7 +1098,7 @@ function previewDocument(){
  const box=$('documentPreview');
  if(!box)return;
  try{
-  setDocumentObjectDefault();
+  if($('docDate') && !$('docDate').value) $('docDate').value=today();
   const d=docContextV07(),type=$('docType')?.value||'ks2';
   let title='',body='';if(type==='ks2'){title='КС-2';body=ks2Body(d)}else if(type==='ks3'){title='КС-3';body=ks3Body(d)}else if(type==='ks6a'){title='КС-6а';body=ks6aBody(d)}else if(['hidden','responsible','network','geoBase','axis'].includes(type)){title=type;body=rdActBody(d,type)}else{const p=d.profile,o=d.obj;if(type==='materials'){title='ВЕДОМОСТЬ МАТЕРИАЛОВ';const mats=db.materials.filter(x=>!d.oid||String(x.objectId)===String(d.oid));body=`<h2 class="form-title">ВЕДОМОСТЬ МАТЕРИАЛОВ</h2>${docHeader(d)}<table class="official-table"><tr><th>Материал</th><th>Количество</th><th>Ед.</th><th>Дата</th></tr>${mats.map(x=>`<tr><td>${esc(x.name)}</td><td>${x.qty}</td><td>${esc(x.unit)}</td><td>${esc(x.date)}</td></tr>`).join('')}</table>`}else if(type==='estimate'){title='Смета';const lines=linesForObjectV07(d.oid),total=lines.reduce((s,x)=>s+(x.total||0),0);body=`<h2 class="form-title">КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ / СМЕТА</h2>${docHeader(d)}<table class="official-table"><tr><th>№</th><th>Работа</th><th>Ед.</th><th>Кол.</th><th>Цена</th><th>Стоимость</th></tr>${lines.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.name||x.type)}</td><td>${esc(x.unit)}</td><td>${x.qty}</td><td>${x.unitPrice==null?'—':money(x.unitPrice)}</td><td>${x.total?money(x.total):'—'}</td></tr>`).join('')}</table><p style="text-align:right"><b>Итого: ${money(total)}</b></p>`}else if(type==='executive'){title='Исполнительная ведомость';body=`<h2 class="form-title">ИСПОЛНИТЕЛЬНАЯ ВЕДОМОСТЬ</h2>${docHeader(d)}<table class="official-table"><tr><th>№</th><th>Работа / элемент</th><th>Документ / чертёж</th><th>Фактические данные</th><th>Примечание</th></tr>${[1,2,3,4].map(i=>`<tr><td>${i}</td><td></td><td></td><td></td><td></td></tr>`).join('')}</table>`}else{title='Ведомость ЛЭП';body=`<h2 class="form-title">ВЕДОМОСТЬ ЛЭП</h2>${docHeader(d)}<table class="official-table"><tr><th>Параметр</th><th>Фактическое значение</th></tr><tr><td>Напряжение</td><td></td></tr><tr><td>Опоры</td><td></td></tr><tr><td>Фундамент</td><td></td></tr><tr><td>Провод</td><td></td></tr><tr><td>Грозотрос / ОКГТ</td><td></td></tr><tr><td>Заземление</td><td></td></tr></table><div class="notice">Рабочая ведомость PGSSTROY. Не является проектной документацией.</div>`}}box.innerHTML=`<div class="doc-preview official-doc"><div class="doc-brand">PGSSTROY.PRO · нормативная форма / рабочий шаблон</div>${body}<hr><p class="doc-foot">Сформировано ${esc(d.date)} · Форма/образец: ${esc(type)}</p></div>`;
   const status=$('documentRenderStatus'); if(status)status.textContent=`Предпросмотр готов · ${title||type}`;
@@ -1204,18 +1112,12 @@ function previewDocument(){
 function printDocument(){previewDocument();document.querySelectorAll('.page').forEach(x=>x.classList.remove('printing'));$('documents').classList.add('printing');window.print();setTimeout(()=>$('documents').classList.remove('printing'),600)}
 function exportDocumentTXT(){const text=$('documentPreview')?.innerText||'';downloadV07('pgsstroy-document.txt',text,'text/plain;charset=utf-8');notify('TXT сохранён')}
 
-// Fix v0.6 price matching for rebar/formwork and preserve old data.
-
-
-
-
-// Add object binding to existing calculators without rewriting their calculation math.
-const oldCalcConcrete=window.calcConcrete,oldCalcRebar=window.calcRebar,oldCalcFormwork=window.calcFormwork;
+// Привязка расчётов к объекту
+const oldCalcConcrete=window.calcConcrete,oldCalcRebar=window.calcRebar;
 window.calcConcrete=function(){oldCalcConcrete();const c=db.calculations[db.calculations.length-1];if(c)c.objectId=$('calcObjectConcrete')?.value||null;save()}
 window.calcRebar=function(){oldCalcRebar();const c=db.calculations[db.calculations.length-1];if(c)c.objectId=$('calcObjectRebar')?.value||null;save()}
-window.calcFormwork=function(){oldCalcFormwork();const c=db.calculations[db.calculations.length-1];if(c)c.objectId=$('calcObjectForm')?.value||null;save()}
 
-// Add object selectors to existing pages by inserting controls after page headers.
+// Селекторы объектов на страницах расчётов
 function injectObjectSelectorsV07(){
   const specs=[['concrete','calcObjectConcrete','Бетон'],['rebar','calcObjectRebar','Арматура'],['formwork','calcObjectForm','Опалубка']];
   specs.forEach(([page,id,label])=>{const card=$(page)?.querySelector('.card');if(card&&!$(id)){const h=card.querySelector('h2');const wrap=document.createElement('div');wrap.innerHTML=`<div style="margin:0 0 12px"><label>Объект</label><select id="${id}"><option value="">— Без привязки —</option></select></div>`;h?.after(wrap)}})
@@ -1224,11 +1126,7 @@ function injectObjectSelectorsV07(){
   const powerCard=$('power')?.querySelector('.card');if(powerCard&&!$('powerObject')){const h=powerCard.querySelector('h2');const wrap=document.createElement('div');wrap.innerHTML='<div style="margin:0 0 12px"><label>Объект</label><select id="powerObject"><option value="">— Без привязки —</option></select></div>';h?.after(wrap)}
 }
 
-// Keep original object renderer but add count/modern details safely.
 const oldRenderObjects=window.renderObjects;window.renderObjects=function(){oldRenderObjects();const c=$('objectCount');if(c)c.textContent=db.objects.length;refreshObjectSelectsV07()}
-
-// Object-aware estimate.
-const oldRenderEstimate=window.renderEstimate;window.renderEstimate=function(){const oid=$('estimateObject')?.value||'';if(!oid){oldRenderEstimate();return}const original=db.calculations;db.calculations=original.filter(x=>String(x.objectId)===String(oid));oldRenderEstimate();db.calculations=original}
 
 // Startup after DOM already exists.
 injectObjectSelectorsV07();
@@ -1239,10 +1137,9 @@ loadProfileV07();
 showPageV07('objects'); setTimeout(()=>{setDocumentObjectDefault();previewDocument();},0);
 
 // ===== PGSSTROY.PRO v1.0 lightweight modules =====
-function today(){return new Date().toISOString().slice(0,10)}
 function pageOf(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));const p=$(id);if(p)p.classList.add('active');document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));window.scrollTo({top:0,behavior:'smooth'})}
 function quickOpen(id){pageOf(id)}
-function recentCalc(x){db.calculations.push(x);save();renderQuickRecentV08()}
+function recentCalc(x){if(x.objectId===undefined)x.objectId=db.currentObjectId||null;db.calculations.push(x);save();renderQuickRecentV08()}
 function renderQuickRecentV08(){const box=$('quickRecent');if(!box)return;const a=db.calculations.slice(-6).reverse();box.innerHTML=a.length?a.map(x=>`<div class="item"><b>${esc(x.type||'Расчёт')}</b> · ${esc(x.name||'')} — ${Number(x.qty||0).toFixed(2)} ${esc(x.unit||'')}</div>`).join(''):'<div class="empty">Расчётов пока нет</div>'}
 function calcEarthV08(){const l=+$('ewL').value||0,w=+$('ewW').value||0,h=+$('ewH').value||0,loos=(+$('ewLoos').value||0)/100,truck=+$('ewTruck').value||20,v=l*w*h,vl=v*(1+loos),tr=Math.ceil(vl/truck);$('earthResult').innerHTML=`<div class="module-result"><div class="big">${v.toFixed(2)} м³</div><div>Объём в плотном теле</div><p>С разрыхлением: <b>${vl.toFixed(2)} м³</b><br>Ориентировочно рейсов по ${truck} м³: <b>${tr}</b></p><span class="mini">Предварительный расчёт. Коэффициент разрыхления уточняется по грунту и технологии разработки.</span></div>`;recentCalc({type:'Земляные работы',name:$('ewType').value,qty:v,unit:'м³',date:today()})}
 function masonrySpec(mat){const m=mat;if(m.includes('600×300×200'))return {a:0.6*0.2,n:1/(.6*.2),m3:0.6*.3*.2,kind:'block',joint:0.012};if(m.includes('600×250×200'))return {a:.6*.2,n:1/(.6*.2),m3:.6*.25*.2,kind:'block',joint:.012};if(m.includes('390×190×188'))return {a:.39*.188,n:1/(.39*.188),m3:.39*.19*.188,kind:'block',joint:.01};if(m.includes('380×250×219'))return {a:.38*.219,n:1/(.38*.219),m3:.38*.25*.219,kind:'block',joint:.012};return {a:.25*.065,n:1/(.25*.065),m3:.25*.12*.065,kind:'brick',joint:.01}}
@@ -1497,9 +1394,9 @@ function findEstimatePriceV09(item,type){
  const score=p=>{let s=0,m=String(p.material||'').toLowerCase().trim();if(m===target)s+=1000;if(region&&regionMatches(p.region,region))s+=300;if(city&&String(p.city||'').toLowerCase().trim()===city.toLowerCase().trim())s+=100;if(item.ksrCode&&String(p.ksrCode||'')===String(item.ksrCode))s+=500;if(type==='Сметная'&&item.fgisPeriod&&String(p.fgisPeriod||'')===String(item.fgisPeriod))s+=100;return s};
  return pool.sort((a,b)=>score(b)-score(a))[0]||null;
 }
-function estimateLinesV09(){
- const oid=$('estimateObject')?.value||'';
- return db.calculations.filter(x=>!oid||String(x.objectId||'')===String(oid)).map((x,i)=>{const p=findEstimatePriceV09(x,$('estimatePriceType')?.value||'Сметная');const qty=Number(x.qty)||0;return {...x,_idx:i,section:estimateSectionV09(x),price:p?Number(p.price):null,total:p?qty*Number(p.price):0,source:p?.source||'',priceDate:p?.date||'',ksrCode:p?.ksrCode||x.ksrCode||'',priceZone:p?.priceZone||'',fgisPeriod:p?.fgisPeriod||''};});
+function estimateLinesV09(forOid){
+ const oid=forOid!==undefined?String(forOid||''):($('estimateObject')?.value||'');
+ return db.calculations.filter(x=>!oid||String(x.objectId||'')===oid).map((x,i)=>{const p=findEstimatePriceV09(x,$('estimatePriceType')?.value||'Сметная');const qty=Number(x.qty)||0;return {...x,_idx:i,section:estimateSectionV09(x),price:p?Number(p.price):null,total:p?qty*Number(p.price):0,source:p?.source||'',priceDate:p?.date||'',ksrCode:p?.ksrCode||x.ksrCode||'',priceZone:p?.priceZone||'',fgisPeriod:p?.fgisPeriod||''};});
 }
 function estimateTotalsV09(lines){
  const direct=lines.reduce((s,x)=>s+x.total,0), overheadPct=Number($('estOverhead')?.value)||0, profitPct=Number($('estProfit')?.value)||0, delivery=Number($('estDelivery')?.value)||0, reservePct=Number($('estReserve')?.value)||0;
@@ -1523,7 +1420,7 @@ function renderEstimateV09(){
 function recalculateEstimateV09(force){renderEstimateV09();if(force)notify('Цены обновлены из текущей базы. Сохранённые версии не изменены.');}
 function saveEstimateVersionV09(){const lines=estimateLinesV09(),t=estimateTotalsV09(lines);if(!lines.length)return alert('Нет позиций для сохранения.');const oid=$('estimateObject')?.value||'',obj=db.objects.find(o=>String(o.id)===String(oid));if(!Array.isArray(db.estimates))db.estimates=[];const version='v'+(db.estimates.filter(x=>x.objectId===oid).length+1);db.estimates.push({id:Date.now(),version,name:$('estimateName')?.value||'Локальная смета',objectId:oid,objectName:obj?.name||'',date:today(),priceType:$('estimatePriceType')?.value||'Сметная',region:$('estimateRegion')?.value||profileRegion(),lines:clone(lines),totals:t,total:t.total,settings:{overhead:$('estOverhead')?.value||0,profit:$('estProfit')?.value||0,delivery:$('estDelivery')?.value||0,reserve:$('estReserve')?.value||0}});save();renderEstimateVersionsV09();notify('Версия сметы сохранена');}
 function exportEstimateV09(){const lines=estimateLinesV09(),t=estimateTotalsV09(lines);if(!lines.length)return alert('Нет позиций для экспорта.');const text=[`PGSSTROY.PRO — ${$('estimateName')?.value||'Локальная смета'}`,`Объект: ${db.objects.find(o=>String(o.id)===String($('estimateObject')?.value||''))?.name||'Все расчёты'}`,`Дата: ${today()}`,'','№ | Раздел | Ресурс | Ед. | Кол-во | Цена | Сумма','---'];lines.forEach((x,i)=>text.push(`${i+1} | ${x.section} | ${x.name} | ${x.unit} | ${Number(x.qty).toFixed(2)} | ${x.price===null?'—':x.price} | ${x.price===null?'—':x.total.toFixed(2)}`));text.push('',`Прямые затраты: ${t.direct.toFixed(2)}`,`Накладные: ${t.overhead.toFixed(2)}`,`Сметная прибыль: ${t.profit.toFixed(2)}`,`Доставка: ${t.delivery.toFixed(2)}`,`Резерв: ${t.reserve.toFixed(2)}`,`ИТОГО: ${t.total.toFixed(2)}`);downloadV07('pgsstroy-estimate.txt',text.join('\n'),'text/plain;charset=utf-8');notify('Смета экспортирована');}
-function recalculateEstimate(){recalculateEstimateV09(false)}
+function recalculateEstimate(force){recalculateEstimateV09(!!force)}
 function renderEstimate(){recalculateEstimateV09(false)}
 
 
@@ -1567,182 +1464,22 @@ function renderLepDrawingCardsV10(){
   if(!b)return;
 
   const drawings=[
-
-    {
-      category:'Опоры',
-      type:'Промежуточная',
-      voltage:'35–110 кВ',
-      material:'Стальная',
-      series:'3.407.2-170',
-      title:'Промежуточные стальные опоры ВЛ 35–110 кВ',
-      desc:'Рабочие чертежи КМ: монтажные схемы, геометрия, узлы и расчётные листы.',
-      drawing:'https://ru.djvu.online/file/IInmvr42qXhLW'
-    },
-
-    {
-      category:'Опоры',
-      type:'Анкерно-угловая',
-      voltage:'35–110 кВ',
-      material:'Стальная',
-      series:'3.407.2-170',
-      title:'Анкерно-угловые стальные опоры ВЛ 35–110 кВ',
-      desc:'Рабочие чертежи КМ конструкций и узлов.',
-      drawing:'https://ohranatruda.ru/ot_biblio/norma/402145/'
-    },
-
-    {
-      category:'Опоры',
-      type:'Промежуточная',
-      voltage:'220 кВ',
-      material:'Стальная',
-      series:'3.407.2-145',
-      title:'Промежуточные стальные опоры ВЛ 220 кВ',
-      desc:'Рабочие чертежи КМ, монтажные схемы и узлы.',
-      drawing:'https://meganorm.ru/Index2/1/4293844/4293844580.htm'
-    },
-
-    {
-      category:'Опоры',
-      type:'Промежуточная',
-      voltage:'330 кВ',
-      material:'Стальная',
-      series:'3.407.2-145',
-      title:'Промежуточные стальные опоры ВЛ 330 кВ',
-      desc:'Рабочие чертежи КМ, монтажные схемы, геометрия и узлы.',
-      drawing:'https://meganorm.ru/Index2/1/4293844/4293844579.htm'
-    },
-
-    {
-      category:'Опоры',
-      type:'Анкерно-угловая',
-      voltage:'220–330 кВ',
-      material:'Стальная',
-      series:'3.407.2-145',
-      title:'Анкерно-угловые стальные опоры ВЛ 220–330 кВ',
-      desc:'Рабочие чертежи КМ конструкции и узлов.',
-      drawing:'https://meganorm.ru/Index2/1/4293844/4293844577.htm'
-    },
-
-    {
-      category:'Опоры',
-      type:'Промежуточная',
-      voltage:'500 кВ',
-      material:'Стальная',
-      series:'3.407.2-155',
-      title:'Промежуточные стальные опоры ВЛ 500 кВ',
-      desc:'Монтажные схемы, узлы, траверсы, стойки и спецификации.',
-      drawing:'https://meganorm.ru/Index2/1/4293844/4293844502.htm'
-    },
-
-    {
-      category:'Опоры',
-      type:'Анкерно-угловая',
-      voltage:'500 кВ',
-      material:'Стальная',
-      series:'3.407.2-155',
-      title:'Анкерно-угловые и промежуточно-угловые опоры ВЛ 500 кВ',
-      desc:'Монтажные схемы, узлы, стойки, траверсы и спецификации.',
-      drawing:'https://files.stroyinf.ru/Index2/1/4293844/4293844501.htm'
-    },
-
-    {
-      category:'Опоры',
-      type:'Концевая',
-      voltage:'220–330 кВ',
-      material:'Стальная',
-      series:'3.407-95',
-      title:'Концевые опоры для больших переходов ВЛ 220–330 кВ',
-      desc:'Монтажные схемы, узлы и рабочие чертежи конструкций К220-1, К220-2, К330-1, К330-2.',
-      drawing:'https://meganorm.ru/Index2/1/4293815/4293815084.htm'
-    },
-
-    {
-      category:'Опоры',
-      type:'Переходная / специальная',
-      voltage:'35–330 кВ',
-      material:'Стальная',
-      series:'3.407.2-168',
-      title:'Переходные опоры ВЛ 35–330 кВ',
-      desc:'Рабочие чертежи КМ свободностоящих переходных опор высотой до 100 м.',
-      drawing:'https://www.studmed.ru/seriya-34072-168-unificirovannye-konstrukcii-svobodnostoyaschih-perehodnyh-opor-vl-35-330-kv-vysotoy-do-100-m-vypusk-3-perehodnye-opory-330-kv-rabochie-chertezhi-km_d08bcb6fa9b.html'
-    },
-
-    {
-      category:'Опоры',
-      type:'Промежуточная',
-      voltage:'35–220 кВ',
-      material:'Железобетонная',
-      series:'3.407.1-175',
-      title:'Промежуточные одностоечные ЖБ опоры ВЛ 35–220 кВ',
-      desc:'Схемы расположения элементов, металлические и железобетонные рабочие чертежи.',
-      drawing:'https://meganorm.ru/Index2/1/4293844/4293844815.htm'
-    },
-
-    {
-      category:'Опоры',
-      type:'Промежуточная',
-      voltage:'35–500 кВ',
-      material:'Железобетонная',
-      series:'3.407.1-152',
-      title:'Промежуточные двухстоечные ЖБ опоры ВЛ 35–500 кВ',
-      desc:'Схемы расположения элементов, металлические и железобетонные рабочие чертежи.',
-      drawing:'https://ohranatruda.ru/ot_biblio/norma/402123/'
-    },
-
-    {
-      category:'Опоры',
-      type:'Анкерно-угловая',
-      voltage:'330–500 кВ',
-      material:'Железобетонная',
-      series:'3.407.1-167',
-      title:'Анкерно-угловые ЖБ опоры ВЛ 330–500 кВ',
-      desc:'Схемы расположения элементов, металлические и железобетонные рабочие чертежи.',
-      drawing:'https://meganorm.ru/Index2/1/4293844/4293844816.htm'
-    },
-
-    {
-      category:'Фундаменты',
-      type:'Сборный ЖБ',
-      voltage:'35–330 кВ',
-      material:'Железобетон',
-      series:'3.407-115',
-      title:'Фундаменты под металлические опоры ВЛ 35–330 кВ',
-      desc:'Рабочие чертежи фундаментных конструкций, плит, ригелей и элементов закрепления опор.',
-      drawing:'https://ohranatruda.ru/ot_biblio/norma/402175/'
-    },
-
-    {
-      category:'Фундаменты',
-      type:'Сборный ЖБ',
-      voltage:'500 кВ',
-      material:'Железобетон',
-      series:'3.407-115',
-      title:'Фундаменты под металлические опоры ВЛ 500 кВ',
-      desc:'Отдельный выпуск фундаментных конструкций для опор 500 кВ.',
-      drawing:'https://files.stroyinf.ru/Data2/1/4293833/4293833466.htm'
-    },
-
-    {
-      category:'Фундаменты',
-      type:'Свайный',
-      voltage:'35–500 кВ',
-      material:'ЖБ / металл',
-      series:'3.407-115',
-      title:'Свайные фундаменты и металлические ростверки',
-      desc:'Вибрированные и центрифугированные сваи, свайные фундаменты и металлические ростверки.',
-      drawing:'https://ohranatruda.ru/ot_biblio/norma/402175/'
-    },
-
-    {
-      category:'Фундаменты',
-      type:'Элементы фундамента',
-      voltage:'35–500 кВ',
-      material:'ЖБ / металл',
-      series:'3.407-115',
-      title:'Плиты, ригели и детали закрепления опор',
-      desc:'Рабочие чертежи плит, ригелей, анкерных элементов, подпятников и металлических деталей.',
-      drawing:'https://meganorm.ru/Index2/1/4293833/4293833464.htm'
-    }
+    {category:'Опоры',type:'Промежуточная',voltage:'35–110 кВ',material:'Стальная',series:'3.407.2-170',title:'Промежуточные стальные опоры ВЛ 35–110 кВ',desc:'Рабочие чертежи КМ: монтажные схемы, геометрия, узлы и расчётные листы.',drawing:'https://ru.djvu.online/file/IInmvr42qXhLW'},
+    {category:'Опоры',type:'Анкерно-угловая',voltage:'35–110 кВ',material:'Стальная',series:'3.407.2-170',title:'Анкерно-угловые стальные опоры ВЛ 35–110 кВ',desc:'Рабочие чертежи КМ конструкций и узлов.',drawing:'https://ohranatruda.ru/ot_biblio/norma/402145/'},
+    {category:'Опоры',type:'Промежуточная',voltage:'220 кВ',material:'Стальная',series:'3.407.2-145',title:'Промежуточные стальные опоры ВЛ 220 кВ',desc:'Рабочие чертежи КМ, монтажные схемы и узлы.',drawing:'https://meganorm.ru/Index2/1/4293844/4293844580.htm'},
+    {category:'Опоры',type:'Промежуточная',voltage:'330 кВ',material:'Стальная',series:'3.407.2-145',title:'Промежуточные стальные опоры ВЛ 330 кВ',desc:'Рабочие чертежи КМ, монтажные схемы, геометрия и узлы.',drawing:'https://meganorm.ru/Index2/1/4293844/4293844579.htm'},
+    {category:'Опоры',type:'Анкерно-угловая',voltage:'220–330 кВ',material:'Стальная',series:'3.407.2-145',title:'Анкерно-угловые стальные опоры ВЛ 220–330 кВ',desc:'Рабочие чертежи КМ конструкции и узлов.',drawing:'https://meganorm.ru/Index2/1/4293844/4293844577.htm'},
+    {category:'Опоры',type:'Промежуточная',voltage:'500 кВ',material:'Стальная',series:'3.407.2-155',title:'Промежуточные стальные опоры ВЛ 500 кВ',desc:'Монтажные схемы, узлы, траверсы, стойки и спецификации.',drawing:'https://meganorm.ru/Index2/1/4293844/4293844502.htm'},
+    {category:'Опоры',type:'Анкерно-угловая',voltage:'500 кВ',material:'Стальная',series:'3.407.2-155',title:'Анкерно-угловые и промежуточно-угловые опоры ВЛ 500 кВ',desc:'Монтажные схемы, узлы, стойки, траверсы и спецификации.',drawing:'https://files.stroyinf.ru/Index2/1/4293844/4293844501.htm'},
+    {category:'Опоры',type:'Концевая',voltage:'220–330 кВ',material:'Стальная',series:'3.407-95',title:'Концевые опоры для больших переходов ВЛ 220–330 кВ',desc:'Монтажные схемы, узлы и рабочие чертежи конструкций К220-1, К220-2, К330-1, К330-2.',drawing:'https://meganorm.ru/Index2/1/4293815/4293815084.htm'},
+    {category:'Опоры',type:'Переходная / специальная',voltage:'35–330 кВ',material:'Стальная',series:'3.407.2-168',title:'Переходные опоры ВЛ 35–330 кВ',desc:'Рабочие чертежи КМ свободностоящих переходных опор высотой до 100 м.',drawing:'https://www.studmed.ru/seriya-34072-168-unificirovannye-konstrukcii-svobodnostoyaschih-perehodnyh-opor-vl-35-330-kv-vysotoy-do-100-m-vypusk-3-perehodnye-opory-330-kv-rabochie-chertezhi-km_d08bcb6fa9b.html'},
+    {category:'Опоры',type:'Промежуточная',voltage:'35–220 кВ',material:'Железобетонная',series:'3.407.1-175',title:'Промежуточные одностоечные ЖБ опоры ВЛ 35–220 кВ',desc:'Схемы расположения элементов, металлические и железобетонные рабочие чертежи.',drawing:'https://meganorm.ru/Index2/1/4293844/4293844815.htm'},
+    {category:'Опоры',type:'Промежуточная',voltage:'35–500 кВ',material:'Железобетонная',series:'3.407.1-152',title:'Промежуточные двухстоечные ЖБ опоры ВЛ 35–500 кВ',desc:'Схемы расположения элементов, металлические и железобетонные рабочие чертежи.',drawing:'https://ohranatruda.ru/ot_biblio/norma/402123/'},
+    {category:'Опоры',type:'Анкерно-угловая',voltage:'330–500 кВ',material:'Железобетонная',series:'3.407.1-167',title:'Анкерно-угловые ЖБ опоры ВЛ 330–500 кВ',desc:'Схемы расположения элементов, металлические и железобетонные рабочие чертежи.',drawing:'https://meganorm.ru/Index2/1/4293844/4293844816.htm'},
+    {category:'Фундаменты',type:'Сборный ЖБ',voltage:'35–330 кВ',material:'Железобетон',series:'3.407-115',title:'Фундаменты под металлические опоры ВЛ 35–330 кВ',desc:'Рабочие чертежи фундаментных конструкций, плит, ригелей и элементов закрепления опор.',drawing:'https://ohranatruda.ru/ot_biblio/norma/402175/'},
+    {category:'Фундаменты',type:'Сборный ЖБ',voltage:'500 кВ',material:'Железобетон',series:'3.407-115',title:'Фундаменты под металлические опоры ВЛ 500 кВ',desc:'Отдельный выпуск фундаментных конструкций для опор 500 кВ.',drawing:'https://files.stroyinf.ru/Data2/1/4293833/4293833466.htm'},
+    {category:'Фундаменты',type:'Свайный',voltage:'35–500 кВ',material:'ЖБ / металл',series:'3.407-115',title:'Свайные фундаменты и металлические ростверки',desc:'Вибрированные и центрифугированные сваи, свайные фундаменты и металлические ростверки.',drawing:'https://ohranatruda.ru/ot_biblio/norma/402175/'},
+    {category:'Фундаменты',type:'Элементы фундамента',voltage:'35–500 кВ',material:'ЖБ / металл',series:'3.407-115',title:'Плиты, ригели и детали закрепления опор',desc:'Рабочие чертежи плит, ригелей, анкерных элементов, подпятников и металлических деталей.',drawing:'https://meganorm.ru/Index2/1/4293833/4293833464.htm'}
   ];
 
   const grouped={};
@@ -1774,36 +1511,14 @@ function renderLepDrawingCardsV10(){
           <p>${esc(x.desc)}</p>
 
           <div class="toolbar">
-            <a class="secondary"
-               href="${x.drawing}"
-               target="_blank"
-               rel="noopener"
-               style="display:inline-block;text-decoration:none">
-              📐 Рабочие чертежи
-            </a>
-
-            <a class="secondary"
-               href="${x.drawing}"
-               target="_blank"
-               rel="noopener"
-               style="display:inline-block;text-decoration:none">
-              🔩 Сборка / узлы
-            </a>
-
-            <a class="secondary"
-               href="${x.drawing}"
-               target="_blank"
-               rel="noopener"
-               style="display:inline-block;text-decoration:none">
-              🏗️ Монтаж / установка
-            </a>
+            <a class="secondary" href="${x.drawing}" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none">📐 Открыть комплект чертежей</a>
           </div>
         </div>
       `).join('')}
     </div>
   `).join('');
 }
-function initLepFullV10(){renderLepFullStepsV10();renderLepFullQcV10();renderLepDocsV10();renderLepFullNormsV10();renderLepDrawingCardsV10()}
+function initLepFullV10(){renderLepFullStepsV10();renderLepFullQcV10();renderLepDocsV10();renderLepFullNormsV10();renderLepDrawingCardsV10();const a=$('lepDrawingCards'),c=$('lepFullDrawingCards');if(c&&a)c.innerHTML=a.innerHTML}
 
 
 function copyObjectV11(id){
@@ -1837,20 +1552,21 @@ function exportAccountBackupV11(){
 function importAccountBackupV11(ev){const file=ev.target.files?.[0];if(!file)return;const r=new FileReader();r.onload=()=>{try{const p=JSON.parse(r.result);if(p.format!=='PGSSTROY.PRO-BACKUP'||!p.data)throw new Error('Неверный формат');if(!confirm('Импорт заменит локальные данные текущего аккаунта. Продолжить?'))return;db=normalizeDB(p.data);save();refreshAllAfterAccountSwitch();renderObjectToolsV11();notify('Резервная копия импортирована');}catch(e){alert('Не удалось импортировать резервную копию: '+e.message)}ev.target.value=''};r.readAsText(file)}
 function initObjectManagementV11(){db.trash=db.trash||[];db.objectHistory=db.objectHistory||[];renderObjectToolsV11()}
 
-// navigation for all buttons
-$('nav')?.addEventListener('click',e=>{const b=e.target.closest('button[data-page]');if(!b)return;pageOf(b.dataset.page);if(b.dataset.page==='quick')renderQuickRecentV08();if(b.dataset.page==='schedule')renderScheduleV08();if(b.dataset.page==='daily')renderDailyV08();if(b.dataset.page==='quality')renderQualityV08();if(b.dataset.page==='warehouse')renderWarehouseV08();if(b.dataset.page==='contracts')renderContractorsV08();if(b.dataset.page==='ks')renderKSV08();if(b.dataset.page==='leptech')renderLepNormsV08();if(b.dataset.page==='lepfull')initLepFullV10();if(b.dataset.page==='procurement')procurementInitV09()})
+// навигация для всех кнопок
+$('nav')?.addEventListener('click',e=>{const b=e.target.closest('button[data-page]');if(!b)return;pageOf(b.dataset.page);if(b.dataset.page==='quick')renderQuickRecentV08();if(b.dataset.page==='schedule')renderScheduleV08();if(b.dataset.page==='daily')renderDailyV08();if(b.dataset.page==='quality')renderQualityV08();if(b.dataset.page==='warehouse')renderWarehouseV08();if(b.dataset.page==='contracts')renderContractorsV08();if(b.dataset.page==='ks')renderKSV08();if(b.dataset.page==='leptech'){renderLepNormsV08();renderLepCatalog()}if(b.dataset.page==='lepfull')initLepFullV10();if(b.dataset.page==='procurement')procurementInitV09()})
 if($('drDate'))$('drDate').value=today();
-refreshCurrentObject();initObjectManagementV11();renderQuickRecentV08();renderScheduleV08();renderDailyV08();renderQualityV08();renderWarehouseV08();renderContractorsV08();renderKSV08();renderLepNormsV08();initLepFullV10();renderObjects();renderMaterials();renderSuppliers();renderPrices();renderKnowledge();renderObjects();renderMaterials();renderSuppliers();renderPrices();renderKnowledge();
+refreshCurrentObject();initObjectManagementV11();renderQuickRecentV08();renderScheduleV08();renderDailyV08();renderQualityV08();renderWarehouseV08();renderContractorsV08();renderKSV08();renderLepNormsV08();initLepFullV10();renderObjects();renderMaterials();renderSuppliers();renderPrices();renderKnowledge();
 refreshAccountUI();
 
 /* Stage 10 — Project Finance */
 function financeInitV10(){
- if(!Array.isArray(db.financeCards))db.financeCards=[];
- if(!Array.isArray(db.financeEntries))db.financeEntries=[];
- if(!Array.isArray(db.financePayments))db.financePayments=[];
- const sel=$("finObject"); if(sel){const cur=sel.value||String(db.currentObjectId||""); sel.innerHTML='<option value="">Выберите объект</option>'+(db.objects||[]).filter(o=>!o.archived).map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join(''); if(cur)sel.value=cur; if(!sel.value&&db.currentObjectId)sel.value=String(db.currentObjectId);}
- const card=db.financeCards.find(x=>String(x.objectId)===String(sel?.value||db.currentObjectId));
- if(card){["finContract","finContractAmount","finAdvance","finVat","finPlannedProfit"].forEach(id=>{if($(id))$(id).value=card[id.replace('fin','').replace(/^./,c=>c.toLowerCase())]??'';});}
+ ['financeCards','financeEntries','financePayments'].forEach(k=>{if(!Array.isArray(db[k]))db[k]=[]});
+ const sel=$("finObject");
+ if(sel){const cur=sel.value||String(db.currentObjectId||""); sel.innerHTML='<option value="">Выберите объект</option>'+(db.objects||[]).filter(o=>!o.archived).map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join(''); if(cur&&[...sel.options].some(o=>o.value===cur))sel.value=cur;}
+ const oid=sel?.value||db.currentObjectId||"";
+ const c=db.financeCards.find(x=>String(x.objectId)===String(oid))||{};
+ const set=(id,v)=>{if($(id))$(id).value=v};
+ set('finContract',c.contract??'');set('finContractAmount',c.contractAmount??'');set('finAdvance',c.advance??0);set('finVat',c.vat??20);set('finPlannedProfit',c.plannedProfit??0);
  if($("finDate")&&!$("finDate").value)$("finDate").value=today(); if($("finPayDate")&&!$("finPayDate").value)$("finPayDate").value=today();
  renderFinanceV10();
 }
@@ -1877,15 +1593,13 @@ function importFinanceFromKS2V10(){
 function deleteFinanceEntryV10(id){if(confirm("Удалить операцию?")){db.financeEntries=db.financeEntries.filter(x=>String(x.id)!==String(id));save();renderFinanceV10()}}
 function deleteFinancePaymentV10(id){if(confirm("Удалить платёж?")){db.financePayments=db.financePayments.filter(x=>String(x.id)!==String(id));save();renderFinanceV10()}}
 function renderFinanceV10(){
- if(!$("financeDashboard"))return; financeInitGuard=true; const oid=financeObjectIdV10(); const card=db.financeCards.find(x=>String(x.objectId)===String(oid))||{}; const entries=(db.financeEntries||[]).filter(x=>String(x.objectId)===String(oid)); const pays=(db.financePayments||[]).filter(x=>String(x.objectId)===String(oid));
+ if(!$("financeDashboard"))return; const oid=financeObjectIdV10(); const card=db.financeCards.find(x=>String(x.objectId)===String(oid))||{}; const entries=(db.financeEntries||[]).filter(x=>String(x.objectId)===String(oid)); const pays=(db.financePayments||[]).filter(x=>String(x.objectId)===String(oid));
  const planExpense=entries.filter(x=>x.type.includes("Расход")||x.type.includes("поставщику")).reduce((s,x)=>s+Number(x.plan||0),0); const factExpense=entries.filter(x=>x.type.includes("Расход")||x.type.includes("поставщику")).reduce((s,x)=>s+Number(x.fact||0),0); const planIncome=entries.filter(x=>x.type.includes("Доход")||x.type.includes("заказчика")).reduce((s,x)=>s+Number(x.plan||0),0); const factIncome=entries.filter(x=>x.type.includes("Доход")||x.type.includes("заказчика")).reduce((s,x)=>s+Number(x.fact||0),0); const cashIn=pays.filter(x=>x.direction==="Приход").reduce((s,x)=>s+Number(x.amount||0),0); const cashOut=pays.filter(x=>x.direction==="Расход").reduce((s,x)=>s+Number(x.amount||0),0); const contract=Number(card.contractAmount||0); const receivable=Math.max(0,contract-factIncome-cashIn); const margin=factIncome-factExpense; const planMargin=planIncome-planExpense; const variance=planExpense-factExpense;
  $("financeDashboard").innerHTML=`<div class="quick-grid"><div class="stat"><span>Договор</span><b>${money(contract)}</b></div><div class="stat"><span>Факт затрат</span><b>${money(factExpense)}</b></div><div class="stat"><span>Факт выручки</span><b>${money(factIncome)}</b></div><div class="stat"><span>Прибыль по факту</span><b>${money(margin)}</b></div><div class="stat"><span>План затрат</span><b>${money(planExpense)}</b></div><div class="stat"><span>Отклонение затрат</span><b>${money(variance)}</b></div><div class="stat"><span>Получено денег</span><b>${money(cashIn)}</b></div><div class="stat"><span>Дебиторка*</span><b>${money(receivable)}</b></div></div><div class="notice" style="margin-top:12px">Плановая маржа: <b>${money(planMargin)}</b>. Денежный остаток по введённым платежам: <b>${money(cashIn-cashOut)}</b>. *Дебиторка здесь расчётная: договорная сумма минус учтённая выручка и поступления; для бухгалтерского учёта требуется сверка с договором и первичными документами.</div>`;
  $("financeEntries").innerHTML=entries.length?`<div class="table-scroll"><table class="data-table"><tr><th>Дата</th><th>Категория</th><th>Операция</th><th>Описание</th><th>План</th><th>Факт</th><th>Контрагент</th><th></th></tr>${entries.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))).map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.category)}</td><td>${esc(x.type)}</td><td>${esc(x.description)}<br><span class="mini">${esc(x.source||'')}</span></td><td>${money(x.plan)}</td><td>${money(x.fact)}</td><td>${esc(x.counterparty||'')}</td><td><button class="secondary" onclick="deleteFinanceEntryV10('${x.id}')">✕</button></td></tr>`).join('')}</table></div>`:'<div class="notice">Операций пока нет.</div>';
  $("financePayments").innerHTML=pays.length?`<div class="table-scroll"><table class="data-table"><tr><th>Дата</th><th>Направление</th><th>Сумма</th><th>Контрагент</th><th>Основание</th><th></th></tr>${pays.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))).map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.direction)}</td><td>${money(x.amount)}</td><td>${esc(x.counterparty||'')}</td><td>${esc(x.doc||'')} ${esc(x.note||'')}</td><td><button class="secondary" onclick="deleteFinancePaymentV10('${x.id}')">✕</button></td></tr>`).join('')}</table></div>`:'<div class="notice">Платежей пока нет.</div>';
- financeInitGuard=false;
 }
 function exportFinanceV10(){const oid=financeObjectIdV10();if(!oid)return alert("Выберите объект.");const rows=[['ФИНАНСЫ ОБЪЕКТА'],['Дата','Категория','Тип','Описание','План','Факт','Контрагент','Основание','Источник']];(db.financeEntries||[]).filter(x=>String(x.objectId)===String(oid)).forEach(x=>rows.push([x.date,x.category,x.type,x.description,x.plan,x.fact,x.counterparty,x.doc,x.source]));rows.push([],['ПЛАТЕЖИ'],['Дата','Направление','Сумма','Контрагент','Основание','Комментарий']);(db.financePayments||[]).filter(x=>String(x.objectId)===String(oid)).forEach(x=>rows.push([x.date,x.direction,x.amount,x.counterparty,x.doc,x.note]));downloadV07('pgsstroy-finance.csv',rows.map(r=>r.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(';')).join('\n'),'text/csv;charset=utf-8');notify('Финансы экспортированы');}
-let financeInitGuard=false;
 
 /* Stage 9 — Procurement & Supply */
 function procurementInitV09(){
@@ -1896,33 +1610,35 @@ function procurementInitV09(){
  const sel=$("prcObject"); if(sel){const cur=sel.value; sel.innerHTML='<option value="">Все объекты</option>'+(db.objects||[]).filter(o=>!o.archived).map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join(''); if(cur)sel.value=cur;}
  renderProcurementV09();
 }
-function procurementStatusV09(x){return x.status||'Новая'}
 function addProcurementRequestV09(){
+ if(!Array.isArray(db.procurementRequests))db.procurementRequests=[];
  const material=$("prcMaterial")?.value.trim(); const qty=Number($("prcQty")?.value||0); if(!material||qty<=0)return alert('Укажите материал и количество.');
  const oid=$("prcObject")?.value||db.currentObjectId||''; const obj=db.objects.find(o=>String(o.id)===String(oid));
  db.procurementRequests.push({id:Date.now()+Math.random(),objectId:oid,objectName:obj?.name||'Без объекта',material,unit:$("prcUnit")?.value||'',qty,requestedQty:qty,needDate:$("prcNeedDate")?.value||'',priority:$("prcPriority")?.value||'Обычный',note:$("prcNote")?.value||'',status:'Новая',createdAt:today(),orderedQty:0,deliveredQty:0,writtenOffQty:0});
  save(); renderProcurementV09(); ['prcMaterial','prcUnit','prcQty','prcNeedDate','prcNote'].forEach(id=>{if($(id))$(id).value=''}); notify('Заявка создана');
 }
 function importNeedsFromEstimateV09(){
- const oid=$("prcObject")?.value||db.currentObjectId||''; const lines=estimateLinesV09?estimateLinesV09():[]; const use=lines.filter(x=>!oid||String(x.objectId||oid)===String(oid)); if(!use.length)return alert('В текущей смете нет позиций для переноса.');
- const grouped={}; use.forEach(x=>{const key=(x.name||'Ресурс')+'|'+(x.unit||'');grouped[key]??={material:x.name||'Ресурс',unit:x.unit||'',qty:0};grouped[key].qty+=Number(x.qty||0)}); Object.values(grouped).forEach(x=>db.procurementRequests.push({id:Date.now()+Math.random(),objectId:oid,objectName:db.objects.find(o=>String(o.id)===String(oid))?.name||'Без объекта',material:x.material,unit:x.unit,qty:x.qty,requestedQty:x.qty,needDate:'',priority:'Обычный',note:'Импорт из сметы',status:'Новая',createdAt:today(),orderedQty:0,deliveredQty:0,writtenOffQty:0})); save();renderProcurementV09();notify('Потребности перенесены из сметы');
+ if(!Array.isArray(db.procurementRequests))db.procurementRequests=[];
+ const oid=$("prcObject")?.value||db.currentObjectId||''; const use=estimateLinesV09(String(oid||'')); if(!use.length)return alert('В текущей смете нет позиций для переноса.');
+ const objName=db.objects.find(o=>String(o.id)===String(oid))?.name||'Без объекта';
+ const grouped={}; use.forEach(x=>{const key=(x.name||'Ресурс')+'|'+(x.unit||'');grouped[key]=grouped[key]||{material:x.name||'Ресурс',unit:x.unit||'',qty:0};grouped[key].qty+=Number(x.qty||0)}); Object.values(grouped).forEach(x=>db.procurementRequests.push({id:Date.now()+Math.random(),objectId:oid,objectName:objName,material:x.material,unit:x.unit,qty:x.qty,requestedQty:x.qty,needDate:'',priority:'Обычный',note:'Импорт из сметы',status:'Новая',createdAt:today(),orderedQty:0,deliveredQty:0,writtenOffQty:0})); save();renderProcurementV09();notify('Потребности перенесены из сметы');
 }
 function addQuoteV09(id){const r=db.procurementRequests.find(x=>String(x.id)===String(id));if(!r)return;const suppliers=db.suppliers||[];if(!suppliers.length)return alert('Сначала добавьте поставщика.');
- const names=suppliers.map(s=>`${s.id}::${s.name}`).join('|'); const choice=prompt('Выберите поставщика:\n'+suppliers.map((s,i)=>`${i+1}. ${s.name}`).join('\n'),'1'); const idx=Number(choice)-1; const sp=suppliers[idx]; if(!sp)return; const price=Number(prompt(`Цена за ${r.unit||'ед.'} для ${r.material}:`,'0')||0); if(price<=0)return; const delivery=Number(prompt('Стоимость доставки, ₽:','0')||0); db.procurementQuotes.push({id:Date.now()+Math.random(),requestId:r.id,supplierId:sp.id,supplierName:sp.name,price,delivery,date:today(),status:'Предложение'}); if(r.status==='Новая')r.status='Запрошены цены'; save();renderProcurementV09();}
+ const choice=prompt('Выберите поставщика:\n'+suppliers.map((s,i)=>`${i+1}. ${s.name}`).join('\n'),'1'); const idx=Number(choice)-1; const sp=suppliers[idx]; if(!sp)return; const price=Number(prompt(`Цена за ${r.unit||'ед.'} для ${r.material}:`,'0')||0); if(price<=0)return; const delivery=Number(prompt('Стоимость доставки, ₽:','0')||0); db.procurementQuotes.push({id:Date.now()+Math.random(),requestId:r.id,supplierId:sp.id,supplierName:sp.name,price,delivery,date:today(),status:'Предложение'}); if(r.status==='Новая')r.status='Запрошены цены'; save();renderProcurementV09();}
 function makeOrderV09(id){const r=db.procurementRequests.find(x=>String(x.id)===String(id));if(!r)return;const quotes=db.procurementQuotes.filter(q=>String(q.requestId)===String(id));if(!quotes.length)return alert('Добавьте хотя бы одно предложение поставщика.');const best=quotes.reduce((a,b)=>(a.price+a.delivery)<(b.price+b.delivery)?a:b);const qty=Math.max(0,Number(r.qty||0)-Number(r.orderedQty||0));if(qty<=0)return alert('Вся заявка уже заказана.');const o={id:Date.now()+Math.random(),requestId:r.id,objectId:r.objectId,material:r.material,unit:r.unit,qty,supplierId:best.supplierId,supplierName:best.supplierName,unitPrice:best.price,delivery:best.delivery,total:qty*best.price+best.delivery,status:'Заказана',orderDate:today(),deliveredQty:0};db.procurementOrders.push(o);r.orderedQty=(Number(r.orderedQty)||0)+qty;r.status='Заказана';save();renderProcurementV09();}
 function receiveOrderV09(id){const o=db.procurementOrders.find(x=>String(x.id)===String(id));if(!o)return;const q=Number(prompt(`Фактически получено (${o.unit}):`,String(Math.max(0,o.qty-(o.deliveredQty||0))))||0);if(q<=0)return;if(q>o.qty-(o.deliveredQty||0))return alert('Количество больше остатка по заказу.');o.deliveredQty=(o.deliveredQty||0)+q;o.status=o.deliveredQty>=o.qty?'Поставлена':'Частично поставлена';const r=db.procurementRequests.find(x=>String(x.id)===String(o.requestId));if(r){r.deliveredQty=(r.deliveredQty||0)+q;r.status=r.deliveredQty>=r.orderedQty?'Поставлена':'Частично поставлена'};db.warehouse.push({id:Date.now()+Math.random(),objectId:o.objectId,mat:o.material,unit:o.unit,inn:q,out:0,doc:`Заказ ${o.id}`,date:today(),source:'Закупка'});save();renderProcurementV09();}
 function writeOffRequestV09(id){const r=db.procurementRequests.find(x=>String(x.id)===String(id));if(!r)return;const available=Number(r.deliveredQty||0)-Number(r.writtenOffQty||0);if(available<=0)return alert('Нет доступного остатка для списания.');const q=Number(prompt(`Списать ${r.unit}:`,String(available))||0);if(q<=0||q>available)return alert('Некорректное количество.');r.writtenOffQty=(r.writtenOffQty||0)+q;r.status=r.writtenOffQty>=r.deliveredQty?'Списана':'Поставлена';db.warehouse.push({id:Date.now()+Math.random(),objectId:r.objectId,mat:r.material,unit:r.unit,inn:0,out:q,doc:`Списание заявки ${r.id}`,date:today(),source:'Снабжение'});save();renderProcurementV09();}
 function cancelRequestV09(id){const r=db.procurementRequests.find(x=>String(x.id)===String(id));if(r){r.status='Отменена';save();renderProcurementV09();}}
 function renderProcurementV09(){
- procurementInitGuard=true; const filter=$("prcFilterStatus")?.value||''; const rs=(db.procurementRequests||[]).filter(r=>!filter||r.status===filter);
- const html=rs.length?`<div class="table-scroll"><table class="data-table"><tr><th>Объект</th><th>Ресурс</th><th>Кол.</th><th>Срок</th><th>Приоритет</th><th>Статус</th><th>Действия</th></tr>${rs.map(r=>`<tr><td>${esc(r.objectName)}</td><td><b>${esc(r.material)}</b><br><span class="mini">${esc(r.note||'')}</span></td><td>${Number(r.qty).toFixed(3)} ${esc(r.unit)}</td><td>${esc(r.needDate||'—')}</td><td>${esc(r.priority)}</td><td><span class="pill">${esc(r.status)}</span><br><span class="mini">заказано ${Number(r.orderedQty||0)} · получено ${Number(r.deliveredQty||0)} · списано ${Number(r.writtenOffQty||0)}</span></td><td><button class="secondary" onclick="addQuoteV09('${r.id}')">💬 Цена</button> <button class="secondary" onclick="makeOrderV09('${r.id}')">🛒 Заказать</button> <button class="secondary" onclick="writeOffRequestV09('${r.id}')">📤 Списать</button> <button class="secondary" onclick="cancelRequestV09('${r.id}')">✕</button></td></tr>${db.procurementQuotes.filter(q=>String(q.requestId)===String(r.id)).map(q=>`<tr><td></td><td colspan="6"><span class="mini">Предложение: ${esc(q.supplierName)} · ${money(q.price)}/${esc(r.unit)} · доставка ${money(q.delivery)} · ${esc(q.date)}</span></td></tr>`).join('')}</tr>`).join('')}</table></div>`:'<div class="notice">Заявок пока нет.</div>';
+ const filter=$("prcFilterStatus")?.value||''; const rs=(db.procurementRequests||[]).filter(r=>!filter||r.status===filter);
+ const quotesAll=db.procurementQuotes||[];
+ const html=rs.length?`<div class="table-scroll"><table class="data-table"><tr><th>Объект</th><th>Ресурс</th><th>Кол.</th><th>Срок</th><th>Приоритет</th><th>Статус</th><th>Действия</th></tr>${rs.map(r=>`<tr><td>${esc(r.objectName)}</td><td><b>${esc(r.material)}</b><br><span class="mini">${esc(r.note||'')}</span></td><td>${Number(r.qty).toFixed(3)} ${esc(r.unit)}</td><td>${esc(r.needDate||'—')}</td><td>${esc(r.priority)}</td><td><span class="pill">${esc(r.status)}</span><br><span class="mini">заказано ${Number(r.orderedQty||0)} · получено ${Number(r.deliveredQty||0)} · списано ${Number(r.writtenOffQty||0)}</span></td><td><button class="secondary" onclick="addQuoteV09('${r.id}')">💬 Цена</button> <button class="secondary" onclick="makeOrderV09('${r.id}')">🛒 Заказать</button> <button class="secondary" onclick="writeOffRequestV09('${r.id}')">📤 Списать</button> <button class="secondary" onclick="cancelRequestV09('${r.id}')">✕</button></td></tr>${quotesAll.filter(q=>String(q.requestId)===String(r.id)).map(q=>`<tr><td></td><td colspan="6"><span class="mini">Предложение: ${esc(q.supplierName)} · ${money(q.price)}/${esc(r.unit)} · доставка ${money(q.delivery)} · ${esc(q.date)}</span></td></tr>`).join('')}`).join('')}</table></div>`:'<div class="notice">Заявок пока нет.</div>';
  $("procurementRequests").innerHTML=html;
  const orders=db.procurementOrders||[];$("procurementOrders").innerHTML=orders.length?`<div class="table-scroll"><table class="data-table"><tr><th>Ресурс</th><th>Поставщик</th><th>Кол.</th><th>Цена</th><th>Сумма</th><th>Статус</th><th></th></tr>${orders.map(o=>`<tr><td>${esc(o.material)}</td><td>${esc(o.supplierName)}</td><td>${o.deliveredQty||0}/${o.qty} ${esc(o.unit)}</td><td>${money(o.unitPrice)}</td><td>${money(o.total)}</td><td>${esc(o.status)}</td><td><button class="secondary" onclick="receiveOrderV09('${o.id}')">📦 Принять</button></td></tr>`).join('')}</table></div>`:'<div class="notice">Заказов пока нет.</div>';
  const pending= (db.procurementRequests||[]).filter(r=>['Новая','Запрошены цены','Заказана','Частично поставлена'].includes(r.status)).length; const delivered=(db.procurementRequests||[]).reduce((s,r)=>s+Number(r.deliveredQty||0),0); const written=(db.procurementRequests||[]).reduce((s,r)=>s+Number(r.writtenOffQty||0),0); const spend=(db.procurementOrders||[]).reduce((s,o)=>s+Number(o.total||0),0);
- $("procurementDashboard").innerHTML=`<div class="quick-grid"><div class="stat"><span>Открытые заявки</span><b>${pending}</b></div><div class="stat"><span>Получено</span><b>${delivered.toFixed(2)}</b></div><div class="stat"><span>Списано</span><b>${written.toFixed(2)}</b></div><div class="stat"><span>Заказано на</span><b>${money(spend)} ₽</b></div></div>`;
+ $("procurementDashboard").innerHTML=`<div class="quick-grid"><div class="stat"><span>Открытые заявки</span><b>${pending}</b></div><div class="stat"><span>Получено</span><b>${delivered.toFixed(2)}</b></div><div class="stat"><span>Списано</span><b>${written.toFixed(2)}</b></div><div class="stat"><span>Заказано на</span><b>${money(spend)}</b></div></div>`;
 }
 function exportProcurementV09(){const rows=[['Заявки'],['Объект','Материал','Ед','Кол','Срок','Приоритет','Статус','Заказано','Получено','Списано']];(db.procurementRequests||[]).forEach(r=>rows.push([r.objectName,r.material,r.unit,r.qty,r.needDate,r.priority,r.status,r.orderedQty||0,r.deliveredQty||0,r.writtenOffQty||0]));rows.push([],['Заказы'],['Материал','Поставщик','Ед','Кол','Цена','Доставка','Сумма','Статус']);(db.procurementOrders||[]).forEach(o=>rows.push([o.material,o.supplierName,o.unit,o.qty,o.unitPrice,o.delivery,o.total,o.status]));downloadV07('pgsstroy-procurement.csv',rows.map(r=>r.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(';')).join('\n'),'text/csv;charset=utf-8');notify('Снабжение экспортировано');}
-let procurementInitGuard=false;
 
 function commercialInitV11(){
  if(!Array.isArray(db.commercialClients))db.commercialClients=[];
@@ -1933,8 +1649,8 @@ function commercialInitV11(){
 }
 function refreshCommercialSelectsV11(){
  const cs=$('cpClient'), os=$('cpObject');
- if(cs)cs.innerHTML='<option value="">— выберите клиента —</option>'+(db.commercialClients||[]).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');
- if(os)os.innerHTML='<option value="">— выберите объект —</option>'+(db.objects||[]).filter(o=>!o.archived).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');
+ if(cs){const v=cs.value;cs.innerHTML='<option value="">— выберите клиента —</option>'+(db.commercialClients||[]).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');if([...cs.options].some(o=>o.value===v))cs.value=v;}
+ if(os){const v=os.value;os.innerHTML='<option value="">— выберите объект —</option>'+(db.objects||[]).filter(o=>!o.archived).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');if([...os.options].some(o=>o.value===v))os.value=v;else if(!v&&db.currentObjectId&&[...os.options].some(o=>o.value===String(db.currentObjectId)))os.value=String(db.currentObjectId);}
 }
 function saveCommercialClientV11(){
  const name=$('cpClientName')?.value.trim(); if(!name)return alert('Укажите название клиента.');
@@ -1944,14 +1660,13 @@ function saveCommercialClientV11(){
 }
 function commercialEstimateV11(oid){
  if(!oid)return {lines:[],total:0};
- try{const lines=estimateLinesV09().filter(x=>String(x.objectId||oid)===String(oid)); const t=estimateTotalsV09(lines); return {lines,total:Number(t.total||0)};}catch(e){
-   const lines=(db.calculations||[]).filter(x=>String(x.objectId||'')===String(oid)); const rows=lines.map(x=>({name:x.name||'Работа',unit:x.unit||'',qty:Number(x.qty||0),price:Number(x.price||0),total:Number(x.qty||0)*Number(x.price||0)})); return {lines:rows,total:rows.reduce((a,x)=>a+x.total,0)};
- }
+ const lines=estimateLinesV09(String(oid));
+ return {lines,total:Number(estimateTotalsV09(lines).total||0)};
 }
 function previewCommercialV11(){
  const oid=$('cpObject')?.value||db.currentObjectId||''; const obj=(db.objects||[]).find(x=>String(x.id)===String(oid)); const client=(db.commercialClients||[]).find(x=>String(x.id)===String($('cpClient')?.value||'')); const e=commercialEstimateV11(oid); const disc=Math.max(0,Number($('cpDiscount')?.value||0)); const net=e.total*(1-disc/100); const vatRate=Number($('cpVat')?.value||20); const vat=net*vatRate/100; const gross=net+vat;
  const rows=e.lines.slice(0,80).map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.name||'Работа')}</td><td>${esc(x.unit||'')}</td><td>${Number(x.qty||0).toFixed(2)}</td><td>${money(Number(x.price||0))}</td><td>${money(Number(x.total||0))}</td></tr>`).join('');
- $('commercialPreview').innerHTML=`<div class="doc-brand">PGSSTROY.PRO</div><h2 style="text-align:center">КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ</h2><p><b>КП №:</b> ${esc($('cpNumber')?.value||'—')} &nbsp; <b>Дата:</b> ${esc($('cpDate')?.value||today())}</p><p><b>Заказчик:</b> ${esc(client?.name||'—')}<br><b>Контакт:</b> ${esc(client?.contact||'—')} ${esc(client?.phone||'')} ${esc(client?.email||'')}</p><p><b>Объект:</b> ${esc(obj?.name||'—')}<br><b>Адрес:</b> ${esc(obj?.address||'—')}</p><p>${esc($('cpIntro')?.value||'Предлагаем выполнить комплекс строительно-монтажных работ по указанному объекту.')}</p><table class="official-table"><tr><th>№</th><th>Работа</th><th>Ед.</th><th>Кол.</th><th>Цена</th><th>Сумма</th></tr>${rows||'<tr><td colspan="6">Позиции сметы не выбраны</td></tr>'}</table><div style="margin-top:12px;text-align:right"><p>Стоимость по смете: <b>${money(e.total)} ₽</b></p><p>Скидка: <b>${disc.toFixed(2)}%</b></p><p>Стоимость без НДС: <b>${money(net)} ₽</b></p><p>НДС ${vatRate}%: <b>${money(vat)} ₽</b></p><p style="font-size:16px">ИТОГО К ОПЛАТЕ: <b>${money(gross)} ₽</b></p></div><p><b>Срок выполнения:</b> ${esc($('cpTerm')?.value||'—')}<br><b>Условия оплаты:</b> ${esc($('cpPayment')?.value||'—')}<br><b>Предложение действительно до:</b> ${esc($('cpValidUntil')?.value||'—')}</p><p>${esc($('cpConditions')?.value||'')}</p><p style="margin-top:30px">Подрядчик: ____________________________<br>Заказчик: ______________________________</p>`;
+ $('commercialPreview').innerHTML=`<div class="doc-brand">PGSSTROY.PRO</div><h2 style="text-align:center">КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ</h2><p><b>КП №:</b> ${esc($('cpNumber')?.value||'—')} &nbsp; <b>Дата:</b> ${esc($('cpDate')?.value||today())}</p><p><b>Заказчик:</b> ${esc(client?.name||'—')}<br><b>Контакт:</b> ${esc(client?.contact||'—')} ${esc(client?.phone||'')} ${esc(client?.email||'')}</p><p><b>Объект:</b> ${esc(obj?.name||'—')}<br><b>Адрес:</b> ${esc(obj?.address||'—')}</p><p>${esc($('cpIntro')?.value||'Предлагаем выполнить комплекс строительно-монтажных работ по указанному объекту.')}</p><table class="official-table"><tr><th>№</th><th>Работа</th><th>Ед.</th><th>Кол.</th><th>Цена</th><th>Сумма</th></tr>${rows||'<tr><td colspan="6">Позиции сметы не выбраны</td></tr>'}</table><div style="margin-top:12px;text-align:right"><p>Стоимость по смете: <b>${money(e.total)}</b></p><p>Скидка: <b>${disc.toFixed(2)}%</b></p><p>Стоимость без НДС: <b>${money(net)}</b></p><p>НДС ${vatRate}%: <b>${money(vat)}</b></p><p style="font-size:16px">ИТОГО К ОПЛАТЕ: <b>${money(gross)}</b></p></div><p><b>Срок выполнения:</b> ${esc($('cpTerm')?.value||'—')}<br><b>Условия оплаты:</b> ${esc($('cpPayment')?.value||'—')}<br><b>Предложение действительно до:</b> ${esc($('cpValidUntil')?.value||'—')}</p><p>${esc($('cpConditions')?.value||'')}</p><p style="margin-top:30px">Подрядчик: ____________________________<br>Заказчик: ______________________________</p>`;
  return {client,obj,e,disc,net,vat,gross};
 }
 function createCommercialProposalV11(){
@@ -1964,7 +1679,7 @@ function loadCommercialProposalV11(id){const p=db.commercialProposals.find(x=>St
 function renderCommercialV11(){
  refreshCommercialSelectsV11();
  const list=$('commercialClientsList'); if(list)list.innerHTML=(db.commercialClients||[]).length?`<div class="table-scroll"><table class="data-table"><tr><th>Клиент</th><th>Контакт</th><th>Телефон</th><th>E-mail</th></tr>${db.commercialClients.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.contact)}</td><td>${esc(c.phone)}</td><td>${esc(c.email)}</td></tr>`).join('')}</table></div>`:'<div class="notice">Клиентов пока нет.</div>';
- const box=$('commercialProposalsList'); if(!box)return; box.innerHTML=(db.commercialProposals||[]).length?`<div class="table-scroll"><table class="data-table"><tr><th>№</th><th>Клиент</th><th>Объект</th><th>Дата</th><th>Сумма</th><th>Статус</th><th>Действия</th></tr>${db.commercialProposals.slice().reverse().map(p=>{const c=db.commercialClients.find(x=>String(x.id)===String(p.clientId));const o=db.objects.find(x=>String(x.id)===String(p.objectId));return `<tr><td>${esc(p.number)}</td><td>${esc(c?.name||'—')}</td><td>${esc(o?.name||'—')}</td><td>${esc(p.date)}</td><td>${money(p.total)} ₽</td><td>${esc(p.status)}</td><td><button class="secondary" onclick="loadCommercialProposalV11('${p.id}')">Открыть</button> <button class="secondary" onclick="setCommercialStatusV11('${p.id}','Отправлено')">Отправлено</button> <button class="secondary" onclick="setCommercialStatusV11('${p.id}','Согласовано')">Согласовано</button> <button class="secondary" onclick="setCommercialStatusV11('${p.id}','Отказ')">Отказ</button></td></tr>`}).join('')}</table></div>`:'<div class="notice">Коммерческих предложений пока нет.</div>';
+ const box=$('commercialProposalsList'); if(!box)return; box.innerHTML=(db.commercialProposals||[]).length?`<div class="table-scroll"><table class="data-table"><tr><th>№</th><th>Клиент</th><th>Объект</th><th>Дата</th><th>Сумма</th><th>Статус</th><th>Действия</th></tr>${db.commercialProposals.slice().reverse().map(p=>{const c=db.commercialClients.find(x=>String(x.id)===String(p.clientId));const o=db.objects.find(x=>String(x.id)===String(p.objectId));return `<tr><td>${esc(p.number)}</td><td>${esc(c?.name||'—')}</td><td>${esc(o?.name||'—')}</td><td>${esc(p.date)}</td><td>${money(p.total)}</td><td>${esc(p.status)}</td><td><button class="secondary" onclick="loadCommercialProposalV11('${p.id}')">Открыть</button> <button class="secondary" onclick="setCommercialStatusV11('${p.id}','Отправлено')">Отправлено</button> <button class="secondary" onclick="setCommercialStatusV11('${p.id}','Согласовано')">Согласовано</button> <button class="secondary" onclick="setCommercialStatusV11('${p.id}','Отказ')">Отказ</button></td></tr>`}).join('')}</table></div>`:'<div class="notice">Коммерческих предложений пока нет.</div>';
 }
 function printCommercialV11(){previewCommercialV11();const old=document.title;document.title=$('cpNumber')?.value||'PGSSTROY — КП';document.querySelectorAll('.page').forEach(x=>x.classList.remove('printing'));$('commercial').classList.add('printing');window.print();setTimeout(()=>{document.title=old;$('commercial').classList.remove('printing')},600);}
 function exportCommercialTxtV11(){const x=previewCommercialV11();downloadV07('pgsstroy-commercial-proposal.txt',$('commercialPreview')?.innerText||'','text/plain;charset=utf-8');notify('КП экспортировано');}
@@ -1979,7 +1694,8 @@ function renderBillingV13(){
  const current=db.billingPlan||'free'; const cur=plans.find(x=>x.id===current)||plans[0];
  const c=$('billingCurrent'); if(c)c.innerHTML=`<div class="stat"><div><span class="muted">Тариф</span><b>${esc(cur.name)}</b></div><div><span class="muted">Стоимость</span><b>${cur.price===null?'По запросу':cur.price===0?'Бесплатно':money(cur.price)+' / мес.'}</b></div><div><span class="muted">Объекты</span><b>${cur.id==='free'?'2':cur.id==='pro'?'10':cur.id==='business'?'50':'∞'}</b></div></div><div class="notice" style="margin-top:12px">${esc(cur.desc)}</div>`;
  const box=$('billingPlans'); if(box)box.innerHTML=plans.map(x=>`<div class="quick-card" style="cursor:default;${x.id===current?'border-color:var(--accent)':''}"><span class="tag">${x.id===current?'Текущий тариф':'Тариф'}</span><b>${esc(x.name)}</b><div class="total">${x.price===null?'По запросу':x.price===0?'0 ₽':money(x.price)}</div><div class="mini">${esc(x.period)}</div><p class="muted">${esc(x.desc)}</p><ul>${x.features.map(f=>`<li>${esc(f)}</li>`).join('')}</ul><button class="secondary" onclick="selectBillingPlanV13('${x.id}')">${x.id===current?'Выбран':'Выбрать'}</button></div>`).join('');
- const f=$('billingFeatures'); if(f)f.innerHTML=`<div class="table-scroll"><table class="data-table"><tr><th>Возможность</th><th>Старт</th><th>Прораб</th><th>Подрядчик</th><th>Компания</th></tr>${['Объекты','Смета','Закупки','Финансы','Документы','КП','Командная работа','Облако/API'].map((r,i)=>{const vals=[i<2?'✓':i<6?'—':'—',i<6?'✓':'—',i<7?'✓':'—','✓'];return `<tr><td>${r}</td>${vals.map(v=>`<td>${v}</td>`).join('')}</tr>`}).join('')}</table></div>`;
+ const rows=[['Объекты','2','10','50','∞'],['Смета','✓','✓','✓','✓'],['Документы','Базовые','✓','✓','✓'],['Закупки и склад','—','✓','✓','✓'],['КП и клиенты','—','✓','✓','✓'],['Финансы объекта','—','—','✓','✓'],['Временный доступ к объектам','—','—','✓','✓'],['Командная работа','—','—','✓','✓'],['Облако / API','—','—','—','✓']];
+ const f=$('billingFeatures'); if(f)f.innerHTML=`<div class="table-scroll"><table class="data-table"><tr><th>Возможность</th><th>Старт</th><th>Прораб</th><th>Подрядчик</th><th>Компания</th></tr>${rows.map(r=>'<tr>'+r.map(v=>`<td>${v}</td>`).join('')+'</tr>').join('')}</table></div>`;
 }
 function selectBillingPlanV13(id){
  const allowed=['free','pro','business','enterprise']; if(!allowed.includes(id))return;
@@ -2035,7 +1751,270 @@ function selectBillingPlanV13(id){
     </div>
   </div>
 </div>
+<div id="editModal" class="modal-backdrop"><div class="modal"><div class="row"><h2 id="editModalTitle">Изменить</h2><button class="secondary" onclick="closeEditModal()">✕</button></div><div id="editModalBody"></div><div class="toolbar"><button class="primary" onclick="saveEditModal()">💾 Сохранить</button><button class="secondary" onclick="closeEditModal()">Отмена</button></div></div></div>
 <div id="stage8Marker" style="display:none">OBJECTS_STAGE8</div><button id="pwaInstallBtn" type="button">Установить PGSSTROY.PRO</button>
 <script>(function(){let deferred=null;const b=document.getElementById('pwaInstallBtn');window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;b.style.display='block';});b&&b.addEventListener('click',async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice;deferred=null;b.style.display='none';});window.addEventListener('appinstalled',()=>{if(b)b.style.display='none';});if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}})();</script>
+<script>
+/* Исправления Stage 13.2: переопределяют отдельные функции выше */
+(function () {
+  const $ = id => document.getElementById(id);
+
+  /* ============ 2. База данных и профиль ============ */
+
+  window.normalizeDB = function (data) {
+    db = data && typeof data === 'object' ? data : structuredClone(emptyDB);
+    Object.keys(emptyDB).forEach(k => {
+      if (db[k] === undefined || (Array.isArray(emptyDB[k]) && !Array.isArray(db[k]))) db[k] = clone(emptyDB[k]);
+    });
+    // в старых версиях сюда могло попасть {} вместо null
+    if (db.currentObjectId && typeof db.currentObjectId === 'object') db.currentObjectId = null;
+    db.schemaVersion = 11;
+    if (!db.account || typeof db.account !== 'object')
+      db.account = { id: accountRegistry.activeId || baseAccountId(), name: 'Локальный аккаунт', email: '' };
+    db.account.id = accountRegistry.activeId || db.account.id;
+    ['objects', 'accessKeys', 'sharedObjects', 'financeCards', 'financeEntries', 'financePayments',
+      'commercialClients', 'commercialProposals'].forEach(k => { if (!Array.isArray(db[k])) db[k] = []; });
+    if (!db.billingPlan) db.billingPlan = 'free';
+    if (db.currentObjectId === undefined) db.currentObjectId = null;
+    db.objects.forEach(o => {
+      if (o.archived === undefined) o.archived = false;
+      if (o.favorite === undefined) o.favorite = false;
+      if (!o.accountId) o.accountId = db.account.id;
+    });
+    // текущий объект должен существовать и быть активным
+    if (!db.objects.some(o => String(o.id) === String(db.currentObjectId) && !o.archived)) {
+      const f = db.objects.find(o => !o.archived);
+      db.currentObjectId = f ? f.id : null;
+    }
+    return db;
+  };
+
+  // Профиль сохраняется в ключи profRegion / profCity, а читался region / city — регион не находился
+  window.profileRegion = function () { return String(db.profile?.profRegion || db.profile?.region || '').trim(); };
+  window.profileCity = function () { return String(db.profile?.profCity || db.profile?.city || '').trim(); };
+
+  // Сохранение: аккаунт из облака попадает в реестр; при конфликте версий локальные данные НЕ затираются
+  window.cloudStatus = function () {
+    if (window.__cloudConflict) return '⚠️ Конфликт версий облака';
+    return cloudSession
+      ? 'Облако: ' + (cloudSession.user?.email || 'подключено')
+      : (PGSSTROY_API_URL ? 'Облако: не выполнен вход' : 'Локальный режим');
+  };
+
+  window.save = function () {
+    if (!db) return;
+    localStorage.setItem(KEY, JSON.stringify(db));
+    const snap = clone(db);
+    const idx = accountRegistry.accounts.findIndex(a => a.id === db.account.id);
+    if (idx >= 0) {
+      accountRegistry.accounts[idx].name = db.account.name || accountRegistry.accounts[idx].name;
+      accountRegistry.accounts[idx].email = db.account.email || '';
+      accountRegistry.accounts[idx].snapshot = snap;
+    } else {
+      accountRegistry.accounts.push({ id: db.account.id, name: db.account.name || 'Аккаунт', email: db.account.email || '', createdAt: Date.now(), snapshot: snap });
+    }
+    accountRegistry.activeId = db.account.id;
+    localStorage.setItem(ACCOUNT_STORE_KEY, JSON.stringify(accountRegistry));
+    refreshAccountUI();
+    if (cloudSession && PGSSTROY_API_URL && !window.__noCloudPush) {
+      clearTimeout(window.__cloudSaveTimer);
+      window.__cloudSaveTimer = setTimeout(async () => {
+        try { await cloudPush(); }
+        catch (e) {
+          if (e.status === 409) { window.__cloudConflict = true; refreshAccountUI(); }
+          else console.error('Cloud save failed:', e);
+        }
+      }, 500);
+    }
+  };
+
+  const _cloudPush = window.cloudPush;
+  window.cloudPush = async function () { const r = await _cloudPush(); window.__cloudConflict = false; return r; };
+
+  window.cloudPull = async function () {
+    if (!cloudSession) return null;
+    const d = await cloudRequest('/api/data');
+    if (d && d.payload) {
+      const u = cloudSession.user;
+      if (!accountRegistry.accounts.some(a => a.id === u.id))
+        accountRegistry.accounts.push({ id: u.id, name: u.name, email: u.email, createdAt: Date.now(), snapshot: {} });
+      accountRegistry.activeId = u.id;
+      db = normalizeDB(d.payload);
+      db._cloudVersion = Number(d.version || 0);
+      db.account = { ...(db.account || {}), id: u.id, name: u.name, email: u.email };
+      window.__noCloudPush = true;
+      try { save(); } finally { window.__noCloudPush = false; }
+      window.__cloudConflict = false;
+      refreshAllAfterAccountSwitch();
+    }
+    return d;
+  };
+
+  const _cloudLogout = window.cloudLogout;
+  window.cloudLogout = function () {
+    window.__cloudConflict = false;
+    const m = $('accountMenu'); if (m) m.style.display = 'none';
+    _cloudLogout();
+  };
+
+  // «Очистить локальную базу» не очищала ничего (данные возвращались из реестра аккаунтов)
+  window.resetDBV07 = function () {
+    if (!confirm('Удалить все данные текущего аккаунта на этом устройстве? Другие аккаунты не затрагиваются. Если подключено облако, после синхронизации данные очистятся и там.')) return;
+    const a = db.account, ver = db._cloudVersion || 0, fresh = structuredClone(emptyDB);
+    fresh.account = { id: a.id, name: a.name, email: a.email || '' };
+    db = normalizeDB(fresh);
+    db._cloudVersion = ver;
+    save();
+    refreshAllAfterAccountSwitch();
+    refreshObjectSelectsV07(); renderObjectToolsV11(); loadProfileV07();
+    renderMaterials(); renderSuppliers(); renderPrices(); renderKnowledge();
+    notify('Данные текущего аккаунта очищены');
+  };
+
+  // Импорт терял привязку к аккаунту (id не совпадал с реестром)
+  window.importBackupV07 = function (e) {
+    const f = e.target.files?.[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const x = JSON.parse(r.result);
+        if (!x || typeof x !== 'object') throw Error();
+        const data = x.format === 'PGSSTROY.PRO-BACKUP' && x.data ? x.data : x;
+        if (!confirm('Импорт заменит данные текущего аккаунта. Продолжить?')) return;
+        const a = db.account, ver = db._cloudVersion || 0;
+        db = normalizeDB(Object.assign(structuredClone(emptyDB), data));
+        db.account = { ...db.account, id: a.id, name: a.name, email: a.email || '' };
+        db._cloudVersion = ver;
+        save();
+        refreshAllAfterAccountSwitch(); refreshObjectSelectsV07(); renderObjectToolsV11(); loadProfileV07();
+        renderMaterials(); renderSuppliers(); renderPrices(); renderKnowledge();
+        notify('База импортирована');
+      } catch (err) { alert('Не удалось импортировать JSON'); }
+    };
+    r.readAsText(f); e.target.value = '';
+  };
+
+  /* ============ 3. Аккаунт: меню и окна ============ */
+
+  window.openAccountSettings = function () {
+    const m = $('accountMenu'); if (m) m.style.display = 'none';
+    showPageV07('profile');
+  };
+  const _openProfile = window.openAccountProfile;
+  window.openAccountProfile = function () { const m = $('accountMenu'); if (m) m.style.display = 'none'; _openProfile(); };
+
+  const _openLogin = window.openLoginModal;
+  window.openLoginModal = function () {
+    _openLogin();
+    const b = $('accountModalBody');
+    if (b) b.querySelectorAll('.toolbar').forEach(t =>
+      [...t.childNodes].forEach(n => { if (n.nodeType === 3 && n.textContent.trim() === '">') n.remove(); }));
+  };
+
+  document.addEventListener('click', e => {
+    const m = $('accountMenu');
+    if (m && m.style.display !== 'none' && !e.target.closest('.auth-area')) m.style.display = 'none';
+  });
+
+  /* ============ 4. Объекты и привязка расчётов ============ */
+
+  const DEFAULT_CUR = ['calcObjectConcrete', 'calcObjectRebar', 'calcObjectForm', 'matObject', 'powerObject'];
+
+  window.renderObjectSelectV07 = function (id, includeAll = true) {
+    const s = $(id); if (!s) return;
+    const old = s.value;
+    const label = id === 'estimateObject' ? '— Все расчёты —' : '— Без привязки —';
+    s.innerHTML = (includeAll ? `<option value="">${label}</option>` : '') +
+      (db.objects || []).map(o => `<option value="${o.id}">${esc(o.name)}${o.archived ? ' (архив)' : ''}${o.address ? ' · ' + esc(o.address) : ''}</option>`).join('');
+    const has = v => [...s.options].some(o => o.value === String(v));
+    if (DEFAULT_CUR.includes(id) && s.dataset.init !== '1') {
+      s.dataset.init = '1';
+      if (db.currentObjectId && has(db.currentObjectId)) s.value = String(db.currentObjectId);
+    } else if (has(old)) s.value = old;
+  };
+
+  const _setCurrentObject = window.setCurrentObject;
+  window.setCurrentObject = function (id) {
+    const o = db.objects.find(x => String(x.id) === String(id));
+    if (o && o.archived) {
+      if (!confirm(`Объект «${o.name}» находится в архиве. Восстановить его и открыть?`)) return;
+      o.archived = false;
+      pushObjectHistoryV11(o.id, 'Восстановление', 'Объект восстановлен из архива');
+    }
+    DEFAULT_CUR.forEach(i => { const s = $(i); if (s) s.dataset.init = ''; });
+    _setCurrentObject(id);
+    renderObjectToolsV11();
+  };
+
+  /* ============ 5. Расчёты ============ */
+
+  // Раньше обёртка переписывала objectId у ПРЕДЫДУЩЕГО расчёта, если новый не создался (пустые поля)
+  function bindCalc(fn, sel) {
+    return function () {
+      const n = db.calculations.length;
+      fn();
+      if (db.calculations.length > n) {
+        db.calculations[db.calculations.length - 1].objectId = $(sel)?.value || null;
+        save();
+      }
+    };
+  }
+  window.calcConcrete = bindCalc(oldCalcConcrete, 'calcObjectConcrete');
+  window.calcRebar = bindCalc(oldCalcRebar, 'calcObjectRebar');
+
+  // Функции calcFormwork в файле не было вообще: кнопка «Рассчитать» в разделе «Опалубка» падала
+  window.calcFormwork = function () {
+    const l = +$('fl').value, w = +$('fw').value, h = +$('fh').value, r = +$('fr').value || 0,
+      sw = +$('fsw').value || 0, sh = +$('fsh').value || 0;
+    if (!(l > 0 && w > 0 && h > 0 && sw > 0 && sh > 0)) return alert('Заполните размеры конструкции и щита');
+    const side = 2 * (l + w) * h, total = side * (1 + r / 100), panel = sw * sh,
+      panels = Math.ceil(total / panel), actual = panels * panel;
+    db.calculations.push({
+      id: Date.now(), objectId: $('calcObjectForm')?.value || null, type: 'Опалубка',
+      name: `Щит опалубки ${sw}×${sh} м`, qty: panels, unit: 'шт',
+      unitPrice: null, total: 0, priceType: null, source: null, date: today(),
+      meta: { sideArea: side, totalArea: total, panelArea: panel, actualArea: actual, reserve: r }
+    });
+    save();
+    $('formworkResult').innerHTML =
+      `<div class="result"><div>Боковая площадь: <b>${side.toFixed(2)} м²</b></div>` +
+      `<div>С запасом ${r}%: <b>${total.toFixed(2)} м²</b></div>` +
+      `<div class="big">${panels} щит.</div>` +
+      `<div class="muted">Щит ${sw}×${sh} м = ${panel.toFixed(2)} м². Фактическая площадь ${actual.toFixed(2)} м²</div>` +
+      `<div class="notice">Периметр × высота, без торцов и оборачиваемости. Цена подставится в «Смету» из базы цен (₽/шт).</div></div>`;
+  };
+
+  // Материалы игнорировали выбранный объект (objectId всегда null)
+  window.saveMaterialNeed = function () {
+    const q = +$('matQty').value; if (!(q > 0)) return alert('Укажите количество');
+    db.materials.push({ id: Date.now(), name: $('matType').value, qty: q, unit: 'м³', objectId: $('matObject')?.value || null, date: today() });
+    save(); $('matQty').value = ''; renderMaterials();
+  };
+
+  /* ============ 12. Навигация ============ */
+
+  // Разделы «Финансы», «КП», «Тарифы», «Закупки», «ЛЭП: монтаж» открывались пустыми — их инициализация не вызывалась
+  const _showPage = window.showPageV07;
+  window.showPageV07 = function (id) {
+    _showPage(id);
+    if (id === 'finance') financeInitV10();
+    if (id === 'commercial') commercialInitV11();
+    if (id === 'billing') renderBillingV13();
+    if (id === 'procurement') procurementInitV09();
+    if (id === 'leptech') { renderLepCatalog(); renderLepNormsV08(); }
+    if (id === 'lepfull') initLepFullV10();
+  };
+
+  /* ============ 13. Первичное обновление ============ */
+
+  db = normalizeDB(db);
+  save();
+  refreshCurrentObject();
+  refreshObjectSelectsV07();
+  renderObjects();
+  initLepFullV10();
+  previewDocument();
+})();
+</script>
 </body>
 </html>
