@@ -26,8 +26,16 @@ const pool = new Pool({
   connectionTimeoutMillis: 10000
 });
 
-app.use(cors());
+// CORS не требуется: frontend и API работают на одном origin.
 app.use(express.json({ limit: '5mb' }));
+
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
 
 const DEFAULT_PAYLOAD = {
   schemaVersion: 11,
