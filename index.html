@@ -149,8 +149,8 @@ button.primary{background:var(--accent);color:#1b1107}button.secondary{backgroun
 <div class="grid"><div><label>Введите ключ доступа к чужому объекту</label><input id="accessKeyInput" maxlength="4" placeholder="A7K2" style="text-transform:uppercase"></div><div style="display:flex;align-items:end"><button class="secondary" onclick="redeemAccessKey()">🔓 Открыть по ключу</button></div></div>
 <div id="accessList"></div>
 <div class="grid">
-<div><label>Название</label><input id="objName" placeholder="Спорткомплекс"></div>
-<div><label>Адрес / город</label><input id="objAddress" placeholder="Москва"></div>
+<div><label>Название</label><input id="objName" placeholder="Падел-корт"></div>
+<div><label>Адрес / город</label><input id="objAddress" placeholder="Нальчик"></div>
 </div><br>
 <button class="primary" onclick="addObject()">Добавить объект</button>
 </div>
@@ -1189,187 +1189,154 @@ if(t==='ks'){const x=db.ks[k];x.work=v('edWork');x.unit=v('edUnit');x.qty=+v('ed
 save();closeEditModal();renderObjects();renderMaterials();renderSuppliers();renderPrices();renderKnowledge();renderEstimate()}
 function deleteRecord(type,id){const map={material:'materials',supplier:'suppliers',knowledge:'knowledge',schedule:'schedule',daily:'daily',quality:'quality',warehouse:'warehouse',contractor:'contractors',ks:'ks'};if(!confirm('Удалить эту запись?'))return;db[map[type]]=db[map[type]].filter(x=>x.id!=id);save();renderMaterials();renderSuppliers();renderKnowledge();renderScheduleV08();renderDailyV08();renderQualityV08();renderWarehouseV08();renderContractorsV08();renderKSV08();renderEstimate()}
 
-const lepCatalog={support:[
- {v:'35 кВ',name:'Промежуточная опора 35 кВ',type:'Промежуточная',drawings:['Общий вид','Узлы крепления траверс','Схема сборки'],source:'Типовая/рабочая документация конкретной серии опор'},
- {v:'110 кВ',name:'У110-2',type:'Анкерно-угловая',drawings:['Общий чертёж','Сборочные узлы','Схема сборки на земле','Схема установки'],source:'Карточка должна быть заполнена официальным комплектом чертежей'},
- {v:'110 кВ',name:'П110',type:'Промежуточная',drawings:['Общий чертёж','Элементы опоры','Схема сборки'],source:'Карточка должна быть заполнена официальным комплектом чертежей'},
- {v:'220 кВ',name:'Промежуточная опора 220 кВ',type:'Промежуточная',drawings:['Общий вид','Узлы','Схема монтажа'],source:'По применимой типовой/рабочей документации'}
-],foundation:[
- {v:'35 кВ',name:'Сборный железобетонный фундамент',type:'Сборный ЖБ',drawings:['Общий чертёж','Схема котлована','Схема установки элементов'],source:'По типовой/рабочей документации'},
- {v:'110 кВ',name:'Фундамент под У110-2',type:'Сборный ЖБ',drawings:['Общий чертёж','Размеры и отметки','Схема установки','Узлы закрепления'],source:'Связать с конкретной маркой опоры и проектом'},
- {v:'110 кВ',name:'Монолитный фундамент',type:'Монолитный ЖБ',drawings:['План','Разрез','Армирование','Закладные'],source:'По проекту; типовой чертёж зависит от конструкции'},
- {v:'220 кВ',name:'Свайный фундамент',type:'Свайный',drawings:['Схема свайного поля','Ростверк','Армирование'],source:'По проекту и инженерно-геологическим условиям'}
-]};
+// ===== Справочник опор и фундаментов ВЛ: у каждой позиции своя ссылка на чертежи =====
+// Ссылки ведут на карточку конкретного выпуска серии (там же PDF для скачивания).
+// verified:true — карточка открыта и сверена по названию/оглавлению; false — ссылка из прежней версии, не перепроверена.
+const LEP_STROY='https://files.stroyinf.ru/';
+const LEP_MEGA='https://meganorm.ru/';
+const LEP_ALL_V=['35 кВ','110 кВ','220 кВ','330 кВ','500 кВ'];
+
+const LEP_ITEMS=[
+ // ---------- Стальные опоры ----------
+ {id:'s170-1',kind:'support',voltages:['110 кВ'],name:'Промежуточные одноцепные опоры 110 кВ',type:'Промежуточная',material:'Сталь',circuit:'одноцепная',series:'3.407.2-170',issue:'Выпуск 1',status:'серия 1990 г., статус «не определён законодательством»',desc:'Рабочие чертежи КМ промежуточных одноцепных опор 110 кВ.',verified:true,
+  links:[{label:'Серия 3.407.2-170, вып. 1 — рабочие чертежи КМ',url:LEP_STROY+'Index2/1/4293842/4293842341.htm'}]},
+ {id:'s170-2',kind:'support',voltages:['35 кВ','110 кВ'],name:'Промежуточные двухцепные опоры 35–110 кВ',type:'Промежуточная',material:'Сталь',circuit:'двухцепная',series:'3.407.2-170',issue:'Выпуск 2',status:'серия 1990 г., статус «не определён законодательством»',desc:'Рабочие чертежи КМ промежуточных двухцепных опор 35–110 кВ.',verified:true,
+  links:[{label:'Серия 3.407.2-170, вып. 2 — рабочие чертежи КМ',url:LEP_STROY+'Index2/1/4293842/4293842340.htm'}]},
+ {id:'s170-3',kind:'support',voltages:['35 кВ','110 кВ'],name:'Анкерно-угловые опоры 35–110 кВ',type:'Анкерно-угловая',material:'Сталь',circuit:'одно- и двухцепные',series:'3.407.2-170',issue:'Выпуск 3',status:'серия 1990 г., статус «не определён законодательством»',desc:'Рабочие чертежи анкерно-угловых опор 35–110 кВ.',verified:true,
+  links:[{label:'Серия 3.407.2-170, вып. 3 — анкерно-угловые опоры',url:LEP_STROY+'Index2/1/4293842/4293842339.htm'}]},
+ {id:'s145-1',kind:'support',voltages:['220 кВ'],name:'Промежуточные опоры 220 кВ',type:'Промежуточная',material:'Сталь',circuit:'',series:'3.407.2-145',issue:'Выпуск 1',status:'действует (по данным библиотеки)',desc:'Рабочие чертежи промежуточных опор 220 кВ.',verified:true,
+  links:[{label:'Серия 3.407.2-145, вып. 1 — промежуточные опоры 220 кВ',url:LEP_MEGA+'Index2/1/4293844/4293844580.htm',pdf:LEP_MEGA+'Data2/1/4293844/4293844580.pdf'}]},
+ {id:'s145-2',kind:'support',voltages:['330 кВ'],name:'Промежуточные опоры 330 кВ (1П330-1, 2П330-1)',type:'Промежуточная',material:'Сталь',circuit:'одноцепная',series:'3.407.2-145',issue:'Выпуск 2',status:'действует (по данным библиотеки)',desc:'Монтажные схемы, геометрические схемы, узлы и расчётные листы опор 1П330-1 и 2П330-1.',verified:true,
+  links:[{label:'Серия 3.407.2-145, вып. 2 — промежуточные опоры 330 кВ',url:LEP_STROY+'Index2/1/4293844/4293844579.htm'}]},
+ {id:'s145-3',kind:'support',voltages:['220 кВ','330 кВ'],name:'Анкерно-угловые опоры 220–330 кВ',type:'Анкерно-угловая',material:'Сталь',circuit:'',series:'3.407.2-145',issue:'Выпуск 3',status:'действует (по данным библиотеки)',desc:'Рабочие чертежи анкерно-угловых опор 220–330 кВ.',verified:true,
+  links:[{label:'Серия 3.407.2-145, вып. 3 — анкерно-угловые опоры 220–330 кВ',url:LEP_MEGA+'Index2/1/4293844/4293844577.htm'}]},
+ {id:'s145-0',kind:'support',voltages:['220 кВ','330 кВ'],name:'Общие материалы к опорам 220–330 кВ (таблицы выбора, габариты, нагрузки)',type:'Материалы для проектирования',material:'Сталь',circuit:'',series:'3.407.2-145',issue:'Выпуск 0',status:'справочные материалы',desc:'Пояснительная записка, обзорные листы и таблица выбора опор, габариты промежуточных и анкерно-угловых опор, углы грозозащиты, нагрузки от проводов и тросов.',verified:true,
+  links:[{label:'Серия 3.407.2-145, вып. 0 — материалы для проектирования',url:LEP_STROY+'Index2/1/4293846/4293846521.htm'}]},
+ {id:'s166-1',kind:'support',voltages:['330 кВ'],name:'Специальные двухцепные опоры 330 кВ (2П330-2, 1У330-2)',type:'Специальная',material:'Сталь',circuit:'двухцепная',series:'3.407.2-166',issue:'Выпуск 1',status:'действует (по данным библиотеки)',desc:'Рабочие чертежи КМ промежуточной 2П330-2 и анкерно-угловой 1У330-2 для специальных условий применения.',verified:true,
+  links:[{label:'Серия 3.407.2-166, вып. 1 — специальные двухцепные опоры 330 кВ',url:LEP_STROY+'Index2/1/4293844/4293844590.htm'}]},
+ {id:'s166-2',kind:'support',voltages:['35 кВ','110 кВ','220 кВ','330 кВ'],name:'Дополнительные элементы к опорам 35–330 кВ в специальных условиях',type:'Специальная',material:'Сталь',circuit:'',series:'3.407.2-166',issue:'Выпуск 2',status:'действует (по данным библиотеки)',desc:'Дополнительные элементы для опор серий 3.407.2-145, -156, -165, -166, -170 в расширенной области применения на ВЛ 110, 220, 330 кВ.',verified:true,
+  links:[{label:'Серия 3.407.2-166, вып. 2 — дополнительные элементы',url:LEP_MEGA+'Index2/1/4293844/4293844589.htm'}]},
+ {id:'s155-1',kind:'support',voltages:['500 кВ'],name:'Промежуточные опоры 500 кВ (ПП500-1, ПП500-3, ПС500-1)',type:'Промежуточная',material:'Сталь',circuit:'одноцепная',series:'3.407.2-155',issue:'Выпуск 1',status:'серия 1988 г., статус «не определён законодательством»',desc:'Монтажные схемы опор, узлы, траверсы, стойки, оттяжки и спецификации стали.',verified:true,
+  links:[{label:'Серия 3.407.2-155, вып. 1 — промежуточные опоры 500 кВ',url:LEP_MEGA+'Index2/1/4293844/4293844502.htm',pdf:LEP_MEGA+'Data2/1/4293844/4293844502.pdf'}]},
+ {id:'s155-2',kind:'support',voltages:['500 кВ'],name:'Анкерно-угловые опоры 500 кВ',type:'Анкерно-угловая',material:'Сталь',circuit:'',series:'3.407.2-155',issue:'Выпуск 2',status:'серия 1988 г., статус «не определён законодательством»',desc:'Чертежи КМ анкерно-угловых опор 500 кВ.',verified:false,
+  links:[{label:'Серия 3.407.2-155, вып. 2',url:LEP_STROY+'Index2/1/4293844/4293844501.htm'}]},
+ {id:'s168-3',kind:'support',voltages:['330 кВ'],name:'Переходные опоры 330 кВ',type:'Переходная',material:'Сталь',circuit:'',series:'3.407.2-168',issue:'Выпуск 3',status:'действует (по данным библиотеки)',desc:'Рабочие чертежи КМ свободностоящих переходных опор.',verified:false,
+  links:[{label:'Серия 3.407.2-168, вып. 3',url:'https://www.studmed.ru/seriya-34072-168-unificirovannye-konstrukcii-svobodnostoyaschih-perehodnyh-opor-vl-35-330-kv-vysotoy-do-100-m-vypusk-3-perehodnye-opory-330-kv-rabochie-chertezhi-km_d08bcb6fa9b.html'}]},
+ {id:'s95',kind:'support',voltages:['220 кВ','330 кВ'],name:'Концевые опоры для больших переходов 220–330 кВ',type:'Концевая',material:'Сталь',circuit:'',series:'3.407-95',issue:'комплект',status:'по данным библиотеки',desc:'Концевые опоры К220-1, К220-2, К330-1, К330-2.',verified:false,
+  links:[{label:'Серия 3.407-95 — концевые опоры',url:LEP_MEGA+'Index2/1/4293815/4293815084.htm'}]},
+
+ // ---------- Железобетонные опоры ----------
+ {id:'zb175',kind:'support',voltages:['35 кВ','110 кВ','220 кВ'],name:'Промежуточные одностоечные ЖБ опоры 35–220 кВ',type:'Промежуточная',material:'Железобетон',circuit:'',series:'3.407.1-175',issue:'комплект',status:'по данным библиотеки',desc:'Схемы расположения элементов, металлические и железобетонные изделия.',verified:false,
+  links:[{label:'Серия 3.407.1-175',url:LEP_MEGA+'Index2/1/4293844/4293844815.htm'}]},
+ {id:'zb167',kind:'support',voltages:['330 кВ','500 кВ'],name:'Анкерно-угловые ЖБ опоры 330–500 кВ',type:'Анкерно-угловая',material:'Железобетон',circuit:'',series:'3.407.1-167',issue:'комплект',status:'по данным библиотеки',desc:'Схемы расположения элементов, металлические и железобетонные изделия.',verified:false,
+  links:[{label:'Серия 3.407.1-167',url:LEP_MEGA+'Index2/1/4293844/4293844816.htm'}]},
+
+ // ---------- Фундаменты ----------
+ {id:'f144',kind:'foundation',voltages:LEP_ALL_V,name:'Унифицированные фундаменты для стальных опор 35–500 кВ',type:'Сборный ЖБ',material:'Железобетон',circuit:'',series:'3.407.1-144',issue:'Выпуск 1',status:'действует (по данным библиотеки)',desc:'Рабочие чертежи фундаментов; в выпуске 0 — материалы для проектирования (подбор фундамента под опору и грунт).',verified:true,
+  links:[
+   {label:'Вып. 1 — рабочие чертежи фундаментов',url:LEP_STROY+'Index2/1/4293845/4293845234.htm',pdf:LEP_STROY+'Data2/1/4293845/4293845234.pdf'},
+   {label:'Вып. 0 — материалы для проектирования',url:LEP_STROY+'Index2/1/4293845/4293845235.htm',pdf:LEP_STROY+'Data2/1/4293845/4293845235.pdf'}]},
+ {id:'f159',kind:'foundation',voltages:LEP_ALL_V,name:'Малозаглублённые фундаменты для стальных опор 35–500 кВ',type:'Малозаглублённый',material:'Железобетон',circuit:'',series:'3.407.1-159',issue:'Выпуск 1',status:'действует (по данным библиотеки)',desc:'Рабочие чертежи малозаглублённых фундаментов.',verified:true,
+  links:[
+   {label:'Вып. 1 — малозаглублённые фундаменты, рабочие чертежи',url:LEP_STROY+'Index2/1/4293845/4293845226.htm',pdf:LEP_STROY+'Data2/1/4293845/4293845226.pdf'},
+   {label:'Вып. 0 — материалы для проектирования',url:LEP_STROY+'Index2/1/4293845/4293845227.htm',pdf:LEP_STROY+'Data2/1/4293845/4293845227.pdf'}]},
+ {id:'f9146',kind:'foundation',voltages:LEP_ALL_V,name:'Свайные фундаменты для стальных опор 35–500 кВ',type:'Свайный',material:'Железобетон / металл',circuit:'',series:'3.407.9-146',issue:'Выпуск 1',status:'действует (по данным библиотеки)',desc:'Свайные фундаменты, сваи вибрированные и центрифугированные, металлические элементы (чертежи КМ).',verified:true,
+  links:[
+   {label:'Вып. 1 — свайные фундаменты, рабочие чертежи',url:LEP_STROY+'Index2/1/4293845/4293845231.htm',pdf:LEP_STROY+'Data2/1/4293845/4293845231.pdf'},
+   {label:'Вып. 2 — сваи вибрированные и центрифугированные',url:LEP_STROY+'Index2/1/4293845/4293845230.htm',pdf:LEP_STROY+'Data2/1/4293845/4293845230.pdf'},
+   {label:'Вып. 3 — металлические элементы, чертежи КМ',url:LEP_STROY+'Index2/1/4293845/4293845229.htm',pdf:LEP_STROY+'Data2/1/4293845/4293845229.pdf'},
+   {label:'Вып. 0 — материалы для проектирования',url:LEP_STROY+'Index2/1/4293845/4293845232.htm',pdf:LEP_STROY+'Data2/1/4293845/4293845232.pdf'}]},
+ {id:'f9158',kind:'foundation',voltages:LEP_ALL_V,name:'Конструкции для закрепления опор ВЛ и ОРУ (ригели, плиты, детали)',type:'Закрепление опор',material:'Железобетон / металл',circuit:'',series:'3.407.9-158',issue:'комплект',status:'заменяет вып. 5 серии 3.407-115',desc:'Плиты, ригели и металлические детали для закрепления опор.',verified:true,
+  links:[{label:'Серия 3.407.9-158 — конструкции для закрепления опор',url:LEP_STROY+'Index2/1/4293844/4293844800.htm'}]},
+ {id:'f115',kind:'foundation',voltages:LEP_ALL_V,name:'Старая серия фундаментов 3.407-115 (заменена) — для действующих проектов',type:'Сборный ЖБ (устаревшая серия)',material:'Железобетон',circuit:'',series:'3.407-115',issue:'Выпуски 1–6',status:'не действует, заменена сериями 3.407.1-144, 3.407.1-159, 3.407.9-146, 3.407.9-158',desc:'Нужна, если проект выполнен по старой серии.',verified:true,
+  links:[
+   {label:'Вып. 2 — фундаменты под опоры 35–330 кВ',url:LEP_STROY+'Index2/1/4293833/4293833462.htm',pdf:LEP_STROY+'Data2/1/4293833/4293833462.pdf'},
+   {label:'Вып. 3 — фундаменты под опоры 500 кВ',url:LEP_STROY+'Index2/1/4293833/4293833461.htm',pdf:LEP_STROY+'Data2/1/4293833/4293833461.pdf'},
+   {label:'Вып. 4 — сваи вибрированные и центрифугированные',url:LEP_STROY+'Index2/1/4293833/4293833460.htm',pdf:LEP_STROY+'Data2/1/4293833/4293833460.pdf'},
+   {label:'Вып. 5 — плиты, ригели и металлические детали',url:LEP_STROY+'Index2/1/4293833/4293833458.htm',pdf:LEP_STROY+'Data2/1/4293833/4293833458.pdf'},
+   {label:'Вып. 6 — свайные фундаменты и металлические ростверки',url:LEP_STROY+'Index2/1/4293833/4293833457.htm',pdf:LEP_STROY+'Data2/1/4293833/4293833457.pdf'},
+   {label:'Вып. 1 — пояснительная записка, обзорные листы',url:LEP_STROY+'Index2/1/4293833/4293833464.htm',pdf:LEP_STROY+'Data2/1/4293833/4293833464.pdf'}]}
+];
+
+// Фундаменты, подходящие под стальные опоры
+const LEP_STEEL_FOUND=['f144','f159','f9146','f9158'];
+
+function lepItemById(id){return LEP_ITEMS.find(x=>x.id===id)}
+function lepItemsFor(kind,voltage){return LEP_ITEMS.filter(x=>x.kind===kind&&x.voltages.includes(voltage))}
+function lepVoltageText(x){return x.voltages.length===LEP_ALL_V.length?'35–500 кВ':x.voltages.join(', ')}
+
+function lepLinksHtml(links){
+  return links.map(l=>`
+    <div class="price-line" style="align-items:center">
+      <span>${esc(l.label)}</span>
+      <span style="white-space:nowrap">
+        <a class="secondary" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;text-decoration:none;padding:6px 10px;border-radius:8px">📐 Открыть</a>
+        ${l.pdf?`<a class="secondary" href="${esc(l.pdf)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;text-decoration:none;padding:6px 10px;border-radius:8px">⬇️ PDF</a>`:''}
+      </span>
+    </div>`).join('');
+}
+
+function lepItemCardHtml(x,withFoundations){
+  const tags=[lepVoltageText(x),x.type,x.material,x.circuit,'серия '+x.series,x.issue].filter(Boolean)
+    .map(t=>`<span class="tag">${esc(t)}</span>`).join('');
+  let html=`<div class="item" style="margin-top:10px">
+    <h3>${esc(x.name)}</h3>
+    <div>${tags}</div>
+    <p class="muted" style="margin-top:8px">${esc(x.desc)}</p>
+    <div class="muted">Статус: ${esc(x.status)}</div>
+    <h4 style="margin-top:12px">📐 Чертежи именно для этой позиции</h4>
+    ${lepLinksHtml(x.links)}`;
+  if(!x.verified)html+=`<div class="notice">⚠️ Ссылка перенесена из прежней версии и пока не перепроверена по содержанию выпуска.</div>`;
+  if(withFoundations){
+    if(x.kind==='support'&&x.material==='Сталь'){
+      html+=`<h4 style="margin-top:14px">🏗️ Фундаменты под эту опору</h4>`+
+        LEP_STEEL_FOUND.map(id=>lepItemById(id)).filter(Boolean).map(f=>
+          `<div style="margin-top:8px"><b>${esc(f.name)}</b> <span class="tag">серия ${esc(f.series)}</span>${lepLinksHtml(f.links.slice(0,1))}</div>`).join('');
+    }else if(x.kind==='support'){
+      html+=`<div class="notice">Фундаменты ЖБ опор определяются комплектом серии и проектом.</div>`;
+    }
+  }
+  return html+`</div>`;
+}
+
 function renderLepCatalog(){
   const kind=$('refKind')?.value||'support';
   const v=$('refVoltage')?.value||'110 кВ';
-  const items=(lepCatalog[kind]||[]).filter(x=>x.v===v);
+  const items=lepItemsFor(kind,v);
   const sel=$('refItem');
-
+  const prev=sel?sel.value:'';
   if(sel){
-    sel.innerHTML=(items.length?items:[{name:'Нет карточки для выбранного фильтра'}])
-      .map((x,i)=>`<option value="${i}">${esc(x.name)}</option>`)
-      .join('');
+    sel.innerHTML=items.length
+      ?items.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')
+      :'<option value="">Нет карточки для выбранного фильтра</option>';
+    if(items.some(x=>x.id===prev))sel.value=prev;
   }
-
-  const x=items[Number(sel?.value)||0];
   const box=$('lepCatalogResult');
-
   if(!box)return;
-
-  if(!x){
-    box.innerHTML=`
-      <div class="empty">
-        Для выбранной комбинации пока нет карточки.
-      </div>`;
-    return;
-  }
-
-  let docs=[];
-
-  if(kind==='support'){
-
-    if(x.type==='Анкерно-угловая'){
-      docs.push({
-        title:'Серия 3.407.1-151',
-        subtitle:'Унифицированные конструкции анкерно-угловых железобетонных опор ВЛ 35–220 кВ',
-        parts:[
-          'Выпуск 1 — схемы расположения элементов',
-          'Выпуск 2 — металлоконструкции, рабочие чертежи',
-          'Выпуск 3 — железобетонные конструкции, рабочие чертежи'
-        ],
-        url:'https://ohranatruda.ru/ot_biblio/norma/402123/'
-      });
-    }
-
-    if(x.type==='Промежуточная'){
-      docs.push({
-        title:'Серия 3.407.1-175',
-        subtitle:'Промежуточные одностоечные железобетонные опоры ВЛ 35–220 кВ',
-        parts:[
-          'Выпуск 1 — схемы расположения элементов',
-          'Выпуск 2 — металлические изделия, рабочие чертежи',
-          'Выпуск 3 — железобетонные изделия, рабочие чертежи'
-        ],
-        url:'https://ohranatruda.ru/ot_biblio/norma/402122/'
-      });
-
-      docs.push({
-        title:'Серия 3.407.1-152',
-        subtitle:'Промежуточные двухстоечные железобетонные опоры ВЛ 35–500 кВ',
-        parts:[
-          'Выпуск 1 — схемы расположения элементов',
-          'Выпуск 2 — металлоконструкции, рабочие чертежи',
-          'Выпуск 3 — железобетонные конструкции, рабочие чертежи'
-        ],
-        url:'https://ohranatruda.ru/ot_biblio/norma/402123/'
-      });
-    }
-  }
-
-  if(kind==='foundation'){
-
-    docs.push({
-      title:'Серия 3.407.1-144',
-      subtitle:'Унифицированные конструкции фундаментов для стальных опор ВЛ 35–500 кВ',
-      parts:[
-        'Выпуск 0 — материалы для проектирования',
-        'Выпуск 1 — рабочие чертежи'
-      ],
-      url:'https://ohranatruda.ru/ot_biblio/norma/402117/'
-    });
-
-    docs.push({
-      title:'Серия 3.407-115',
-      subtitle:'Унифицированные фундаментные конструкции ВЛ 35–500 кВ',
-      parts:[
-        'Выпуск 2 — фундаменты под металлические опоры 35–330 кВ',
-        'Выпуск 3 — фундаменты под металлические опоры 500 кВ',
-        'Выпуск 4 — вибрированные и центрифугированные сваи',
-        'Выпуск 5 — плиты, ригели и детали закрепления',
-        'Выпуск 6 — свайные фундаменты и металлические ростверки'
-      ],
-      url:'https://files.stroyinf.ru/Index2/1/4293833/4293833466.htm'
-    });
-  }
-
-  const docsHtml=docs.length
-    ? docs.map(d=>`
-      <div class="item" style="margin-top:10px">
-
-        <div class="price-line">
-          <b>📐 ${esc(d.title)}</b>
-          <span class="tag">
-            Рабочие чертежи
-          </span>
-        </div>
-
-        <p>
-          ${esc(d.subtitle)}
-        </p>
-
-        <ul>
-          ${d.parts.map(p=>`
-            <li>${esc(p)}</li>
-          `).join('')}
-        </ul>
-
-        <a
-          href="${d.url}"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="primary"
-          style="display:inline-block;text-decoration:none;margin-top:6px"
-        >
-          📄 Открыть комплект чертежей
-        </a>
-
-      </div>
-    `).join('')
-    : `
-      <div class="notice">
-        Для выбранной конструкции проверенный комплект
-        рабочих чертежей пока не найден.
-      </div>
-    `;
-
-  box.innerHTML=`
-    <div class="item">
-
-      <h3>${esc(x.name)}</h3>
-
-      <div class="muted">
-        ${esc(x.v)} · ${esc(x.type)}
-      </div>
-
-      <h4 style="margin-top:14px">
-        📐 Состав конструкции
-      </h4>
-
-      <ul>
-        ${x.drawings.map(d=>`
-          <li>${esc(d)}</li>
-        `).join('')}
-      </ul>
-
-      <h4 style="margin-top:18px">
-        📚 Рабочие чертежи и документация
-      </h4>
-
-      ${docsHtml}
-
-      <div class="notice" style="margin-top:14px">
-        ⚠️ Автоматическая привязка выполнена по типу конструкции
-        и диапазону напряжения. Перед применением на объекте необходимо
-        проверить соответствие конкретной марке опоры, фундаменту
-        и проектной документации.
-      </div>
-
-    </div>
-  `;
+  const x=items.find(i=>i.id===(sel?sel.value:''))||items[0];
+  if(!x){box.innerHTML='<div class="empty">Для выбранной комбинации пока нет карточки.</div>';return;}
+  box.innerHTML=lepItemCardHtml(x,true)+
+    `<div class="notice">⚠️ Серии типовые. Перед применением на объекте сверьте марку опоры/фундамента, нагрузки и грунт с проектом и рабочей документацией. Статус серии указан по данным библиотеки на дату её актуализации.</div>`;
 }
 
-function showLepTechV08(){const v=$('ltV').value,s=$('ltS').value,f=$('ltF').value;const steps=['Проверить проект и типовую/рабочую документацию на применимость к конкретной опоре','Подготовить трассу и площадку, обеспечить геодезическую разбивку','Разработать котлован/подготовить основание согласно проекту','Установить элементы фундамента, выполнить выверку и контроль отметок','Выполнить бетонирование/монтаж сборных элементов по проекту','Выполнить обратную засыпку и уплотнение с предусмотренным контролем','Собрать опору по ведомости элементов и технологической карте','Выполнить строповку и подъём с применением предусмотренного механизма','Установить опору, выполнить выверку и закрепление','Смонтировать траверсы, изоляторы и линейную арматуру','После монтажа — выполнить предусмотренный проектом контроль и оформить ИД'];$('lepTechResult').innerHTML=`<div class="module-result"><b>${esc(v)} · ${esc(s)} · ${esc(f)}</b><ol>${steps.map(x=>`<li style="margin:7px 0">${esc(x)}</li>`).join('')}</ol><span class="mini">Чек-лист не заменяет рабочую документацию, ППР/ТК и проектные решения.</span></div>`}
+// Чертежи под выбор в технологическом чек-листе (напряжение + тип опоры + тип фундамента)
+function lepSelectionDrawingsHtml(v,s,f){
+  const typeMap={'Промежуточная':['Промежуточная'],'Анкерная':['Анкерно-угловая'],'Анкерно-угловая':['Анкерно-угловая'],'Концевая':['Концевая'],'Переходная / специальная':['Специальная','Переходная']};
+  const wanted=typeMap[s]||[];
+  const supports=lepItemsFor('support',v).filter(x=>wanted.includes(x.type));
+  const foundMap={'Сборный ЖБ':['f144','f159'],'Свайный':['f9146']};
+  const found=(foundMap[f]||[]).map(id=>lepItemById(id)).filter(Boolean);
+  let html=`<h4 style="margin-top:16px">📐 Чертежи по выбранным параметрам</h4>`;
+  html+=`<div class="muted">Опора: ${esc(v)} · ${esc(s)}</div>`;
+  html+=supports.length?supports.map(x=>`<div class="item" style="margin-top:8px"><b>${esc(x.name)}</b> <span class="tag">серия ${esc(x.series)}</span><span class="tag">${esc(x.material)}</span>${lepLinksHtml(x.links)}${x.verified?'':'<div class="mini">⚠️ ссылка не перепроверена</div>'}</div>`).join('')
+    :`<div class="notice">Для сочетания «${esc(v)} · ${esc(s)}» типовой выпуск в справочнике не найден — смотрите проект.</div>`;
+  html+=`<div class="muted" style="margin-top:10px">Фундамент: ${esc(f)}</div>`;
+  html+=found.length?found.map(x=>`<div class="item" style="margin-top:8px"><b>${esc(x.name)}</b> <span class="tag">серия ${esc(x.series)}</span>${lepLinksHtml(x.links)}</div>`).join('')
+    :`<div class="notice">Для типа «${esc(f)}» типовая серия не подтверждена — фундамент принимается по проекту.</div>`;
+  return html;
+}
+
+function showLepTechV08(){const v=$('ltV').value,s=$('ltS').value,f=$('ltF').value;const steps=['Проверить проект и типовую/рабочую документацию на применимость к конкретной опоре','Подготовить трассу и площадку, обеспечить геодезическую разбивку','Разработать котлован/подготовить основание согласно проекту','Установить элементы фундамента, выполнить выверку и контроль отметок','Выполнить бетонирование/монтаж сборных элементов по проекту','Выполнить обратную засыпку и уплотнение с предусмотренным контролем','Собрать опору по ведомости элементов и технологической карте','Выполнить строповку и подъём с применением предусмотренного механизма','Установить опору, выполнить выверку и закрепление','Смонтировать траверсы, изоляторы и линейную арматуру','После монтажа — выполнить предусмотренный проектом контроль и оформить ИД'];$('lepTechResult').innerHTML=`<div class="module-result"><b>${esc(v)} · ${esc(s)} · ${esc(f)}</b><ol>${steps.map(x=>`<li style="margin:7px 0">${esc(x)}</li>`).join('')}</ol><span class="mini">Чек-лист не заменяет рабочую документацию, ППР/ТК и проектные решения.</span>${lepSelectionDrawingsHtml(v,s,f)}</div>`}
 function renderLepNormsV08(){const a=[['ГОСТ Р 51872-2024','Исполнительная геодезическая документация — действует с 01.11.2024.'],['ПУЭ, глава 2.5','Воздушные линии электропередачи напряжением выше 1 кВ; требования к опорам, фундаментам и условиям трассы.'],['СП 76.13330.2016','Электротехнические устройства; применяется с учётом актуальности и области применения конкретной работы.']];$('lepNormsV08').innerHTML=a.map(x=>`<div class="item"><b>${x[0]}</b><br><span class="mini">${x[1]}</span></div>`).join('')}
 // ===== STAGE 5: full estimate engine =====
 const EST_SECTIONS_V09=['Земляные работы','Фундаменты','Монолит','Арматура','Опалубка','Стены','Кровля','Отделка','ЛЭП','Прочие работы'];
@@ -1462,61 +1429,14 @@ function renderLepFullNormsV10(){const a=[['ГрК РФ, ст. 52','Строит
 function renderLepDrawingCardsV10(){
   const b=$('lepDrawingCards');
   if(!b)return;
-
-  const drawings=[
-    {category:'Опоры',type:'Промежуточная',voltage:'35–110 кВ',material:'Стальная',series:'3.407.2-170',title:'Промежуточные стальные опоры ВЛ 35–110 кВ',desc:'Рабочие чертежи КМ: монтажные схемы, геометрия, узлы и расчётные листы.',drawing:'https://ru.djvu.online/file/IInmvr42qXhLW'},
-    {category:'Опоры',type:'Анкерно-угловая',voltage:'35–110 кВ',material:'Стальная',series:'3.407.2-170',title:'Анкерно-угловые стальные опоры ВЛ 35–110 кВ',desc:'Рабочие чертежи КМ конструкций и узлов.',drawing:'https://ohranatruda.ru/ot_biblio/norma/402145/'},
-    {category:'Опоры',type:'Промежуточная',voltage:'220 кВ',material:'Стальная',series:'3.407.2-145',title:'Промежуточные стальные опоры ВЛ 220 кВ',desc:'Рабочие чертежи КМ, монтажные схемы и узлы.',drawing:'https://meganorm.ru/Index2/1/4293844/4293844580.htm'},
-    {category:'Опоры',type:'Промежуточная',voltage:'330 кВ',material:'Стальная',series:'3.407.2-145',title:'Промежуточные стальные опоры ВЛ 330 кВ',desc:'Рабочие чертежи КМ, монтажные схемы, геометрия и узлы.',drawing:'https://meganorm.ru/Index2/1/4293844/4293844579.htm'},
-    {category:'Опоры',type:'Анкерно-угловая',voltage:'220–330 кВ',material:'Стальная',series:'3.407.2-145',title:'Анкерно-угловые стальные опоры ВЛ 220–330 кВ',desc:'Рабочие чертежи КМ конструкции и узлов.',drawing:'https://meganorm.ru/Index2/1/4293844/4293844577.htm'},
-    {category:'Опоры',type:'Промежуточная',voltage:'500 кВ',material:'Стальная',series:'3.407.2-155',title:'Промежуточные стальные опоры ВЛ 500 кВ',desc:'Монтажные схемы, узлы, траверсы, стойки и спецификации.',drawing:'https://meganorm.ru/Index2/1/4293844/4293844502.htm'},
-    {category:'Опоры',type:'Анкерно-угловая',voltage:'500 кВ',material:'Стальная',series:'3.407.2-155',title:'Анкерно-угловые и промежуточно-угловые опоры ВЛ 500 кВ',desc:'Монтажные схемы, узлы, стойки, траверсы и спецификации.',drawing:'https://files.stroyinf.ru/Index2/1/4293844/4293844501.htm'},
-    {category:'Опоры',type:'Концевая',voltage:'220–330 кВ',material:'Стальная',series:'3.407-95',title:'Концевые опоры для больших переходов ВЛ 220–330 кВ',desc:'Монтажные схемы, узлы и рабочие чертежи конструкций К220-1, К220-2, К330-1, К330-2.',drawing:'https://meganorm.ru/Index2/1/4293815/4293815084.htm'},
-    {category:'Опоры',type:'Переходная / специальная',voltage:'35–330 кВ',material:'Стальная',series:'3.407.2-168',title:'Переходные опоры ВЛ 35–330 кВ',desc:'Рабочие чертежи КМ свободностоящих переходных опор высотой до 100 м.',drawing:'https://www.studmed.ru/seriya-34072-168-unificirovannye-konstrukcii-svobodnostoyaschih-perehodnyh-opor-vl-35-330-kv-vysotoy-do-100-m-vypusk-3-perehodnye-opory-330-kv-rabochie-chertezhi-km_d08bcb6fa9b.html'},
-    {category:'Опоры',type:'Промежуточная',voltage:'35–220 кВ',material:'Железобетонная',series:'3.407.1-175',title:'Промежуточные одностоечные ЖБ опоры ВЛ 35–220 кВ',desc:'Схемы расположения элементов, металлические и железобетонные рабочие чертежи.',drawing:'https://meganorm.ru/Index2/1/4293844/4293844815.htm'},
-    {category:'Опоры',type:'Промежуточная',voltage:'35–500 кВ',material:'Железобетонная',series:'3.407.1-152',title:'Промежуточные двухстоечные ЖБ опоры ВЛ 35–500 кВ',desc:'Схемы расположения элементов, металлические и железобетонные рабочие чертежи.',drawing:'https://ohranatruda.ru/ot_biblio/norma/402123/'},
-    {category:'Опоры',type:'Анкерно-угловая',voltage:'330–500 кВ',material:'Железобетонная',series:'3.407.1-167',title:'Анкерно-угловые ЖБ опоры ВЛ 330–500 кВ',desc:'Схемы расположения элементов, металлические и железобетонные рабочие чертежи.',drawing:'https://meganorm.ru/Index2/1/4293844/4293844816.htm'},
-    {category:'Фундаменты',type:'Сборный ЖБ',voltage:'35–330 кВ',material:'Железобетон',series:'3.407-115',title:'Фундаменты под металлические опоры ВЛ 35–330 кВ',desc:'Рабочие чертежи фундаментных конструкций, плит, ригелей и элементов закрепления опор.',drawing:'https://ohranatruda.ru/ot_biblio/norma/402175/'},
-    {category:'Фундаменты',type:'Сборный ЖБ',voltage:'500 кВ',material:'Железобетон',series:'3.407-115',title:'Фундаменты под металлические опоры ВЛ 500 кВ',desc:'Отдельный выпуск фундаментных конструкций для опор 500 кВ.',drawing:'https://files.stroyinf.ru/Data2/1/4293833/4293833466.htm'},
-    {category:'Фундаменты',type:'Свайный',voltage:'35–500 кВ',material:'ЖБ / металл',series:'3.407-115',title:'Свайные фундаменты и металлические ростверки',desc:'Вибрированные и центрифугированные сваи, свайные фундаменты и металлические ростверки.',drawing:'https://ohranatruda.ru/ot_biblio/norma/402175/'},
-    {category:'Фундаменты',type:'Элементы фундамента',voltage:'35–500 кВ',material:'ЖБ / металл',series:'3.407-115',title:'Плиты, ригели и детали закрепления опор',desc:'Рабочие чертежи плит, ригелей, анкерных элементов, подпятников и металлических деталей.',drawing:'https://meganorm.ru/Index2/1/4293833/4293833464.htm'}
-  ];
-
-  const grouped={};
-  drawings.forEach(x=>{
-    if(!grouped[x.category])grouped[x.category]=[];
-    grouped[x.category].push(x);
-  });
-
-  b.innerHTML=Object.entries(grouped).map(([category,items])=>`
-    <div class="item" style="margin-top:12px">
-      <div class="price-line">
-        <b>${esc(category)}</b>
-        <span class="tag">${items.length} комплектов</span>
-      </div>
-
-      ${items.map(x=>`
-        <div class="item" style="margin-top:10px">
-          <div class="price-line">
-            <b>${esc(x.title)}</b>
-            <span class="tag">${esc(x.voltage)}</span>
-          </div>
-
-          <div style="margin-top:7px">
-            <span class="tag">${esc(x.type)}</span>
-            <span class="tag">${esc(x.material)}</span>
-            <span class="tag">${esc(x.series)}</span>
-          </div>
-
-          <p>${esc(x.desc)}</p>
-
-          <div class="toolbar">
-            <a class="secondary" href="${x.drawing}" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none">📐 Открыть комплект чертежей</a>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `).join('');
+  const groups=[['Опоры','support'],['Фундаменты','foundation']];
+  b.innerHTML=groups.map(([title,kind])=>{
+    const items=LEP_ITEMS.filter(x=>x.kind===kind);
+    return `<div class="item" style="margin-top:12px">
+      <div class="price-line"><b>${esc(title)}</b><span class="tag">${items.length} позиций</span></div>
+      ${items.map(x=>lepItemCardHtml(x,false)).join('')}
+    </div>`;
+  }).join('');
 }
 function initLepFullV10(){renderLepFullStepsV10();renderLepFullQcV10();renderLepDocsV10();renderLepFullNormsV10();renderLepDrawingCardsV10();const a=$('lepDrawingCards'),c=$('lepFullDrawingCards');if(c&&a)c.innerHTML=a.innerHTML}
 
