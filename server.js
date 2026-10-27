@@ -37,6 +37,11 @@ const pool = new Pool({
 app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser());
 
+app.use(cors({
+  origin: 'https://bczmdhv47k-pixel.github.io',
+  credentials: true
+}));
+
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
