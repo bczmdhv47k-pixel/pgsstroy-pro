@@ -794,6 +794,42 @@ const PGSSTROY_API_URL=(window.PGSSTROY_API_URL||localStorage.getItem("PGSSTROY_
 let cloudSession=JSON.parse(localStorage.getItem("pgsstroy_cloud_session")||"null");
 function cloudHeaders(){return cloudSession?.token?{"Content-Type":"application/json","Authorization":"Bearer "+cloudSession.token}:{"Content-Type":"application/json"}}
 async function cloudRequest(path,options={}){if(!PGSSTROY_API_URL)return null;const r=await fetch(PGSSTROY_API_URL+path,{...options,headers:{...cloudHeaders(),...(options.headers||{})}});const data=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(data.error||"cloud_error"),{status:r.status,data});return data}
+async function sendAIMessage(){
+  const input=$("aiMessage");
+  const result=$("aiResult");
+
+  if(!input||!result)return;
+
+  const message=input.value.trim();
+
+  if(!message){
+    result.style.display="block";
+    result.textContent="Напишите вопрос для AI-прораба.";
+    return;
+  }
+
+  if(!cloudSession){
+    result.style.display="block";
+    result.textContent="Сначала войдите в облачный аккаунт.";
+    return;
+  }
+
+  result.style.display="block";
+  result.textContent="🤖 AI-прораб думает...";
+
+  try{
+    const data=await cloudRequest("/api/ai",{
+      method:"POST",
+      body:JSON.stringify({message})
+    });
+
+    result.textContent=data.answer||"AI не вернул ответ.";
+  }catch(e){
+    console.error("AI request failed:",e);
+    result.textContent="❌ Ошибка AI: "+(e.data?.error||e.message||"неизвестная ошибка");
+  }
+}
+
 async function cloudLogin(email,password){const d=await cloudRequest('/api/auth/login',{method:'POST',body:JSON.stringify({email,password})});cloudSession=d;localStorage.setItem('pgsstroy_cloud_session',JSON.stringify(d));await cloudPull();return d}
 async function cloudRegister(name,email,password,organization){const d=await cloudRequest('/api/auth/register',{method:'POST',body:JSON.stringify({name,email,password,organization})});cloudSession=d;localStorage.setItem('pgsstroy_cloud_session',JSON.stringify(d));await cloudPull();return d}
 async function cloudPull(){if(!cloudSession)return null;const d=await cloudRequest('/api/data');if(d?.payload){db=normalizeDB(d.payload);db._cloudVersion=Number(d.version||0);db.account={...(db.account||{}),id:cloudSession.user.id,name:cloudSession.user.name,email:cloudSession.user.email};localStorage.setItem(KEY,JSON.stringify(db));refreshAccountUI();refreshAllAfterAccountSwitch();}return d}
