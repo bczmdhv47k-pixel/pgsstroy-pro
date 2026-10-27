@@ -262,6 +262,47 @@ app.get('/api/objects', auth, async (_req,res) => {
   } catch(e){res.status(500).json({error:'objects_read_failed'});}
 });
 
+app.post('/api/ai', auth, async (req, res) => {
+  const message = String(req.body?.message || '').trim();
+
+  if (!message) {
+    return res.status(400).json({ error: 'message_required' });
+  }
+
+  if (!openai) {
+    return res.status(503).json({ error: 'openai_not_configured' });
+  }
+
+  try {
+    const response = await openai.responses.create({
+      model: 'gpt-6-luna',
+      instructions: `
+Ты — AI-помощник PGSSTROY.PRO для управления строительными проектами.
+
+Отвечай на русском языке.
+Отвечай кратко, конкретно и по делу.
+Учитывай строительную специфику: объекты, сметы, материалы,
+объёмы работ, цены, поставщиков, сроки, финансы и организацию работ.
+
+На данном этапе у тебя НЕТ инструментов изменения данных.
+Не утверждай, что ты создал, изменил, удалил или сохранил что-либо
+в системе.
+
+Если для ответа не хватает данных — прямо скажи, какие данные нужны.
+`,
+      input: message
+    });
+
+    res.json({
+      ok: true,
+      answer: response.output_text || ''
+    });
+  } catch (e) {
+    console.error('OpenAI error', e);
+    res.status(502).json({ error: 'openai_request_failed' });
+  }
+});
+
 app.get('/api', (_req,res)=>res.json({service:'PGSSTROY.PRO API',version:'1.2.0',health:'/health'}));
 
 const publicDir = __dirname;
