@@ -274,6 +274,54 @@ nav#nav{margin-top:8px;padding:8px;border:1px solid var(--line);border-radius:12
 
 <main class="wrap">
 
+<section id="ai" class="page">
+<div class="hero07">
+  <div class="eyebrow">AI CONSTRUCTION ASSISTANT</div>
+  <h1>🤖 AI-прораб</h1>
+  <p>Интеллектуальный помощник PGSSTROY.PRO для расчётов, объектов, материалов, смет и организации строительных работ.</p>
+</div>
+
+<div class="card">
+  <h2>Задайте вопрос</h2>
+
+  <textarea
+    id="aiMessage"
+    placeholder="Например: сколько бетона нужно на плиту 10×20 м толщиной 200 мм?"
+    style="min-height:120px"
+  ></textarea>
+
+  <div class="toolbar">
+    <button class="primary" onclick="sendAIMessage()">🤖 Спросить AI-прораба</button>
+    <button class="secondary" onclick="document.getElementById('aiMessage').value=''">Очистить</button>
+  </div>
+
+  <div id="aiResult" class="module-result" style="display:none"></div>
+</div>
+
+<div class="card">
+  <h2>💡 Что умеет AI-прораб</h2>
+
+  <div class="quick-grid">
+    <div class="quick-card" onclick="document.getElementById('aiMessage').value='Рассчитай объём бетона для плиты 10×20 м толщиной 200 мм'">
+      <span class="tag">Расчёты</span>
+      <b>Объёмы работ</b>
+      <div class="mini">Бетон, арматура, кладка, земляные работы</div>
+    </div>
+
+    <div class="quick-card" onclick="document.getElementById('aiMessage').value='Помоги составить смету на строительство объекта'">
+      <span class="tag">Смета</span>
+      <b>Сметные решения</b>
+      <div class="mini">Работы, материалы, цены и резерв</div>
+    </div>
+
+    <div class="quick-card" onclick="document.getElementById('aiMessage').value='Составь план организации строительных работ'">
+      <span class="tag">Организация</span>
+      <b>План работ</b>
+      <div class="mini">Этапы, сроки, ресурсы и контроль</div>
+    </div>
+  </div>
+</div>
+</section>
 
 <section id="billing" class="page">
 <div class="hero07"><div class="eyebrow">MONETIZATION</div><h1>💳 Тарифы PGSSTROY.PRO</h1><p>Управление тарифом, лимитами и коммерческими возможностями. В прототипе оплата не подключена: тариф можно выбрать для тестирования продукта.</p></div>
